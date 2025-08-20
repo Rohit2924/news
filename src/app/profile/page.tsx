@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 
 import { useAuth } from "@/app/components/ui/AuthContext";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 
 
 interface UserProfile {
