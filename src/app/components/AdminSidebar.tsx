@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { X, BarChart2, Folder, FileText, Users, Settings, Home, LogOut } from 'lucide-react';
-import { useAuth } from './ui/AuthContext';
+import { useAuth } from '@/app/components/ui/AuthContext';
 import { useRouter } from 'next/navigation';
 
 interface AdminSidebarProps {

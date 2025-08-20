@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Edit, Trash2, Eye, Plus, FileText, Loader2 } from "lucide-react";
 import Link from "next/link";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 
 interface Article {
   id: number;

@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../components/ui/AuthContext';
 import { usePathname } from 'next/navigation';
-import AdminSidebar from '../components/AdminSidebar';
+import AdminSidebar from '@/app/components/AdminSidebar';
 import { Menu } from 'lucide-react';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
