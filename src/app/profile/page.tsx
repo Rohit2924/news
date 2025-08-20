@@ -57,7 +57,7 @@ export default function Profile() {
     return url.startsWith("/public") ? url.substring(7) : url;
   };
 
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, username, userRole, userId } = useAuth();
   const token =
     typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
@@ -66,8 +66,20 @@ export default function Profile() {
     const fetchProfile = async () => {
       const storedToken = localStorage.getItem('token')
       const storedRole = localStorage.getItem('role')
+      const storedUsername = localStorage.getItem('username')
       
-      if (!storedToken || !storedRole) {
+      console.log('Profile page auth check:', { 
+        isAuthenticated, 
+        username, 
+        userRole, 
+        userId, 
+        storedToken: !!storedToken, 
+        storedRole, 
+        storedUsername 
+      });
+      
+      if (!storedToken) {
+        console.log('No token found, showing login message');
         toast.error("Please log in to view your profile")
         setIsFetching(false)
         return
@@ -75,7 +87,7 @@ export default function Profile() {
 
       setIsFetching(true)
       try {
-        const response = await fetch("/api/customer/profile", {
+        const response = await fetch("/api/customer/mock-profile", {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -223,7 +235,7 @@ export default function Profile() {
 
     setLoading(true);
     try {
-      const response = await fetch("/api/customer/profile", {
+      const response = await fetch("/api/customer/mock-profile", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

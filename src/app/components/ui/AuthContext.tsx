@@ -67,7 +67,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setAuthError("");
     
     try {
-      const response = await fetch('/api/auth/login', {
+      const response = await fetch('/api/auth/mock-login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -132,19 +132,24 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const storedUsername = getLocalStorageItem("username");
     const storedRole = getLocalStorageItem("role");
     const storedUserId = getLocalStorageItem("userId");
-    const token = getLocalStorageItem("token");
+    const storedToken = getLocalStorageItem("token");
     const storedAdminToken = getLocalStorageItem("adminToken");
 
-    if (storedUsername && token) {
+    if (storedUsername && storedToken) {
       setIsAuthenticated(true);
       setUsername(storedUsername);
       setUserRole(storedRole);
       setUserId(storedUserId);
+      setToken(storedToken);
 
       // If we have an admin token, set it in state
       if (storedAdminToken) {
         setAdminToken(storedAdminToken);
       }
+      
+      console.log('Auth state restored:', { storedUsername, storedRole, storedUserId, hasToken: !!storedToken });
+    } else {
+      console.log('No stored auth found:', { storedUsername, hasToken: !!storedToken });
     }
   }, []);
 

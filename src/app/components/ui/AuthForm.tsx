@@ -61,7 +61,10 @@ export default function AuthForm() {
         const ok = await login(form.email, form.password, "user");
         if (ok) {
           setSuccess("Logged in!");
-          router.push("/profile");
+          // Small delay to ensure state is updated
+          setTimeout(() => {
+            router.push("/profile");
+          }, 100);
         } else {
           setError(authError || "Login failed.");
         }
