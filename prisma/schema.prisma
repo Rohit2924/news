@@ -3,8 +3,8 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider = "sqlite"
+  url      = "file:./dev.db"
 }
 
 model User {
@@ -29,8 +29,8 @@ model News {
   published_date String
   image          String
   summary        String
-  content        String   @db.Text
-  tags          String[]
+  content        String
+  tags           String   // Store as JSON string for SQLite
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 

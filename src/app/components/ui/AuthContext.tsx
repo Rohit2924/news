@@ -15,7 +15,7 @@ interface AuthContextType {
   logout: () => void;
   isAdmin: boolean;
   adminToken: string | null;
-  login: (email: string, password: string, role?: string) => boolean;
+  login: (email: string, password: string, role?: string) => Promise<boolean>;
   forgotPassword: (email: string, newPassword: string) => boolean;
   authError: string;
   setAuthError: (err: string) => void;
@@ -62,42 +62,53 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, []);
 
-  // Dummy login function (replace with real API call)
-  const login = (email: string, password: string, role: string = "user") => {
+  // Real login function that connects to the database
+  const login = async (email: string, password: string, role: string = "user"): Promise<boolean> => {
     setAuthError("");
-    if (email === "admin@example.com" && password === "admin123") {
-      const adminToken = "demo-admin-token";
+    
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (data.error) {
+        setAuthError(data.message || 'Login failed');
+        return false;
+      }
+
+      // Store user data and token
+      const { user, token: userToken } = data.data;
+      
       setIsAuthenticated(true);
-      setUsername("Admin");
-      setUserRole("admin");
-      setToken(adminToken);
-      setLocalStorageItem("token", adminToken);
-      setLocalStorageItem("username", "Admin");
-      setLocalStorageItem("role", "admin");
-      return true;
-    } else if (email === "example@gmail.com" && password === "123456") {
-      const userToken = "demo-user-token";
-      setIsAuthenticated(true);
-      setUsername("Test User");
-      setUserRole(role);
+      setUsername(user.name || user.email);
+      setUserRole(user.role);
+      setUserId(user.id);
       setToken(userToken);
+      
+      // Store in localStorage
       setLocalStorageItem("token", userToken);
-      setLocalStorageItem("username", "Test User");
-      setLocalStorageItem("role", role);
-      setLocalStorageItem("userId", "test-user-123");
+      setLocalStorageItem("username", user.name || user.email);
+      setLocalStorageItem("role", user.role);
+      setLocalStorageItem("userId", user.id);
+      setLocalStorageItem("email", user.email);
+      
+      if (user.image) {
+        setLocalStorageItem("image", user.image);
+      }
+      if (user.contactNumber) {
+        setLocalStorageItem("contactNumber", user.contactNumber);
+      }
+
       return true;
-    } else if (email && password.length >= 6) {
-      const userToken = "demo-user-token";
-      setIsAuthenticated(true);
-      setUsername(email);
-      setUserRole(role);
-      setToken(userToken);
-      setLocalStorageItem("token", userToken);
-      setLocalStorageItem("username", email);
-      setLocalStorageItem("role", role);
-      return true;
-    } else {
-      setAuthError("Invalid credentials");
+    } catch (error) {
+      console.error('Login error:', error);
+      setAuthError('Network error. Please try again.');
       return false;
     }
   };

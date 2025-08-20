@@ -55,10 +55,10 @@ export default function AuthForm() {
     setAuthError("");
     if (!validate()) return;
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
+    
+    try {
       if (mode === "login") {
-        const ok = login(form.email, form.password, "user");
+        const ok = await login(form.email, form.password, "user");
         if (ok) {
           setSuccess("Logged in!");
           router.push("/profile");
@@ -66,9 +66,35 @@ export default function AuthForm() {
           setError(authError || "Login failed.");
         }
       } else {
-        setSuccess("Account created! (Demo: use login)");
+        // Handle registration
+        const response = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email: form.email,
+            password: form.password,
+            name: form.email.split('@')[0] // Use email prefix as default name
+          }),
+        });
+
+        const data = await response.json();
+
+        if (data.error) {
+          setError(data.message || 'Registration failed');
+        } else {
+          setSuccess("Account created successfully! Please log in.");
+          setMode("login");
+          setForm(initialState);
+        }
       }
-    }, 1000);
+    } catch (error) {
+      console.error('Auth error:', error);
+      setError('Network error. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleForgot = (e: React.FormEvent) => {
