@@ -15,17 +15,21 @@ export default function AdminLoginPage() {
   if (!auth) return <div>Loading...</div>;
   const { login, forgotPassword, authError, setAuthError } = auth;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setAuthError("");
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      const ok = login(email, password, "admin");
+    
+    try {
+      const ok = await login(email, password, "admin");
       if (ok) {
         router.push("/admin/dashboard");
       }
-    }, 1000);
+    } catch (error) {
+      console.error('Admin login error:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleForgot = (e: React.FormEvent) => {
