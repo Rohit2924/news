@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
       whereClause.subcategory = { equals: subcategory, mode: 'insensitive' };
     }
 
-    const articles = await prisma?.news.findMany({
+    const articles = await prisma.news.findMany({
       where: whereClause,
       orderBy: [
         { published_date: 'desc' },

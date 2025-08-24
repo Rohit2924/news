@@ -78,17 +78,17 @@ const Header = () => {
         {/* Desktop Nav */}
         <nav id="main-nav" className="hidden md:block my-4 border-t pt-4">
           <ul className="flex space-x-8 justify-center">
-            {categories.map((cat) => (
-              <li key={cat.name}>
+            {categories.map((cat) => 
                 <Link
+                key={cat.href}
                   href={cat.href}
                   className="text-gray-700 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 font-medium transition-colors duration-200 relative group"
                 >
                   {cat.name}
                   <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-red-600 transition-all duration-300 group-hover:w-full"></span>
                 </Link>
-              </li>
-            ))}
+              
+            )}
           </ul>
         </nav>
 

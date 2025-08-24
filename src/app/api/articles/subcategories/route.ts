@@ -17,9 +17,8 @@ export async function GET(request: NextRequest) {
       where: { category: { equals: category, mode: 'insensitive' } },
       _count: { subcategory: true },
     });
-    
+
     // Normalize, remove nulls, sort by count desc
-    
     const subcategories = groups
       .filter(g => !!g.subcategory)
       .sort((a, b) => (b._count.subcategory ?? 0) - (a._count.subcategory ?? 0))

@@ -53,3 +53,4 @@ async function migrateNewsData() {
 
 // Run the migration
 migrateNewsData();
+
