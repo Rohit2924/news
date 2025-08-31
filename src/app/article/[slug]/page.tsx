@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { slugify } from '../../../utils/slugify';
 import prisma from '@/lib/models/prisma';
+import CommentSection from '@/components/CommentSection';
 
 export default async function ArticlePage({ params }: { params: { slug: string } }) {
   // Load a reasonable window and match by slugified title
@@ -59,7 +60,13 @@ export default async function ArticlePage({ params }: { params: { slug: string }
           ))}
         </div>
       </div>
-      <Link href="/" className="inline-block text-red-600 hover:underline text-sm" prefetch={true}>&larr; Back to Home</Link>
+      
+      {/* Comments Section */}
+      <CommentSection newsId={article.id} />
+      
+      <div className="mt-8">
+        <Link href="/" className="inline-block text-red-600 hover:underline text-sm" prefetch={true}>&larr; Back to Home</Link>
+      </div>
     </div>
   );
 }

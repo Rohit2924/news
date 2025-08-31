@@ -15,6 +15,9 @@ import {
   Mail,
   X,
   Sparkles,
+  MessageCircle,
+  Calendar,
+  Trash2,
 } from "lucide-react";
 
 import { useAuth } from "@/app/components/ui/AuthContext";
@@ -28,8 +31,19 @@ interface UserProfile {
   image?: string | null;
   contactNumber?: string | null;
   createdAt: string;
-    updatedAt: string;
-  }
+  updatedAt: string;
+}
+
+interface Comment {
+  id: string;
+  content: string;
+  createdAt: string;
+  updatedAt: string;
+  news: {
+    id: number;
+    title: string;
+  };
+}
 
 export default function Profile() {
   const [isEditing, setIsEditing] = useState(false);
@@ -50,6 +64,11 @@ export default function Profile() {
     contactNumber?: string;
   }>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // Comments state
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [commentsLoading, setCommentsLoading] = useState(false);
+  const [deletingComment, setDeletingComment] = useState<string | null>(null);
 
   // Helper function to format image URL
   const formatImageUrl = (url: string | null | undefined) => {
@@ -60,6 +79,74 @@ export default function Profile() {
   const { isAuthenticated } = useAuth();
   const token =
     typeof window !== "undefined" ? localStorage.getItem("token") : null;
+
+  // Function to fetch user comments
+  const fetchUserComments = async () => {
+    if (!user?.id) return;
+    
+    try {
+      setCommentsLoading(true);
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      const response = await fetch(`/api/comments?userId=${user.id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setComments(data.data || []);
+      } else {
+        console.error("Failed to fetch comments");
+      }
+    } catch (error) {
+      console.error("Error fetching comments:", error);
+    } finally {
+      setCommentsLoading(false);
+    }
+  };
+
+  // Function to delete a comment
+  const handleDeleteComment = async (commentId: string) => {
+    if (!confirm("Are you sure you want to delete this comment?")) return;
+
+    try {
+      setDeletingComment(commentId);
+      const token = localStorage.getItem("token");
+      
+      const response = await fetch(`/api/comments/${commentId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        toast.success("Comment deleted successfully");
+        setComments(comments.filter(c => c.id !== commentId));
+      } else {
+        toast.error("Failed to delete comment");
+      }
+    } catch (error) {
+      console.error("Error deleting comment:", error);
+      toast.error("Error deleting comment");
+    } finally {
+      setDeletingComment(null);
+    }
+  };
+
+  // Function to format date
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
 
   // Fetch user profile on mount
   useEffect(() => {
@@ -106,6 +193,13 @@ export default function Profile() {
     }
     fetchProfile()
   }, []) // Remove isAuthenticated and token dependencies
+
+  // Fetch user comments when user data is available
+  useEffect(() => {
+    if (user?.id) {
+      fetchUserComments();
+    }
+  }, [user?.id]);
 
   // Handle input changes with validation
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -686,6 +780,76 @@ export default function Profile() {
                 )}
               </button>
             </div>
+          </div>
+        </div>
+
+        {/* Comments Section */}
+        <div className="relative overflow-hidden rounded-3xl bg-charcoalBlack shadow-2xl border border-gray-100 mt-8">
+          {/* Background decorations */}
+          <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-purple-100/50 to-transparent rounded-full -translate-y-1/2 translate-x-1/2"></div>
+          <div className="absolute bottom-0 left-0 w-64 h-64 bg-gradient-to-tr from-green-100/50 to-transparent rounded-full translate-y-1/2 -translate-x-1/2"></div>
+
+          <div className="relative p-8 md:p-12">
+            <div className="text-center mb-8">
+              <h3 className="text-2xl font-bold bg-gradient-to-r from-[#B87333] via-[#D4AF37] to-[#8B1A1A] bg-clip-text text-transparent mb-2">
+                Your Comments
+              </h3>
+              <p className="text-[#D4AF37]/90">Comments you've made on articles</p>
+            </div>
+
+            {commentsLoading ? (
+              <div className="text-center py-8">
+                <Loader2 className="h-8 w-8 animate-spin mx-auto text-[#D4AF37] mb-4" />
+                <p className="text-ivoryWhite">Loading your comments...</p>
+              </div>
+            ) : comments.length === 0 ? (
+              <div className="text-center py-12">
+                <MessageCircle className="h-16 w-16 text-[#D4AF37]/50 mx-auto mb-4" />
+                <p className="text-ivoryWhite text-lg mb-2">No comments yet</p>
+                <p className="text-[#D4AF37]/70">Start engaging with articles to see your comments here</p>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {comments.map((comment) => (
+                  <div
+                    key={comment.id}
+                    className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20 hover:bg-white/15 transition-all duration-300"
+                  >
+                    <div className="flex justify-between items-start mb-4">
+                      <div className="flex-1">
+                        <h4 className="text-lg font-semibold text-ivoryWhite mb-2">
+                          {comment.news.title}
+                        </h4>
+                        <p className="text-[#D4AF37]/90 leading-relaxed">
+                          {comment.content}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => handleDeleteComment(comment.id)}
+                        disabled={deletingComment === comment.id}
+                        className="ml-4 p-2 text-red-400 hover:text-red-300 hover:bg-red-500/20 rounded-lg transition-all duration-200 disabled:opacity-50"
+                        title="Delete comment"
+                      >
+                        {deletingComment === comment.id ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Trash2 className="h-4 w-4" />
+                        )}
+                      </button>
+                    </div>
+                    <div className="flex items-center gap-4 text-sm text-[#D4AF37]/70">
+                      <div className="flex items-center gap-2">
+                        <Calendar className="h-4 w-4" />
+                        <span>{formatDate(comment.createdAt)}</span>
+                      </div>
+                      {comment.createdAt !== comment.updatedAt && (
+                        <span className="text-xs">(edited)</span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
