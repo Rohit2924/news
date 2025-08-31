@@ -32,7 +32,7 @@ async function migrateNewsData() {
           image: article.image,
           summary: article.summary,
           content: article.content,
-          tags: article.tags || [],
+          tags: JSON.stringify(article.tags || []),
         }
       });
     }
