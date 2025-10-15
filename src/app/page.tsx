@@ -1,8 +1,8 @@
 "use client";
 import { useState, useEffect } from 'react';
-import HeroSection from './components/HeroSection';
-import NewsGrid, { Article } from './components/NewsGrid';
-import Sidebar from './components/Sidebar';
+import HeroSection from '../components/news/HeroSection';
+import NewsGrid, { Article } from '../components/news/NewsGrid';
+import Sidebar from '../components/layout/Sidebar';
 
 export default function Home() {
   const [articles, setArticles] = useState<Article[]>([]);
@@ -11,17 +11,25 @@ export default function Home() {
 
   useEffect(() => {
     fetch('/api/articles')
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) {
+          throw new Error(`HTTP error! Status: ${res.status}`);
+        }
+        return res.json();
+      })
       .then(data => {
         if (data.success) {
           setArticles(data.articles);
+        } else if (data.error) {
+          console.error('API error:', data.error);
+          setError(data.error.message || "Failed to load articles");
         } else {
           setError("Failed to load articles");
         }
       })
       .catch(err => {
         console.error('Error fetching articles:', err);
-        setError("Failed to load articles");
+        setError(err.message || "Failed to load articles");
       })
       .finally(() => setLoading(false));
   }, []);
@@ -46,7 +54,7 @@ export default function Home() {
           <p className="text-red-600 dark:text-red-400">{error}</p>
         </div>
       </div>
-    );
+    );    
   }
 
   return (

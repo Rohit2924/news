@@ -1,7 +1,8 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "../components/ui/AuthContext";
+import { Moon, Sun } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 
 export default function AdminLoginPage() {
   const [email, setEmail] = useState("");
@@ -10,47 +11,75 @@ export default function AdminLoginPage() {
   const [forgotMode, setForgotMode] = useState(false);
   const [resetSuccess, setResetSuccess] = useState("");
   const [loading, setLoading] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  
   const router = useRouter();
   const auth = useAuth();
-  if (!auth) return <div>Loading...</div>;
-  const { login, forgotPassword, authError, setAuthError } = auth;
+  const { login, forgotPassword, authError, setAuthError } = auth || {};
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Mark as mounted after hydration
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setAuthError("");
+    if (setAuthError) setAuthError("");
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      const ok = login(email, password, "admin");
-      if (ok) {
-        router.push("/admin/dashboard");
+    
+    try {
+      if (login) {
+        const ok = await login(email, password, "admin");
+        if (ok) {
+          router.push("/admin/dashboard");
+        }
       }
-    }, 1000);
+    } catch (error) {
+      console.error('Admin login error:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleForgot = (e: React.FormEvent) => {
+  const handleForgot = async (e: React.FormEvent) => {
     e.preventDefault();
-    setAuthError("");
+    if (setAuthError) setAuthError("");
     if (!email.match(/^[^@\s]+@[^@\s]+\.[^@\s]+$/)) {
-      setAuthError("Please enter a valid email address.");
+      if (setAuthError) setAuthError("Please enter a valid email address.");
       return;
     }
     if (password.length < 6) {
-      setAuthError("New password must be at least 6 characters.");
+      if (setAuthError) setAuthError("New password must be at least 6 characters.");
       return;
     }
-    const ok = forgotPassword(email, password);
-    if (ok) {
-      setResetSuccess("Password reset! You can now log in.");
-      setForgotMode(false);
-      setEmail("");
-      setPassword("");
+    if (forgotPassword) {
+      const ok = await forgotPassword(email);
+      if (ok) {
+        setResetSuccess("Password reset! You can now log in.");
+        setForgotMode(false);
+        setEmail("");
+        setPassword("");
+      } else {
+        if (setAuthError) setAuthError("You cannot perform this Task right Now");
+      }
     }
   };
 
+  // Return minimal HTML until hydration is complete
+  if (!mounted) {
+    return (
+      <div className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-100 via-gray-200 to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+        <div className="absolute inset-0 bg-black/20 dark:bg-black/40 backdrop-blur-sm z-0" />
+        <div className="relative z-10 w-full max-w-md p-8 bg-white/90 dark:bg-gray-800/90 rounded-lg shadow-2xl backdrop-blur-md">
+          <div>Loading...</div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm z-0" />
+    <div className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-100 via-gray-200 to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+      <div className="absolute inset-0 bg-black/20 dark:bg-black/40 backdrop-blur-sm z-0" />
       <div className="relative z-10 w-full max-w-md p-8 bg-white/90 dark:bg-gray-800/90 rounded-lg shadow-2xl backdrop-blur-md">
         <h2 className="text-2xl font-bold mb-6 text-center text-gray-900 dark:text-white">Admin Login</h2>
         {!forgotMode ? (
@@ -60,7 +89,7 @@ export default function AdminLoginPage() {
               <input
                 type="email"
                 value={email}
-                onChange={e => { setEmail(e.target.value); setAuthError(""); }}
+                onChange={e => { setEmail(e.target.value); if (setAuthError) setAuthError(""); }}
                 className="w-full px-4 py-2 rounded border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
                 autoComplete="email"
@@ -72,7 +101,7 @@ export default function AdminLoginPage() {
                 <input
                   type={showPassword ? "text" : "password"}
                   value={password}
-                  onChange={e => { setPassword(e.target.value); setAuthError(""); }}
+                  onChange={e => { setPassword(e.target.value); if (setAuthError) setAuthError(""); }}
                   className="w-full px-4 py-2 rounded border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
                   autoComplete="current-password"
@@ -103,7 +132,7 @@ export default function AdminLoginPage() {
               <input
                 type="email"
                 value={email}
-                onChange={e => { setEmail(e.target.value); setAuthError(""); }}
+                onChange={e => { setEmail(e.target.value); if (setAuthError) setAuthError(""); }}
                 className="w-full px-4 py-2 rounded border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
                 autoComplete="email"
@@ -114,7 +143,7 @@ export default function AdminLoginPage() {
               <input
                 type={showPassword ? "text" : "password"}
                 value={password}
-                onChange={e => { setPassword(e.target.value); setAuthError(""); }}
+                onChange={e => { setPassword(e.target.value); if (setAuthError) setAuthError(""); }}
                 className="w-full px-4 py-2 rounded border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
                 autoComplete="new-password"
@@ -133,12 +162,12 @@ export default function AdminLoginPage() {
         )}
         <div className="mt-4 text-center text-sm text-gray-600 dark:text-gray-300">
           {!forgotMode && (
-            <button className="text-blue-600 hover:underline mr-2" type="button" onClick={() => { setForgotMode(true); setAuthError(""); setResetSuccess(""); }}>
+            <button className="text-blue-600 hover:underline mr-2" type="button" onClick={() => { setForgotMode(true); if (setAuthError) setAuthError(""); setResetSuccess(""); }}>
               Forgot password?
             </button>
           )}
           {forgotMode && (
-            <button className="text-blue-600 hover:underline" type="button" onClick={() => { setForgotMode(false); setAuthError(""); setResetSuccess(""); }}>
+            <button className="text-blue-600 hover:underline" type="button" onClick={() => { setForgotMode(false); if (setAuthError) setAuthError(""); setResetSuccess(""); }}>
               Back to Login
             </button>
           )}
@@ -146,4 +175,4 @@ export default function AdminLoginPage() {
       </div>
     </div>
   );
-} 
+}

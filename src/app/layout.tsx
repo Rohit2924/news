@@ -1,20 +1,21 @@
 // src/app/layout.tsx
+// src/app/layout.tsx
 "use client";
 
 import { useEffect, useState } from "react";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import Header from "./components/Header";
-import FooterWrapper from "./components/FooterWrapper";
-import BreakingBar from "./components/BreakingBar";
-import { AuthProvider } from "./components/ui/AuthContext";
+import Header from "../components/layout/Header";
+import FooterWrapper from "../components/layout/FooterWrapper";
+import BreakingBar from "../components/common/BreakingBar";
+import { AuthProvider } from "../context/AuthContext";
 import { usePathname } from "next/navigation";
+import { Toaster } from "@/components/ui/sonner";
+import { useSiteSettings } from "../hooks/useSiteSettings";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
-
-// Removed export const metadata block as it is not allowed in client components
 
 export default function RootLayout({
   children,
@@ -22,42 +23,58 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const { settings } = useSiteSettings();
+  const [mounted, setMounted] = useState(false);
+
   const isAdminRoute = pathname?.startsWith("/admin");
+  const isEditorLoginRoute = pathname?.startsWith("/Editor/");
+  const isEditorRoute = pathname?.startsWith("/Editor/");
+  const isAuthRoute = pathname === "/login" || pathname === "/register";
+  const hideChrome = isAdminRoute || isEditorRoute || isAuthRoute || isEditorLoginRoute;
 
-  const [isDarkMode, setIsDarkMode] = useState(false);
-
-  // Toggle dark mode by adding/removing 'dark' class to <html>
+  // Mark as mounted after hydration
   useEffect(() => {
-    const saved = localStorage.getItem("theme");
-    const isDark = saved === "dark" || (!saved && window.matchMedia("(prefers-color-scheme: dark)").matches);
-    setIsDarkMode(isDark);
-    document.documentElement.classList.toggle("dark", isDark);
+    setMounted(true);
   }, []);
 
-  const toggleTheme = () => {
-    const newTheme = !isDarkMode;
-    setIsDarkMode(newTheme);
-    localStorage.setItem("theme", newTheme ? "dark" : "light");
-    document.documentElement.classList.toggle("dark", newTheme);
-  };
+  // Update favicon dynamically
+  useEffect(() => {
+    if (settings?.siteFavicon) {
+      const favicon = document.querySelector('link[rel="icon"]') as HTMLLinkElement;
+      if (favicon) {
+        favicon.href = settings.siteFavicon;
+      } else {
+        const link = document.createElement('link');
+        link.rel = 'icon';
+        link.href = settings.siteFavicon;
+        document.head.appendChild(link);
+      }
+    }
+  }, [settings?.siteFavicon]);
+
+  // Don't render chrome until after hydration to prevent mismatch
+  if (!mounted) {
+    return (
+      <html lang="en">
+        <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-white dark:bg-black text-black dark:text-white transition-colors duration-300`}>
+          <AuthProvider>
+            <main>{children}</main>
+            <Toaster position="top-center" richColors />
+          </AuthProvider>
+        </body>
+      </html>
+    );
+  }
 
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-white dark:bg-black text-black dark:text-white transition-colors duration-300`}>
         <AuthProvider>
-          {/* <button
-            onClick={toggleTheme}
-            className="fixed top-4 right-4 px-4 py-2 rounded bg-gray-200 dark:bg-gray-700 text-sm"
-          >
-            {isDarkMode ? "Light Mode" : "Dark Mode"}
-          </button> */}
-
-          {!isAdminRoute && <BreakingBar />}
-          {!isAdminRoute && <Header />}
-            
+          {!hideChrome && <BreakingBar />}
+          {!hideChrome && <Header />}
           <main>{children}</main>
-
-          {!isAdminRoute && <FooterWrapper />}
+          {!hideChrome && <FooterWrapper />}
+          <Toaster position="top-center" richColors />
         </AuthProvider>
       </body>
     </html>

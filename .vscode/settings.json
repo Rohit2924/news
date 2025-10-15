@@ -1,0 +1,8 @@
+{
+    "yaml.schemas": {
+        "file:///c%3A/Users/Asus/.vscode/extensions/continue.continue-1.3.17-win32-x64/config-yaml-schema.json": [
+            ".continue/**/*.yaml",
+            "file:///c%3A/Users/Asus/.continue/config.yaml"
+        ]
+    }
+}

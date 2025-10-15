@@ -1,9 +1,9 @@
 "use client";
 import { useEffect, useState } from 'react';
-import HeroSection from '../components/HeroSection';
-import NewsGrid, { Article } from '../components/NewsGrid';
-import Sidebar from '../components/Sidebar';
 import { slugify } from '../../utils/slugify';
+import HeroSection from '@/components/news/HeroSection';
+import NewsGrid, {Article} from '@/components/news/NewsGrid';
+import Sidebar from '@/components/layout/Sidebar';
 
 type Subcat = { name: string; count: number };
 

@@ -36,3 +36,13 @@ The easiest way to deploy your Next.js app is to use the [Vercel Platform](https
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
 
 there are 
+
+## Documentation
+
+Long-form project documentation has been moved to the `docs/` folder. See:
+
+- `docs/FULL_STACK_GUIDE_NOTEPAD.md` — full development guide
+- `docs/PROJECT_DOCUMENTATION.md` — project reference and API overview
+- `docs/PROFESSIONAL_WEBSITE_UPGRADE.md` — upgrade notes
+- `docs/MANUAL_TESTING_GUIDE.md` — manual test checklist
+

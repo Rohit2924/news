@@ -1,7 +1,7 @@
 "use client";
-import HeroSection from '../components/HeroSection';
-import NewsGrid, { Article } from '../components/NewsGrid';
-import Sidebar from '../components/Sidebar';
+import HeroSection from '@/components/news/HeroSection';
+import NewsGrid, {Article} from '@/components/news/NewsGrid';
+import Sidebar from '@/components/layout/Sidebar';
 import { useEffect, useState } from 'react';
 import { slugify } from '../../utils/slugify';
 
