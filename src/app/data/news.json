@@ -1,0 +1,559 @@
+{
+  "articles": [
+    {
+      "id": 1,
+      "title": "Parliament Passes Landmark Bill on Electoral Reform",
+      "category": "politics",
+      "subcategory":"Elections",
+      "author": "Sunita Sharma",
+      "published_date": "2025-06-18",
+      "image": "https://images.unsplash.com/photo-1649972904349-6e44c42644a7?auto=format&fit=crop&w=1200&q=80",
+      "summary": "In a major political development, the parliament has passed a new bill aimed at reforming the electoral system and promoting transparency.",
+      "content": "<p>In a landmark session that went late into the night, the national parliament passed a comprehensive electoral reform bill. The bill, which has been debated for months, introduces several key changes including electronic voting machines, stricter campaign finance regulations, and an independent body to oversee elections. Proponents argue that this will make elections more fair and transparent, while critics raise concerns about the security of electronic voting and the potential for disenfranchising rural voters who may not be familiar with the new technology.</p><p>The Prime Minister hailed the bill as a 'victory for democracy,' stating that it fulfills a key promise of his government's agenda. The opposition leader, however, called it a 'dark day for our nation,' and has vowed to challenge the bill in the constitutional court. The coming weeks will be crucial in determining the future of the nation's electoral landscape.</p>",
+      "tags": ["parliament", "election reform", "transparency"]
+    },
+    {
+      "id": 2,
+      "title": "National Budget Unveiled: Focus on Economic Recovery",
+      "category": "economy",
+      "subcategory": "Trade",
+      "author": "Rajesh Gupta",
+      "published_date": "2025-06-17",
+      "image": "https://images.unsplash.com/photo-1553729459-efe14ef6055d?auto=format&fit=crop&w=1200&q=80",
+      "summary": "The government has unveiled the national budget for the upcoming fiscal year, with a strong emphasis on economic recovery and infrastructure development.",
+      "content": "<p>The Minister of Finance presented the annual budget with a total outlay of $30 billion. Key allocations include a significant boost to the healthcare sector to handle future pandemics, a multi-billion dollar fund for road and bridge construction, and tax cuts for small and medium-sized enterprises (SMEs) to stimulate growth. The budget aims for a GDP growth rate of 6.5% for the next fiscal year.</p><p>Economists have offered mixed reactions. While many praise the focus on infrastructure and support for SMEs, others are concerned about the rising national debt and the inflationary pressure that such a large budget might create. The success of the budget will largely depend on its implementation and the global economic climate.</p>",
+      "tags": ["budget", "gdp", "infrastructure", "smes"]
+    },
+    {
+      "id": 3,
+      "title": "Blockbuster Nepali Movie Breaks Box Office Records",
+      "category": "entertainment",
+      "subcategory": "Movies",
+      "author": "Anjali Rai",
+      "published_date": "2025-06-16",
+      "image": "https://images.unsplash.com/photo-1489599435384-2330488473c9?auto=format&fit=crop&w=1200&q=80",
+      "summary": "The latest Nepali movie has set new box office records, drawing large crowds and critical acclaim. The film industry is seeing a revival.",
+      "content": "<p>The romantic thriller 'Echoes of the Valley' has become the highest-grossing Nepali film of all time, earning over 15 crore in just three weeks. Directed by the acclaimed filmmaker Pradeep Bhatta, the movie has been praised for its stunning cinematography, powerful performances, and gripping storyline. The success of the film is seen as a major boost for the local film industry, which has been struggling to compete with foreign productions. The lead actors, Aryan KC and Samikshya Adhikari, have become overnight superstars.</p>",
+      "tags": ["movies", "kollywood", "box office"]
+    },
+    {
+      "id": 4,
+      "title": "Nepal National Football Team Prepares for SAFF Championship",
+      "category": "sports",
+      "subcategory": "Football",
+      "author": "Bikram Thapa",
+      "published_date": "2025-06-15",
+      "image": "https://images.unsplash.com/photo-1517649763962-0c623066013b?auto=format&fit=crop&w=1200&q=80",
+      "summary": "The national team is in full swing with their training sessions, aiming for the title in the upcoming South Asian Football Federation Championship.",
+      "content": "<p>The All Nepal Football Association (ANFA) has announced the final 23-man squad for the upcoming SAFF Championship to be held in Dhaka, Bangladesh. The team, led by captain Kiran Chemjong, has been undergoing intensive training for the past month. Head coach Abdullah Almutairi expressed confidence in his team's ability to clinch the title for the first time. Nepal is placed in Group B alongside India, Maldives, and Bhutan. Their first match is against the Maldives on July 5th.</p>",
+      "tags": ["football", "saff", "anfa", "team nepal"]
+    },
+    {
+      "id": 5,
+      "title": "AI and Machine Learning Adoption in Nepal",
+      "category": "technology",
+      "subcategory": "Startups",
+      "author": "Prakash Yadav",
+      "published_date": "2025-06-14",
+      "image": "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1200&q=80",
+      "summary": "The adoption of AI and machine learning is transforming industries in Nepal, from finance to healthcare.",
+      "content": "<p>From smart chatbots handling customer service for banks to AI-powered diagnostic tools in hospitals, Nepal is witnessing a quiet technological revolution. A new report by the Tech Foundation of Nepal indicates that over 60% of large companies in the country have started investing in AI technologies. The government is also promoting this shift, announcing a new 'Digital Nepal Framework' that includes provisions for AI research and development. However, challenges such as a shortage of skilled professionals and the need for robust data privacy laws remain.</p>",
+      "tags": ["ai", "machine learning", "digital nepal"]
+    },
+    {
+      "id": 6,
+      "title": "New Advancements in Medical Technology",
+      "category": "health",
+      "subcategory": "Nutrition",
+      "author": "Dr. Sabina Joshi",
+      "published_date": "2025-06-13",
+      "image": "https://images.unsplash.com/photo-1576091160550-2173dba9996a?auto=format&fit=crop&w=1200&q=80",
+      "summary": "Recent advancements in medical technology are revolutionizing healthcare in Nepal, improving diagnostics and treatment.",
+      "content": "<p>Hospitals across Nepal are increasingly adopting cutting-edge medical technologies. Telemedicine services have connected rural patients with specialists in the capital, while new robotic surgery units are allowing for less invasive procedures. The government has also launched a national health data digitization project, which aims to create electronic health records for every citizen. These advancements promise to make healthcare more accessible and effective for all Nepalis.</p>",
+      "tags": ["healthcare", "telemedicine", "medical tech"]
+    },
+    {
+      "id": 7,
+      "title": "Global Summit on Climate Change Concludes",
+      "category": "international",
+      "subcategory": "Diplomacy",
+      "author": "Hari Pandey",
+      "published_date": "2025-06-12",
+      "image": "https://images.unsplash.com/photo-1543286386-713bdd548da4?auto=format&fit=crop&w=1200&q=80",
+      "summary": "Leaders from around the world gathered to discuss climate action and sustainable development goals.",
+      "content": "<p>The two-week long Global Climate Summit concluded in Geneva with participating nations pledging to increase their efforts to combat climate change. Nepal, represented by the Minister for Environment, highlighted the disproportionate impact of global warming on Himalayan nations and called for more significant financial support through the 'Loss and Damage' fund. While the summit resulted in renewed commitments, climate activists have criticized the lack of legally binding treaties and concrete action plans.</p>",
+      "tags": ["climate change", "global summit", "environment"]
+    },
+    {
+      "id": 8,
+      "title": "New Trade Agreements Expected to Boost Exports",
+      "category": "business",
+      "subcategory": "Export",
+      "author": "Sita Bhandari",
+      "published_date": "2025-06-11",
+      "image": "https://images.unsplash.com/photo-1591696205602-2f950c417cb9?auto=format&fit=crop&w=400&q=80",
+      "summary": "The government is finalizing new trade agreements that are expected to provide a major boost to exports.",
+      "content": "<p>The Ministry of Commerce is in the final stages of negotiating new trade agreements with several European and Southeast Asian nations. These agreements are expected to reduce tariffs on key Nepali exports such as garments, carpets, and handicrafts. The Federation of Nepalese Chambers of Commerce and Industry (FNCCI) has welcomed the move, stating that it will open up new markets for Nepali products and create thousands of jobs.</p>",
+      "tags": ["trade", "exports", "fncci"]
+    },
+    {
+      "id": 9,
+      "title": "Nepal Cricket Team Qualifies for Asia Cup",
+      "category": "sports",
+      "subcategory": "Cricket",
+      "author": "Bikram Thapa",
+      "published_date": "2025-06-10",
+      "image": "https://images.unsplash.com/photo-1505843276877-1a8b1bfa6c64?auto=format&fit=crop&w=300&q=80",
+      "summary": "Nepal's cricket team has made history by qualifying for the Asia Cup for the first time.",
+      "content": "<p>In a thrilling final qualifier match, Nepal defeated the UAE by 4 wickets to secure its spot in the prestigious Asia Cup. This is a historic achievement for the Nepali cricket team, which will now compete against giants like India and Pakistan. Fans across the country erupted in celebration, and the Cricket Association of Nepal (CAN) has announced a bonus for all the players.</p>",
+      "tags": ["cricket", "asia cup", "can"]
+    },
+    {
+      "id": 10,
+      "title": "Parliament Debates Controversial Citizenship Bill",
+      "category": "politics",
+      "subcategory": "Bills & Laws",
+      "author": "Sunita Sharma",
+      "published_date": "2025-06-23",
+      "image": "https://images.unsplash.com/photo-1590608897129-79da91a4356e?auto=format&fit=crop&w=1200&q=80",
+      "summary": "A heated session unfolded in parliament over the proposed amendments to the citizenship act.",
+      "content": "<p>Lawmakers engaged in intense debate today over a bill that would change eligibility requirements for Nepali citizenship by descent. While supporters argue it will simplify legal processes, critics warn it may marginalize vulnerable communities. The bill is now under review by the Legal Committee.</p>",
+      "tags": ["citizenship", "parliament", "bills"]
+    },
+    {
+      "id": 11,
+      "title": "Cabinet Reshuffle Brings New Faces to Key Ministries",
+      "category": "politics",
+      "subcategory": "Cabinet",
+      "author": "Ravi Khadka",
+      "published_date": "2025-06-22",
+      "image": "https://images.unsplash.com/photo-1623152188264-97d2740dfbd9?auto=format&fit=crop&w=1200&q=80",
+      "summary": "The Prime Minister has reshuffled the cabinet, appointing five new ministers to strategic portfolios.",
+      "content": "<p>The recent cabinet reshuffle has introduced new ministers for Finance, Education, and Home Affairs. The move is seen as a response to growing public dissatisfaction and internal party tensions. Analysts believe it signals a shift toward more technocratic leadership.</p>",
+      "tags": ["cabinet", "government", "reshuffle"]
+    },
+    {
+      "id": 12,
+      "title": "Anti-Corruption Commission Launches Major Investigation",
+      "category": "politics",
+      "subcategory": "Corruption",
+      "author": "Nisha Adhikari",
+      "published_date": "2025-06-21",
+      "image": "https://images.unsplash.com/photo-1525182008055-f88b95ff7980?auto=format&fit=crop&w=1200&q=80",
+      "summary": "A top government agency is under investigation for alleged financial mismanagement.",
+      "content": "<p>The Commission for the Investigation of Abuse of Authority (CIAA) has begun a probe into irregularities in a multi-billion-rupee infrastructure project. Sources say several senior officials may face legal action. Whistleblowers have welcomed the move as a sign of growing accountability.</p>",
+      "tags": ["corruption", "investigation", "ciaa"]
+    },
+    {
+      "id": 13,
+      "title": "Thousands Rally in Kathmandu Over Education Reform",
+      "category": "politics",
+      "subcategory": "Protests",
+      "author": "Bibek Rana",
+      "published_date": "2025-06-20",
+      "image": "https://images.unsplash.com/photo-1505678261036-a3fcc5e884ee?auto=format&fit=crop&w=1200&q=80",
+      "summary": "Students and teachers held a large protest demanding immediate education reform and better funding.",
+      "content": "<p>The protest march, organized by a coalition of student unions and educators, called for increased investment in public education, curriculum modernization, and equitable access. The protest remained largely peaceful, though some confrontations with police were reported.</p>",
+      "tags": ["protest", "education", "reform"]
+    },
+    {
+      "id": 14,
+      "title": "Election Commission Announces Dates for Upcoming Local Polls",
+      "category": "politics",
+      "subcategory": "Elections",
+      "author": "Mina KC",
+      "published_date": "2025-06-18",
+      "image": "https://images.unsplash.com/photo-1549924231-f129b911e442?auto=format&fit=crop&w=1200&q=80",
+      "summary": "The Election Commission has released the schedule for local level elections across all provinces.",
+      "content": "<p>According to the Election Commission, local polls will be held in three phases starting next month. The announcement comes after weeks of discussions with political parties. Security arrangements and voter education programs are also underway in preparation.</p>",
+      "tags": ["elections", "local polls", "commission"]
+    },
+    {
+      "id": 15,
+      "title": "Nepal Begins First Power Exports via India",
+      "category": "business",
+      "subcategory": "Energy",
+      "author": "Staff Reporter",
+      "published_date": "2025-06-16",
+      "image": "https://images.unsplash.com/photo-placeholder-energy?auto=format&fit=crop&w=1200&q=80",
+      "summary": "Nepal marks its entry into the international energy market by exporting electricity to Bangladesh and India, leveraging its hydropower capacity.",
+      "content": "<p>Nepal officially commenced its maiden power exports—sending 40 MW to Bangladesh and 80 MW to Bihar via the Indian grid. This is part of a tripartite agreement signed in October 2024. The country’s hydropower capacity now exceeds 3,000 MW, with major development projects like Arun-3 underway. Enhanced cross-border transmission infrastructure is also in progress.</p>",
+      "tags": ["hydropower", "energy export", "infrastructure"]
+    },
+    {
+      "id": 16,
+      "title": "Former PM Charged in Land Deal Scandal",
+      "category": "politics",
+      "subcategory": "Corruption",
+      "author": "Investigative Desk",
+      "published_date": "2025-06-06",
+      "image": "https://images.unsplash.com/photo-placeholder-court?auto=format&fit=crop&w=1200&q=80",
+      "summary": "Ex-Prime Minister Madhav Kumar Nepal faces graft charges over a land transaction with Patanjali firm, accused of causing state financial loss.",
+      "content": "<p>The Commission for the Investigation of Abuse of Authority (CIAA) has filed charges against former PM Madhav Kumar Nepal over a 15-year-old land transaction involving Patanjali Yogpeeth Nepal. The deal allegedly exceeded legal land-holding limits, causing state loss. A fine of NPR 185.85 million and up to 17 years jail time are being sought. Nepal denies wrongdoing, calling it politically motivated.</p>",
+      "tags": ["corruption", "ciaa", "former PM"]
+    },
+    {
+      "id": 17,
+      "title": "India-Nepal Strengthen Border Security to Combat Trafficking",
+      "category": "international",
+      "subcategory": "Security",
+      "author": "Border Correspondent",
+      "published_date": "2025-06-28",
+      "image": "https://images.unsplash.com/photo-placeholder-border?auto=format&fit=crop&w=1200&q=80",
+      "summary": "High-level officials from Nepal and India agreed on joint patrols and enhanced surveillance to counter cross-border drug and human trafficking.",
+      "content": "<p>In a Border District Coordination Committee meeting at Rupaidiha ICP, Indian and Nepali officials agreed on coordinated strategies to combat smuggling, drug and human trafficking. Measures include real-time information exchange, heightened surveillance, joint patrolling, and stricter checks on forged documents. The meeting also aimed to strengthen bilateral law enforcement cooperation while facilitating legitimate trade.</p>",
+      "tags": ["border security", "India-Nepal", "anti-trafficking"]
+    },
+        {
+          "id": 19,
+          "title": "India’s Misri Meets Prime Minister Oli Ahead of September Visit",
+          "category": "politics",
+          "subcategory": "Diplomacy",
+          "author": "Staff Reporter",
+          "published_date": "2025-08-18",
+          "image": "https://images.unsplash.com/photo-placeholder-diplomacy?auto=format&fit=crop&w=1200&q=80",
+          "summary": "India’s Foreign Secretary Vikram Misri held high-level talks with PM KP Sharma Oli to prep for Oli’s visit to India in mid-September.",
+          "content": "<p>As part of India's 'Neighbourhood First' policy, Foreign Secretary Vikram Misri visited Kathmandu and met PM KP Sharma Oli and President Paudel. Discussions focused on enhancing bilateral cooperation and setting the stage for Oli’s mid-September official visit to India. The talks aim to reinvigorate diplomatic and economic ties between the two neighbours.</p>",
+          "tags": [
+            "diplomacy",
+            "India-Nepal",
+            "Misri",
+            "Oli"
+          ]
+        },
+        {
+          "id": 20,
+          "title": "Prison Overcrowding Remains Critical Issue",
+          "category": "politics",
+          "subcategory": "Law & Order",
+          "author": "Justice Desk",
+          "published_date": "2025-08-19",
+          "image": "https://images.unsplash.com/photo-placeholder-prison?auto=format&fit=crop&w=1200&q=80",
+          "summary": "Nepal’s prisons remain critically overcrowded, with NGOs operating juvenile detention centres pushing for reform.",
+          "content": "<p>With the rising number of offenders, Nepal’s 74 prisons are facing overcrowding that strains resources and human rights safeguards. Juvenile correction centres in the Kathmandu Valley are run by NGOs with government funding. Experts call for long-term solutions including new facilities and alternatives to incarceration.</p>",
+          "tags": [
+            "prisons",
+            "overcrowding",
+            "justice"
+          ]
+        },
+        {
+          "id": 21,
+          "title": "Missing Persons Cases Surge Nationwide",
+          "category": "politics",
+          "subcategory": "Social Issues",
+          "author": "Community Watch",
+          "published_date": "2025-08-19",
+          "image": "https://images.unsplash.com/photo-placeholder-missing?auto=format&fit=crop&w=1200&q=80",
+          "summary": "Nepali families are increasingly distressed over unresolved missing-persons cases, spanning youth to retirees.",
+          "content": "<p>Reports reveal a growing number of missing persons across Nepal—from students and service personnel to retirees. Many remain untraced, leaving grieving families in prolonged anguish. Police data underscores the need for improved reporting systems and investigative transparency.</p>",
+          "tags": [
+            "missing persons",
+            "social crisis",
+            "police records"
+          ]
+        },
+        {
+          "id": 22,
+          "title": "Nepali Rupee Strengthens Against U.S. Dollar",
+          "category": "economy",
+          "subcategory": "Forex",
+          "author": "Finance Monitor",
+          "published_date": "2025-08-19",
+          "image": "https://images.unsplash.com/photo-placeholder-forex?auto=format&fit=crop&w=1200&q=80",
+          "summary": "The Nepali rupee gained against the U.S. dollar, with the central bank fixing rates at Rs 139.47 (buying) and Rs 140.07 (selling).",
+          "content": "<p>Nepal Rastra Bank set the USD buying rate at Rs 139.47 and the selling rate at Rs 140.07—slightly stronger compared to the previous day’s Rs 139.79 / Rs 140.39. Analysts attribute the shift to improved remittance flows and growing forex reserves.</p>",
+          "tags": [
+            "forex",
+            "NRB",
+            "rupee strength"
+          ]
+        },
+        {
+          "id": 23,
+          "title": "NEPSE Declines Amid Mixed Sentiment",
+          "category": "economy",
+          "subcategory": "Stock Market",
+          "author": "Market Watch",
+          "published_date": "2025-08-11",
+          "image": "https://images.unsplash.com/photo-placeholder-stock?auto=format&fit=crop&w=1200&q=80",
+          "summary": "On August 11, NEPSE closed down by 5.82 points at 2,842.16, with Hydropower and Insurance stocks buoying gains amid overall bearish vibes.",
+          "content": "<p>The Nepal Stock Exchange slipped by 5.82 points (-0.20%) to 2,842.16. Trading volume reached NPR 5.42 billion over 6.8 million units in 68,254 transactions. Sector-wise, Hydropower and Insurance led gains, while Microfinance and Development Banks saw retreats. Market breadth remained mixed.</p>",
+          "tags": [
+            "NEPSE",
+            "stock market",
+            "trading"
+          ]
+        },
+        {
+          "id": 24,
+          "title": "Silver Prices Rise While Gold Holds Steady",
+          "category": "economy",
+          "subcategory": "Commodities",
+          "author": "Commodity Insights",
+          "published_date": "2025-08-07",
+          "image": "https://images.unsplash.com/photo-placeholder-metals?auto=format&fit=crop&w=1200&q=80",
+          "summary": "Gold prices remained stable, but silver market saw a noticeable uptick in Nepal in early August.",
+          "content": "<p>On August 7, gold prices in Nepal held steady while silver saw an uptick—reflecting investor interest in precious metals amid inflation concerns. Analysts suggest shifting consumer preferences and global price trends are influencing local commodity markets.</p>",
+          "tags": [
+            "gold",
+            "silver",
+            "commodities"
+          ]
+        },
+        {
+          "id": 25,
+          "title": "Proton Debuts Malaysian EV in Nepal",
+          "category": "business",
+          "subcategory": "Automotive",
+          "author": "Auto Correspondent",
+          "published_date": "2025-08-18",
+          "image": "https://images.unsplash.com/photo-placeholder-ev?auto=format&fit=crop&w=1200&q=80",
+          "summary": "Proton Malaysia and Jagdamba Motors bring the Proton e.MAS 7—Malaysia’s first locally developed EV—to Nepal, with 12 showrooms planned by year-end.",
+          "content": "<p>Proton e.MAS 7, developed with Geely, premiered in Kathmandu with plans to roll out 12 showrooms and service centres across Nepal by 2025’s end. The launch deepens Proton’s partnership with Jagdamba Motors, offering robust after-sales support and expanding the local EV ecosystem.</p>",
+          "tags": [
+            "EV",
+            "Proton",
+            "automotive"
+          ]
+        },
+        {
+          "id": 26,
+          "title": "India Considers Duty Evasion Probe Into Nepal, China Steel",
+          "category": "business",
+          "subcategory": "Trade",
+          "author": "Trade Analyst",
+          "published_date": "2025-08-07",
+          "image": "https://images.unsplash.com/photo-placeholder-steel?auto=format&fit=crop&w=1200&q=80",
+          "summary": "India’s DRI may investigate steel imports from Nepal and China over concerns of duty evasion threatening domestic manufacturers.",
+          "content": "<p>The Indian Directorate of Revenue Intelligence is evaluating a probe into steel imports from Nepal and China. Allegations of bypassing import duties could destabilize local industries. The initiative is aimed at safeguarding India’s manufacturing competitiveness.</p>",
+          "tags": [
+            "trade",
+            "steel",
+            "duty evasion"
+          ]
+        },
+        {
+          "id": 27,
+          "title": "Tourism Boost: Climbing Fees Waived on 97 Himalayan Peaks",
+          "category": "business",
+          "subcategory": "Tourism",
+          "author": "Travel Desk",
+          "published_date": "2025-08-11",
+          "image": "https://images.unsplash.com/photo-placeholder-mountain?auto=format&fit=crop&w=1200&q=80",
+          "summary": "Nepal waived climbing fees on 97 remote Himalayan peaks for two years to attract mountaineers to less-visited regions, while raising Everest permit prices.",
+          "content": "<p>To stimulate tourism in underdeveloped areas, Nepal's Tourism Department waived permits for 97 peaks (5,870–7,132 m) over the next two years. Meanwhile, Everest permit rates will increase from US$11,000 to $15,000 starting September.</p>",
+          "tags": [
+            "tourism",
+            "mountaineering",
+            "Himalayas"
+          ]
+        },
+        {
+          "id": 28,
+          "title": "West Indies to Tour Nepal for Historic T20I Series",
+          "category": "sports",
+          "subcategory": "Cricket",
+          "author": "Sports Desk",
+          "published_date": "2025-08-15",
+          "image": "https://images.unsplash.com/photo-placeholder-cricket?auto=format&fit=crop&w=1200&q=80",
+          "summary": "West Indies will tour the UAE to face Nepal in a bilateral T20I series from 27–30 September—the first such series.",
+          "content": "<p>Nepal and West Indies will face off in a three-match T20I series from 27 to 30 September at Sharjah Cricket Stadium. It marks the first-ever bilateral T20I series between the two nations—boosting Nepal’s cricketing visibility globally.</p>",
+          "tags": [
+            "cricket",
+            "T20I",
+            "sports diplomacy"
+          ]
+        },
+        {
+          "id": 29,
+          "title": "Nepal Kabaddi League’s Inaugural Season Wraps Up",
+          "category": "sports",
+          "subcategory": "Kabaddi",
+          "author": "Sports Reporter",
+          "published_date": "2025-01-31",
+          "image": "https://images.unsplash.com/photo-placeholder-kabaddi?auto=format&fit=crop&w=1200&q=80",
+          "summary": "The first Nepal Kabaddi League concluded with Janakpur Knights crowned champions after the inaugural season held in Kathmandu.",
+          "content": "<p>From 17–31 January, the inaugural Nepal Kabaddi League took place in Kathmandu’s Covered Hall. Six teams competed round-robin style and playoffs, with Janakpur Knights defeating Kathmandu Mavericks to claim the title.</p>",
+          "tags": [
+            "kabaddi",
+            "national league",
+            "champions"
+          ]
+        },
+        {
+          "id": 30,
+          "title": "Prime Minister Cup Cricket Tourney Held Outside Kathmandu",
+          "category": "sports",
+          "subcategory": "Cricket",
+          "author": "Cricket News",
+          "published_date": "2025-03-29",
+          "image": "https://images.unsplash.com/photo-placeholder-pmcup?auto=format&fit=crop&w=1200&q=80",
+          "summary": "PM Cup 2025 was held across Lumbini Province, with Nepal Police Club winning the title against Tribhuvan Army Club.",
+          "content": "<p>The 7th Prime Minister Cup ended on 29 March, hosted outside Kathmandu across three venues in Lumbini Province. Nepal Police Club clinched their fourth trophy after defeating Tribhuvan Army Club in the final.</p>",
+          "tags": [
+            "cricket",
+            "PM Cup",
+            "national tournament"
+          ]
+        },
+        {
+          "id": 31,
+          "title": "‘A Road to a Village’ Explores Tradition vs Modernity",
+          "category": "entertainment",
+          "subcategory": "Film",
+          "author": "Film Critic",
+          "published_date": "2025-08-18",
+          "image": "https://images.unsplash.com/photo-placeholder-film?auto=format&fit=crop&w=1200&q=80",
+          "summary": "The Nepali drama ‘A Road to a Village’ captures cultural tension through a rural weaver’s story amidst modernization.",
+          "content": "<p>Set near Dharan, ‘A Road to a Village’ follows Maila, a bamboo weaver whose craft is threatened after a new road brings modern goods to his remote community. Director Nabin Subba balances comic moments with critique of class divides. The film opens in the UK on August 22, 2025.</p>",
+          "tags": [
+            "film review",
+            "rural life",
+            "modernity"
+          ]
+        },
+        {
+          "id": 32,
+          "title": "Economic Digest Offers Quick-Read on Nepal Business Trends",
+          "category": "entertainment",
+          "subcategory": "Media",
+          "author": "Editorial Team",
+          "published_date": "2025-08-19",
+          "image": "https://images.unsplash.com/photo-placeholder-news?auto=format&fit=crop&w=1200&q=80",
+          "summary": "Khabarhub’s 'Economic Digest' rolls out quick summaries of business news in easy-to-digest formats.",
+          "content": "<p>‘Economic Digest’ by Khabarhub delivers summarized business highlights in a visually digestible format—making it easier for audiences to stay updated on business developments in Nepal.</p>",
+          "tags": [
+            "media",
+            "business news",
+            "digest"
+          ]
+        },
+        {
+          "id": 33,
+          "title": "Economic Digest Offers Quick-Read on Nepal Business Trends",
+          "category": "entertainment",
+          "subcategory": "Media",
+          "author": "Editorial Team",
+          "published_date": "2025-08-19",
+          "image": "https://images.unsplash.com/photo-placeholder-media?auto=format&fit=crop&w=1200&q=80",
+          "summary": "Oops, duplicate entry only for demo—ignore in production.",
+          "content": "<p>Placeholder—skip this.</p>",
+          "tags": [
+            "duplicate"
+          ]
+        },
+        {
+          "id": 34,
+          "title": "Nepal Eliminates Rubella as Public Health Problem",
+          "category": "health",
+          "subcategory": "Public Health",
+          "author": "Health Desk",
+          "published_date": "2025-08-19",
+          "image": "https://images.unsplash.com/photo-placeholder-health?auto=format&fit=crop&w=1200&q=80",
+          "summary": "WHO confirms Nepal has successfully eliminated rubella as a public health concern—milestone in vaccine-preventable disease control.",
+          "content": "<p>The World Health Organization announced that Nepal has eliminated rubella as a public health problem. This marks a major achievement for the country’s immunization program and overall disease surveillance systems.</p>",
+          "tags": [
+            "rubella",
+            "WHO",
+            "public health"
+          ]
+        },
+        {
+          "id": 35,
+          "title": "Health Ministry to Operationalise 700 Basic Hospitals",
+          "category": "health",
+          "subcategory": "Healthcare Infrastructure",
+          "author": "Ministry Bulletin",
+          "published_date": "2025-07-17",
+          "image": "https://images.unsplash.com/photo-placeholder-hospital?auto=format&fit=crop&w=1200&q=80",
+          "summary": "From mid-July, roughly 700 basic hospitals across Nepal will be operationalised along with telemedicine and digital health upgrades.",
+          "content": "<p>Health Minister Pradip Paudel announced that approximately 700 basic hospitals nationwide will go operational starting 17 July 2025. Initiatives include telemedicine services, digital appointments, and integrated health records aligned with national ID systems.</p>",
+          "tags": [
+            "hospitals",
+            "telemedicine",
+            "health infrastructure"
+          ]
+        },
+        {
+          "id": 36,
+          "title": "Study Proposes Responsible AI for Healthcare",
+          "category": "technology",
+          "subcategory": "AI in Health",
+          "author": "Research Correspondent",
+          "published_date": "2025-08-17",
+          "image": "https://images.unsplash.com/photo-placeholder-AI?auto=format&fit=crop&w=1200&q=80",
+          "summary": "A recent study recommends an ethical, localized AI framework to manage healthcare in low-resource countries like Nepal and Ghana.",
+          "content": "<p>The paper proposes a Responsible AI (RAI) framework tailored for Nepal and Ghana—supporting ethical oversight, regulatory structures, and bias mitigation in healthcare AI deployments.</p>",
+          "tags": [
+            "AI",
+            "healthcare",
+            "ethics"
+          ]
+        },
+        {
+          "id": 37,
+          "title": "EV Expo Slashes Prices Across Brands",
+          "category": "technology",
+          "subcategory": "Electric Vehicles",
+          "author": "Tech Spotlight",
+          "published_date": "2025-08-2025",
+          "image": "https://images.unsplash.com/photo-placeholder-ev-expo?auto=format&fit=crop&w=1200&q=80",
+          "summary": "At the NAIMA Mobility Expo 2025, EV makers like Leapmotor, Jaecoo, Mahindra, and Forthing offered aggressive discounts in the Rs 50–65 lakh range.",
+          "content": "<p>The NAIMA Nepal Mobility Expo showcased competitive EV pricing with brands such as Leapmotor and Mahindra offering deals in the Rs 50–65 lakh range to boost consumer adoption in Nepal's growing EV market.</p>",
+          "tags": [
+            "EV",
+            "expo",
+            "technology deals"
+          ]
+        },
+        {
+          "id": 38,
+          "title": "Oli Champions Nepal at UN LLDCs Conference",
+          "category": "international",
+          "subcategory": "Diplomacy",
+          "author": "Foreign Affairs",
+          "published_date": "2025-08-13",
+          "image": "https://images.unsplash.com/photo-placeholder-UN?auto=format&fit=crop&w=1200&q=80",
+          "summary": "PM KP Sharma Oli emphasized Nepal’s leadership role at the UN Conference on LLDCs, advocating stronger global support for landlocked nations.",
+          "content": "<p>At the Third UN Conference on Landlocked Developing Countries in Turkmenistan, PM Oli underscored Nepal’s position and urged for enhanced international cooperation tailored to LLDC challenges.</p>",
+          "tags": [
+            "UN",
+            "LLDCs",
+            "diplomacy"
+          ]
+        },
+        {
+          "id": 39,
+          "title": "Tourism Waives Fees for Lesser-Known Peaks to Boost Economy",
+          "category": "international",
+          "subcategory": "Tourism Diplomacy",
+          "author": "Global Tourism Desk",
+          "published_date": "2025-08-11",
+          "image": "https://images.unsplash.com/photo-placeholder-mountains?auto=format&fit=crop&w=1200&q=80",
+          "summary": "Nepal waived permits for 97 Himalayan peaks, inviting global climbers to scenic, under-explored regions over the next two years.",
+          "content": "<p>The permit waiver for 97 remote peaks (5870–7132 m) aims to diversify mountaineering tourism and stimulate local economies in the Karnali and Far-Western regions.</p>",
+          "tags": [
+            "tourism",
+            "mountaineering",
+            "economic development"
+          ]
+        },
+        {
+          "id": 40,
+          "title": "India Probes Nepal-China Steel Imports Over Evasion Claims",
+          "category": "international",
+          "subcategory": "Trade Dispute",
+          "author": "International Trade",
+          "published_date": "2025-08-07",
+          "image": "https://images.unsplash.com/photo-placeholder-trade?auto=format&fit=crop&w=1200&q=80",
+          "summary": "India may probe steel imports from Nepal and China over suspected duty evasion, threatening cross-border trade stability.",
+          "content": "<p>India’s DRI is considering a probe into potential duty evasion in steel imports from Nepal and China—raising concerns about export competitiveness and bilateral trade equilibrium.</p>",
+          "tags": [
+            "trade",
+            "India",
+            "steel imports"
+          ]
+        }
+      ]
+    }

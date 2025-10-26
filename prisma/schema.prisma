@@ -1,0 +1,230 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String        @id @default(cuid())
+  email           String        @unique
+  name            String?
+  password        String?
+  role            Role          @default(USER) // Changed to Role enum
+  image           String?
+  contactNumber   String?
+  reputation      Int           @default(0)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  comments        Comment[]
+  commentEdits    CommentEdit[]
+  reportsMade     UserReport[]  @relation("reportsMade")
+  reportsReceived UserReport[]  @relation("reportsReceived")
+
+  @@map("users")
+}
+
+model News {
+  id             Int       @id @default(autoincrement())
+  title          String
+    categoryId     String
+    category      Category   @relation("NewsCategory", fields: [categoryId], references: [id])
+  author         String
+  published_date String
+  image          String
+  imageUrl       String // newly added line 
+  summary        String
+  content        String
+  tags           String[]
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  comments       Comment[]
+
+  @@map("news")
+}
+
+model Comment {
+  id          Int           @id @default(autoincrement())
+  userId      String
+  newsId      Int
+  content     String
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  news        News          @relation(fields: [newsId], references: [id])
+  user        User          @relation(fields: [userId], references: [id])
+  editHistory CommentEdit[]
+  reports     UserReport[] // Added relation to UserReport
+
+  @@map("comments")
+}
+
+model CommentEdit {
+  id         String   @id @default(cuid())
+  commentId  Int
+  oldContent String
+  newContent String
+  reason     String?
+  createdAt  DateTime @default(now())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  comment    Comment  @relation(fields: [commentId], references: [id])
+
+  @@map("comment_edits")
+}
+
+model AnalyticsEvent {
+  id        String   @id @default(cuid())
+  type      String
+  sessionId String
+  userId    String?
+  path      String
+  userAgent String?
+  referrer  String?
+  timestamp DateTime @default(now())
+  metadata  Json?
+
+  @@index([type])
+  @@index([sessionId])
+  @@index([path])
+  @@index([timestamp])
+}
+
+model UserReport {
+  id             String   @id @default(cuid())
+  reporterId     String
+  reportedUserId String
+  commentId      Int? // Made optional and added relation
+  reason         String
+  status         String   @default("pending")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  reporter     User     @relation("reportsMade", fields: [reporterId], references: [id])
+  reportedUser User     @relation("reportsReceived", fields: [reportedUserId], references: [id])
+  comment      Comment? @relation(fields: [commentId], references: [id]) // Added relation
+
+  @@index([reportedUserId])
+  @@index([reporterId])
+  @@index([status])
+  @@map("user_reports") // Fixed: Changed from "UserReport" to "user_reports"
+}
+
+// Role enum to define user roles including editor
+enum Role {
+  USER
+  EDITOR
+  ADMIN
+}
+
+model SiteSettings {
+  id              String  @id @default(cuid())
+  siteName        String  @default("News Portal")
+  siteDescription String  @default("Your trusted source for news")
+  siteLogo        String?
+  siteFavicon     String?
+  siteUrl         String  @default("http://localhost:3000")
+
+  // SEO Settings
+  metaTitle       String  @default("News Portal - Latest News")
+  metaDescription String  @default("Stay updated with the latest news")
+  metaKeywords    String  @default("news, portal, latest, updates")
+  ogImage         String?
+  twitterCard     String?
+
+  // Contact Information
+  contactEmail   String?
+  contactPhone   String?
+  contactAddress String?
+
+  // Social Media
+  facebookUrl  String?
+  twitterUrl   String?
+  instagramUrl String?
+  linkedinUrl  String?
+  youtubeUrl   String?
+
+  // Analytics
+  googleAnalyticsId String?
+  facebookPixelId   String?
+
+  // Footer Settings
+  footerText  String @default("© 2024 News Portal. All rights reserved.")
+  footerLinks Json? // Store footer links as JSON
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("site_settings")
+}
+
+model PageContent {
+  id              String   @id @default(cuid())
+  pageSlug        String   @unique // e.g., "about", "contact", "privacy"
+  pageTitle       String
+  pageContent     String // HTML content
+  metaTitle       String?
+  metaDescription String?
+  metaKeywords    String?
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("page_content")
+}
+
+model MediaFile {
+  id           String   @id @default(cuid())
+  fileName     String
+  originalName String
+  filePath     String
+  fileSize     Int
+  mimeType     String
+  uploadedBy   String
+  createdAt    DateTime @default(now())
+
+  @@map("media_files")
+}
+
+// Category model for news categories
+model Category {
+  id           String     @id @default(cuid())
+  name         String
+  slug         String     @unique
+  description  String?
+  parentId     String?
+  parent       Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  subcategories Category[] @relation("CategoryHierarchy")
+  articles     News[]     @relation("NewsCategory")
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@map("categories")
+}
+
+// Stores messages submitted from the public Contact form
+model ContactMessage {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  message   String
+  resolved  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@map("contact_messages")
+}
+
+// Stores job applications submitted from /careers/apply
+model JobApplication {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  phone     String?
+  position  String
+  coverNote String?
+  cvPath    String
+  createdAt DateTime @default(now())
+
+  @@map("job_applications")
+}

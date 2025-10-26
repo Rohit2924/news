@@ -1,0 +1,36 @@
+{
+    "users": [
+      {
+        "id": 1,
+        "email": "admin@newsportal.com",
+        "name": "Admin",
+        "password": "password123",
+        "role": "ADMIN",
+        "image": "https://images.unsplash.com/photo-1649972904349-6e44c42644a7?auto=format&fit=crop&w=1200&q=80",
+        "contactNumber": "",
+        "reputation": 0
+      },
+      {
+        "id": 2,
+        "email": "user@newsportal.com",
+        "name": "User",
+        "password": "password123",
+        "role": "USER",
+        "image": "https://images.unsplash.com/photo-1649972904349-6e44c42644a7?auto=format&fit=crop&w=1200&q=80",
+        "contactNumber": "",
+        "reputation": 0
+      },
+      {
+        "id": 3,
+        "email": "editor@newsportal.com",
+        "name": "Editor",
+        "password": "password123",
+        "role": "EDITOR",
+        "image": "https://images.unsplash.com/photo-1649972904349-6e44c42644a7?auto=format&fit=crop&w=1200&q=80",
+        "contactNumber": "",
+        "reputation": 0
+      }
+    ]
+    }
+
+    

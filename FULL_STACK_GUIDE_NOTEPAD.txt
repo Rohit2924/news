@@ -1,0 +1,640 @@
+================================================================================
+                    FULL-STACK NEWS PORTAL DEVELOPMENT GUIDE
+                           (Complete Beginner's Reference)
+================================================================================
+
+📋 TABLE OF CONTENTS
+====================
+1. Project Overview & Architecture
+2. Database Schema & Relationships  
+3. Authentication System (JWT)
+4. Frontend Pages & Components
+5. API Endpoints & Data Flow
+6. Real-Time Features (Socket.io)
+7. Common Errors & Debugging
+8. Development Workflow
+9. Security & Best Practices
+
+================================================================================
+1. PROJECT OVERVIEW & ARCHITECTURE
+================================================================================
+
+🏗️ TECHNOLOGY STACK:
+- Frontend: Next.js 15 + React + TypeScript + Tailwind CSS
+- Backend: Next.js API Routes + Prisma ORM
+- Database: PostgreSQL
+- Real-time: Socket.io
+- Authentication: JWT tokens
+- Styling: Tailwind CSS + Shadcn/ui
+
+📁 PROJECT STRUCTURE:
+news_portal/
+├── src/
+│   ├── app/                    # Next.js app directory
+│   │   ├── api/               # Backend API routes
+│   │   │   ├── auth/         # Authentication APIs
+│   │   │   ├── admin/        # Admin management APIs
+│   │   │   ├── comments/     # Comment system APIs
+│   │   │   └── socket/       # Real-time APIs
+│   │   ├── admin/            # Admin dashboard pages
+│   │   ├── article/          # Article display pages
+│   │   ├── login/            # Authentication pages
+│   │   └── profile/          # User profile pages
+│   ├── components/           # Reusable React components
+│   │   ├── ui/              # UI components (buttons, forms, etc.)
+│   │   └── ...              # Feature-specific components
+│   ├── lib/                 # Utility functions
+│   │   ├── auth.ts          # JWT authentication
+│   │   ├── db.ts            # Database connection
+│   │   └── error-handler.ts # Error handling
+│   └── prisma/              # Database schema
+├── public/                  # Static files
+└── package.json            # Dependencies
+
+================================================================================
+2. DATABASE SCHEMA & RELATIONSHIPS
+================================================================================
+
+🗄️ DATABASE MODELS (prisma/schema.prisma):
+
+// Users table - stores all user information
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique        // User's email (unique)
+  name          String?                  // User's full name
+  password      String?                  // Hashed password
+  role          String    @default("user") // user/admin/editor
+  image         String?                  // Profile image URL
+  contactNumber String?                  // Phone number
+  createdAt     DateTime  @default(now()) // Account creation date
+  updatedAt     DateTime  @updatedAt      // Last update date
+  comments      Comment[]                // User's comments (relationship)
+}
+
+// News table - stores all articles
+model News {
+  id             Int       @id @default(autoincrement())
+  title          String                   // Article title
+  category       String                   // Main category (Technology, Business, etc.)
+  subcategory    String?                  // Optional subcategory
+  author         String                   // Author name
+  published_date String                   // Publication date
+  image          String                   // Featured image URL
+  summary        String                   // Article summary
+  content        String                   // Full article content
+  tags           String[]                 // Array of tags
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  comments       Comment[]                // Article's comments (relationship)
+}
+
+// Comments table - stores user comments on articles
+model Comment {
+  id        Int      @id @default(autoincrement())
+  userId    String   // Reference to User
+  newsId    Int      // Reference to News article
+  content   String   // Comment text
+  createdAt DateTime @default(now())
+  news      News     @relation(fields: [newsId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+🔗 RELATIONSHIPS:
+- One User can have Many Comments (1:N)
+- One News Article can have Many Comments (1:N)
+- Comments belong to both User and News (N:1)
+
+================================================================================
+3. AUTHENTICATION SYSTEM (JWT)
+================================================================================
+
+🔐 HOW AUTHENTICATION WORKS:
+
+1. USER REGISTRATION FLOW:
+   User fills form → API creates user → Returns JWT token
+   
+   POST /api/auth/register
+   Body: { email, name, password, contactNumber }
+   Response: { success: true, data: { user, token } }
+
+2. USER LOGIN FLOW:
+   User enters credentials → API verifies → Returns JWT token
+   
+   POST /api/auth/login
+   Body: { email, password }
+   Response: { success: true, data: { user, token } }
+
+3. TOKEN STORAGE:
+   - Frontend: Stored in httpOnly cookie as auth-token
+   - Backend: Sent in Authorization: Bearer <token> header
+
+4. TOKEN VERIFICATION:
+   Every protected API checks the token:
+   const token = request.headers.get('authorization')?.replace('Bearer ', '');
+   const payload = verifyJWT(token); // Decodes and validates token
+
+👥 USER ROLES:
+- user: Can read articles, post comments, manage profile
+- admin: Can manage everything (users, articles, categories)
+- editor: Can manage articles and content
+
+================================================================================
+4. FRONTEND PAGES & COMPONENTS
+================================================================================
+
+📄 PUBLIC PAGES (No Login Required):
+
+1. HOME PAGE (/)
+   File: src/app/page.tsx
+   Purpose: Main landing page with latest news
+   Features: Latest articles, breaking news, category navigation, search
+   Components: BreakingBar, Header, SectionCards, FooterWrapper
+
+2. ARTICLE PAGE (/article/[slug])
+   File: src/app/article/[slug]/page.tsx
+   Purpose: Display individual articles
+   Features: Full article content, related articles, comment section
+   Components: ArticleComments, RelatedArticles
+
+3. LOGIN PAGE (/login)
+   File: src/app/login/page.tsx
+   Purpose: User authentication
+   Features: Login form, registration form, password reset
+   Components: AuthForm, AuthContext
+
+4. REGISTER PAGE (/register)
+   File: src/app/register/page.tsx
+   Purpose: New user registration
+   Features: Registration form, email validation, password requirements
+   Components: AuthForm
+
+🔒 PROTECTED PAGES (Login Required):
+
+5. USER PROFILE (/profile)
+   File: src/app/profile/page.tsx
+   Purpose: User profile management
+   Features: View/edit profile, change password, upload image, view comments
+   API Calls: GET/POST /api/customer/profile, GET /api/comments?mode=user
+
+👑 ADMIN PAGES (Admin Role Required):
+
+6. ADMIN DASHBOARD (/admin/dashboard)
+   File: src/app/admin/dashboard/page.tsx
+   Purpose: Main admin control panel
+   Features: Overview statistics, quick actions, recent activity, system health
+   Components: SectionCards, RecentActivity, SystemHealth
+
+7. USER MANAGEMENT (/admin/users)
+   File: src/app/admin/users/page.tsx
+   Purpose: Manage all users
+   Features: List users, add/edit/delete users, change roles
+   API Calls: GET/POST/PUT/DELETE /api/admin/users
+
+8. ARTICLE MANAGEMENT (/admin/articles)
+   File: src/app/admin/articles/page.tsx
+   Purpose: Manage all articles
+   Features: List articles, add/edit/delete articles, search and filter
+   API Calls: GET/POST/PUT/DELETE /api/admin/articles
+
+9. CATEGORY MANAGEMENT (/admin/categories)
+   File: src/app/admin/catageories/page.tsx
+   Purpose: Manage article categories
+   Features: List categories, add/delete categories, view article counts
+   API Calls: GET/POST/DELETE /api/admin/categories
+
+10. COMMENTS MANAGEMENT (/admin/comments)
+    File: src/app/admin/comments/page.tsx
+    Purpose: Manage all comments
+    Features: List comments, view details, delete comments, filter
+    API Calls: GET /api/comments?mode=admin
+
+11. ANALYTICS DASHBOARD (/admin/analytics)
+    File: src/app/admin/analytics/page.tsx
+    Purpose: View website analytics
+    Features: User statistics, article statistics, real-time updates
+    API Calls: GET /api/admin/analytics
+
+================================================================================
+5. API ENDPOINTS & DATA FLOW
+================================================================================
+
+🔌 AUTHENTICATION APIs:
+
+1. USER REGISTRATION
+   POST /api/auth/register
+   Body: { email, name, password, contactNumber }
+   Response: { success: true, data: { user, token } }
+
+2. USER LOGIN
+   POST /api/auth/login
+   Body: { email, password }
+   Response: { success: true, data: { user, token } }
+
+🔌 USER APIs:
+
+3. USER PROFILE
+   GET /api/customer/profile
+   Headers: Authorization: Bearer <token>
+   Response: { success: true, data: User }
+
+   POST /api/customer/profile
+   Headers: Authorization: Bearer <token>
+   Body: { name, contactNumber }
+   Response: { success: true, data: User }
+
+🔌 ADMIN APIs:
+
+4. USER MANAGEMENT
+   GET /api/admin/users
+   Headers: Authorization: Bearer <token>
+   Response: { error: boolean, data: User[] }
+
+   POST /api/admin/users
+   Headers: Authorization: Bearer <token>
+   Body: { name, email, role, contactNumber }
+   Response: { error: boolean, data: User }
+
+   PUT /api/admin/users/[id]
+   Headers: Authorization: Bearer <token>
+   Body: { name, email, role, contactNumber }
+   Response: { error: boolean, data: User }
+
+   DELETE /api/admin/users/[id]
+   Headers: Authorization: Bearer <token>
+   Response: { error: boolean, message: string }
+
+5. ARTICLE MANAGEMENT
+   GET /api/admin/articles
+   Headers: Authorization: Bearer <token>
+   Response: { error: boolean, data: { articles: News[], pagination: object } }
+
+   POST /api/admin/articles
+   Headers: Authorization: Bearer <token>
+   Body: { title, category, author, content, ... }
+   Response: { error: boolean, data: News }
+
+   PUT /api/admin/articles/[id]
+   Headers: Authorization: Bearer <token>
+   Body: { title, category, author, content, ... }
+   Response: { error: boolean, data: News }
+
+   DELETE /api/admin/articles/[id]
+   Headers: Authorization: Bearer <token>
+   Response: { error: boolean, message: string }
+
+6. CATEGORY MANAGEMENT
+   GET /api/admin/categories
+   Headers: Authorization: Bearer <token>
+   Response: { success: boolean, data: Category[] }
+
+   POST /api/admin/categories
+   Headers: Authorization: Bearer <token>
+   Body: { category: string }
+   Response: { success: boolean, data: object }
+
+   DELETE /api/admin/categories?category=name
+   Headers: Authorization: Bearer <token>
+   Response: { success: boolean, message: string }
+
+7. ANALYTICS
+   GET /api/admin/analytics
+   Headers: Authorization: Bearer <token>
+   Response: { success: boolean, data: { totalUsers, totalArticles, totalComments, totalViews, ... } }
+
+🔌 PUBLIC APIs:
+
+8. ARTICLES
+   GET /api/articles?category=string&limit=number
+   Response: { success: boolean, articles: News[] }
+
+   GET /api/news
+   Response: { success: boolean, articles: News[] }
+
+9. COMMENTS
+   GET /api/comments?newsId=number
+   Response: { success: boolean, data: Comment[] }
+
+   POST /api/comments
+   Headers: Authorization: Bearer <token>
+   Body: { newsId: number, content: string }
+   Response: { success: boolean, data: Comment }
+
+📊 DATA FLOW:
+User Action → Frontend Component → API Call → Database → Response → UI Update
+
+================================================================================
+6. REAL-TIME FEATURES (Socket.io)
+================================================================================
+
+⚡ SOCKET.IO IMPLEMENTATION:
+
+1. SOCKET SERVER (/api/socket)
+   File: src/app/api/socket/route.ts
+   Purpose: Handle real-time communication
+
+   Events Handled:
+   - userRegistered: { id, name, email, timestamp }
+   - articlePublished: { id, title, category, author, timestamp }
+   - commentPosted: { id, userName, content, newsId, timestamp }
+   - analyticsUpdate: { totalUsers, totalArticles, totalComments, totalViews, popularArticles }
+
+2. REAL-TIME NOTIFICATIONS
+   File: src/components/ui/notification-button.tsx
+   Purpose: Display real-time notifications
+   Features: Live notification count, dropdown, mark as read, clear all
+
+3. REAL-TIME ANALYTICS
+   File: src/app/admin/analytics/page.tsx
+   Purpose: Live analytics updates
+   Features: Live user count, real-time statistics, popular articles
+
+================================================================================
+7. COMMON ERRORS & DEBUGGING
+================================================================================
+
+🚨 AUTHENTICATION ERRORS:
+
+1. "Authentication required"
+   Cause: Missing or invalid JWT token
+   Solution: Check httpOnly cookie, redirect to login if missing
+
+2. "Invalid token"
+   Cause: Token expired or malformed
+   Solution: Clear httpOnly cookie, redirect to login
+
+3. "Admin access required"
+   Cause: User doesn't have admin role
+   Solution: Check user role, redirect to appropriate page
+
+🚨 DATABASE ERRORS:
+
+1. "Database connection failed"
+   Cause: PostgreSQL not running or wrong connection string
+   Solution: Check PostgreSQL status, verify DATABASE_URL in .env.local
+
+2. "Table doesn't exist"
+   Cause: Database schema not migrated
+   Solution: Run npx prisma db push or npx prisma migrate dev
+
+3. "Prisma validation error"
+   Cause: Invalid data format or missing required fields
+   Solution: Check data validation, ensure all required fields are provided
+
+🚨 API ERRORS:
+
+1. "500 Internal Server Error"
+   Cause: Server-side error in API route
+   Solution: Check server logs, add proper error handling
+
+2. "404 Not Found"
+   Cause: API endpoint doesn't exist
+   Solution: Check if API route file exists, verify file path
+
+3. "400 Bad Request"
+   Cause: Invalid request data
+   Solution: Check request body, validate input data
+
+🚨 FRONTEND ERRORS:
+
+1. "Cannot read property of undefined"
+   Cause: Trying to access property of undefined object
+   Solution: Add null checks, use optional chaining (?.)
+
+2. "TypeScript compilation error"
+   Cause: Type mismatch or missing type definition
+   Solution: Add proper TypeScript interfaces, use correct types
+
+3. "React hydration error"
+   Cause: Server and client rendering mismatch
+   Solution: Use useEffect for client-side only code
+
+🚨 REAL-TIME ERRORS:
+
+1. "Socket connection failed"
+   Cause: Socket.io server not running
+   Solution: Check Socket.io configuration, verify server setup
+
+2. "Socket event not received"
+   Cause: Event not properly emitted or listened
+   Solution: Check event names, verify socket connection
+
+================================================================================
+8. DEVELOPMENT WORKFLOW
+================================================================================
+
+🛠️ SETTING UP DEVELOPMENT ENVIRONMENT:
+
+1. Install Dependencies:
+   npm install
+   npm install -g prisma
+   npm install @prisma/client
+
+2. Database Setup:
+   Create .env.local file:
+   DATABASE_URL="postgresql://username:password@localhost:5432/news_portal"
+   JWT_SECRET="your-secret-key-here"
+   
+   Initialize database:
+   npx prisma db push
+   npx prisma generate
+
+3. Start Development Server:
+   npm run dev
+   npx prisma studio
+
+🔄 ADDING NEW FEATURES:
+
+1. Create Database Model (prisma/schema.prisma)
+2. Create API Route (src/app/api/new-feature/route.ts)
+3. Create Frontend Page (src/app/new-feature/page.tsx)
+4. Test functionality
+5. Add error handling
+6. Update documentation
+
+🧪 TESTING:
+
+1. Test User Registration:
+   curl -X POST http://localhost:3000/api/auth/register \
+     -H "Content-Type: application/json" \
+     -d '{"email":"test@example.com","name":"Test User","password":"password123"}'
+
+2. Test Login:
+   curl -X POST http://localhost:3000/api/auth/login \
+     -H "Content-Type: application/json" \
+     -d '{"email":"test@example.com","password":"password123"}'
+
+3. Test Protected API:
+   curl -X GET http://localhost:3000/api/admin/users \
+     -H "Authorization: Bearer YOUR_TOKEN_HERE"
+
+🐛 DEBUGGING TIPS:
+
+1. Check Console Logs:
+   console.log('API Response:', data);
+   console.log('User state:', user);
+   console.log('Token:', token);
+
+2. Use Browser DevTools:
+   - Network Tab: Check API requests/responses
+   - Console Tab: View JavaScript errors
+   - Application Tab: Check localStorage and cookies
+
+3. Use Prisma Studio:
+   npx prisma studio
+   Opens http://localhost:5555
+
+================================================================================
+9. SECURITY & BEST PRACTICES
+================================================================================
+
+🔐 SECURITY MEASURES:
+
+1. Password Security:
+   - Hash passwords with bcrypt (12 salt rounds)
+   - Never store plain text passwords
+   - Implement password requirements
+
+2. JWT Security:
+   - Use strong JWT_SECRET
+   - Set appropriate token expiration
+   - Validate tokens on every request
+
+3. Input Validation:
+   - Validate all user inputs
+   - Sanitize data before database storage
+   - Use Prisma for SQL injection protection
+
+4. Role-Based Access:
+   - Check user roles for protected routes
+   - Implement proper authorization
+   - Log security events
+
+📋 BEST PRACTICES:
+
+1. Error Handling:
+   - Always wrap API calls in try-catch
+   - Provide user-friendly error messages
+   - Log errors for debugging
+   - Implement graceful degradation
+
+2. Code Organization:
+   - Use consistent naming conventions
+   - Separate concerns (UI, logic, data)
+   - Create reusable components
+   - Document complex functions
+
+3. Performance:
+   - Optimize database queries
+   - Use pagination for large datasets
+   - Implement caching where appropriate
+   - Minimize bundle size
+
+4. Testing:
+   - Test all user flows
+   - Validate error scenarios
+   - Test with different user roles
+   - Verify real-time features
+
+================================================================================
+🎯 KEY LEARNING POINTS
+================================================================================
+
+1. FULL-STACK ARCHITECTURE:
+   - Frontend: React components handle UI
+   - Backend: API routes handle business logic
+   - Database: Prisma ORM manages data
+   - Real-time: Socket.io enables live updates
+
+2. AUTHENTICATION FLOW:
+   - User registers/logs in → Gets JWT token
+   - Token stored in httOnly cookie
+   - Token sent with every API request
+   - Backend validates token for protected routes
+
+3. DATA FLOW:
+   - User action → Frontend component → API call → Database → Response → UI update
+
+4. ERROR HANDLING:
+   - Always wrap API calls in try-catch
+   - Provide user-friendly error messages
+   - Log errors for debugging
+   - Graceful degradation when services fail
+
+5. SECURITY BEST PRACTICES:
+   - Hash passwords with bcrypt
+   - Validate all inputs
+   - Use JWT tokens for authentication
+   - Implement role-based access control
+
+================================================================================
+🚀 NEXT STEPS
+================================================================================
+
+1. LEARN MORE ABOUT:
+   - Next.js App Router
+   - Prisma ORM
+   - JWT Authentication
+   - Socket.io Real-time
+   - TypeScript
+   - Tailwind CSS
+
+2. PRACTICE:
+   - Add new features
+   - Modify existing functionality
+   - Debug issues
+   - Deploy to production
+
+3. ADVANCED TOPICS:
+   - Email notifications
+   - File uploads
+   - Search functionality
+   - Pagination
+   - Caching
+   - Performance optimization
+
+================================================================================
+📞 SUPPORT & RESOURCES
+================================================================================
+
+🔗 USEFUL LINKS:
+- Next.js Documentation: https://nextjs.org/docs
+- Prisma Documentation: https://www.prisma.io/docs
+- Socket.io Documentation: https://socket.io/docs
+- Tailwind CSS Documentation: https://tailwindcss.com/docs
+- TypeScript Documentation: https://www.typescriptlang.org/docs
+
+🐛 DEBUGGING RESOURCES:
+- Browser DevTools
+- Prisma Studio
+- Next.js Debug Mode
+- Console Logging
+- Network Tab Analysis
+
+📚 LEARNING RESOURCES:
+- React Documentation
+- JavaScript ES6+ Features
+- CSS Grid & Flexbox
+- Database Design Principles
+- API Design Best Practices
+
+================================================================================
+🎉 CONCLUSION
+================================================================================
+
+This guide covers everything you need to understand and work with this 
+full-stack news portal application. The system provides:
+
+✅ Real-time features with Socket.io integration
+✅ Professional UI/UX with modern design patterns
+✅ Comprehensive CRUD operations for all entities
+✅ Robust error handling and user feedback
+✅ Security best practices with JWT authentication
+✅ Performance optimizations for scalability
+✅ Production-ready architecture for deployment
+
+The application demonstrates modern full-stack development practices and 
+provides a solid foundation for learning and building scalable web applications.
+
+Happy Coding! 🚀
+
+================================================================================
