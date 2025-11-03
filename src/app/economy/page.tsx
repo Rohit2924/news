@@ -60,7 +60,7 @@ export default function EconomyPage() {
       <div className="container mx-auto px-4 py-8 grid lg:grid-cols-4 gap-8">
         <div className="lg:col-span-3 space-y-10">
           <NewsGrid articles={articles} />
-          {subcats.map((sc) => (
+          {subcats?.map((sc) => (
             <SubcategorySection key={sc.name} subcategory={sc.name} />
           ))}
         </div>
@@ -91,7 +91,7 @@ function SubcategorySection({ subcategory }: { subcategory: string }) {
         </span>
       </div>
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {items.map(a => (
+        {items?.map(a => (
           <div key={a.id} className="bg-white dark:bg-gray-900 rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
             <a href={`/article/${slugify(a.title)}`} className="block group">
               <img src={a.image} alt={a.title} className="w-full h-48 object-cover" />

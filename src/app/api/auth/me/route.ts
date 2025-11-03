@@ -5,8 +5,8 @@ import { prisma } from '@/lib/db';
 
 export async function GET(request: NextRequest) {
   try {
-    // Debug: Log all cookies
-    console.log('🔍 [/api/auth/me] All cookies:', request.cookies.getAll());
+    // // Debug: Log all cookies
+    // console.log('🔍 [/api/auth/me] All cookies:', request.cookies.getAll());
     
     // Get token from cookies
     const token = request.cookies.get('auth-token')?.value;
@@ -39,6 +39,8 @@ export async function GET(request: NextRequest) {
         { status: 401 }
       );
     }
+
+
 
     // Get fresh user data from database
     const user = await prisma.user.findUnique({

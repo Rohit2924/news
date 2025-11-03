@@ -46,7 +46,7 @@ const RecentActivity = () => {
       // Add recent user registrations
       if (usersResponse?.ok) {
         const usersData = await usersResponse.json();
-        const recentUsers = usersData.data?.slice(0, 3) || [];
+        const recentUsers = usersData.data?.users?.slice(0, 3) || [];            
         recentUsers.forEach((user: any) => {
           activities.push({
             id: `user-${user.id}`,

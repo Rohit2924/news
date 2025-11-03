@@ -1,46 +1,56 @@
 // src/app/api/editor/articles/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyJWT } from '@/lib/auth';
-import prisma  from '@/lib/models/prisma';
+import prisma from '@/lib/models/prisma';
 import { secureLog } from '@/lib/secure-logger';
 import { AppError, ErrorCodes, handleApiError } from '@/lib/error-handler';
 
-function getAuthToken(request: NextRequest): string | null {
-  const authHeader = request.headers.get('authorization');
-  if (authHeader && authHeader.startsWith('Bearer ')) {
-    return authHeader.substring(7);
-  }
-  
-  return request.cookies.get('authToken')?.value || null;
-}
+// Use middleware headers for authentication (same as admin routes)
+async function verifyEditorAccess(request: Request): Promise<{ 
+  user?: { id: string; role: string; name: string }; 
+  error?: string; 
+  status?: number 
+}> {
+  const userId = request.headers.get("x-user-id");
+  const userRole = request.headers.get("x-user-role");
 
-type EditorPayload = { id: string; email: string; role: string; name: string };
+  console.log("🔍 Editor Access Check - Headers:", { userId, userRole });
 
-async function verifyEditorAccess(request: NextRequest): Promise<EditorPayload> {
-  const token = getAuthToken(request);
-  if (!token) {
-    throw new AppError('No token provided', ErrorCodes.AUTH_REQUIRED, 401);
+  if (!userId) {
+    return { error: "Authentication required", status: 401 };
   }
-  
-  const result = verifyJWT(token);
-  if (!result.isValid || !result.payload) {
-    throw new AppError('Invalid token', ErrorCodes.INVALID_TOKEN, 401);
+
+  if (userRole !== 'EDITOR' && userRole !== 'ADMIN') {
+    return { error: "Editor or Admin access required", status: 403 };
   }
-  
-  if (result.payload.role !== 'EDITOR' && result.payload.role !== 'ADMIN') {
-    throw new AppError('Unauthorized', ErrorCodes.INSUFFICIENT_PERMISSIONS, 403);
-  }
-  
-  const authorName = (result.payload as any).name || result.payload.email.split('@')[0];
-  return { id: result.payload.id, email: result.payload.email, role: result.payload.role, name: authorName };
+
+  // Get user details from database for name
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { id: true, name: true, role: true }
+  });
+
+  return { 
+    user: { 
+      id: userId, 
+      role: userRole,
+      name: user?.name || 'Editor User'
+    } 
+  };
 }
 
 export async function GET(request: NextRequest) {
   try {
-    const payload = await verifyEditorAccess(request);
+    const authCheck = await verifyEditorAccess(request);
+    
+    if (authCheck.error) {
+      return NextResponse.json(
+        { success: false, error: authCheck.error },
+        { status: authCheck.status }
+      );
+    }
     
     const articles = await prisma.news.findMany({
-      where: { author: payload.name },
+      where: { author: authCheck.user?.name }, // FIXED: Use authCheck.user.name
       orderBy: { createdAt: 'desc' },
       include: { _count: { select: { comments: true } } }
     });
@@ -53,17 +63,34 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// src/app/api/editor/articles/route.ts
+
+
 export async function POST(request: NextRequest) {
   try {
-    const payload = await verifyEditorAccess(request);
+    const authCheck = await verifyEditorAccess(request); // FIXED: Renamed from payload
+    
+    if (authCheck.error) {
+      return NextResponse.json(
+        { success: false, error: authCheck.error },
+        { status: authCheck.status }
+      );
+    }
     
     const body = await request.json();
-    const { title, content, category, imageUrl, summary, image } = body; // Add image to destructuring
+    const { title, content, categoryId, imageUrl, summary, image } = body; // Changed to categoryId
     
     // Validate input
-    if (!title || !content) {
-      throw new AppError('Title and content are required', ErrorCodes.MISSING_REQUIRED_FIELD, 400);
+    if (!title || !content || !categoryId) {
+      throw new AppError('Title, content, and category are required', ErrorCodes.MISSING_REQUIRED_FIELD, 400);
+    }
+    
+    // Verify category exists
+    const category = await prisma.category.findUnique({
+      where: { id: categoryId }
+    });
+    
+    if (!category) {
+      throw new AppError('Category not found', ErrorCodes.RECORD_NOT_FOUND, 400);
     }
     
     // Create the article with ALL required fields
@@ -71,12 +98,21 @@ export async function POST(request: NextRequest) {
       data: {
         title,
         content,
-        category: category || 'general',
-        imageUrl: imageUrl || '', // This is your imageUrl field
-        image: image || 'https://via.placeholder.com/800x400?text=News+Article', // REQUIRED: image field
-        published_date: new Date().toISOString().split('T')[0], // REQUIRED: published_date field
+        categoryId, 
+        imageUrl: imageUrl || '',
+        image: image || 'https://via.placeholder.com/800x400?text=News+Article',
+        published_date: new Date().toISOString().split('T')[0],
         summary: summary || content.substring(0, 200) + '...',
-        author: payload.name
+        author: authCheck.user?.name || "" 
+      },
+      include: {
+        category: {
+          select: {
+            id: true,
+            name: true,
+            slug: true
+          }
+        }
       }
     });
     
@@ -91,3 +127,4 @@ export async function POST(request: NextRequest) {
     return handleApiError(error);
   }
 }
+

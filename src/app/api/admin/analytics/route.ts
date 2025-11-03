@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
       data: {
         totalViews,
         totalUsers: totalUsers.length,
-        popularArticles: popularArticles.map((a, i) => ({
+        popularArticles: popularArticles?.map((a, i) => ({
           id: a.id,
           title: a.title,
           category: a.category?.name || "N/A",

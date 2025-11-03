@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
     }
 
     const payload = verifyJWT(token);
-    if (!payload || payload.role !== 'ADMIN') {
+    if (!payload || !payload.payload || payload.payload.role !== 'ADMIN') {
       return NextResponse.json(
         { success: false, error: 'Admin access required' },
         { status: 403 }
@@ -116,7 +116,7 @@ export async function POST(request: NextRequest) {
           totalArticles,
           totalComments,
           totalViews,
-          popularArticles: popularArticles.map(article => ({
+          popularArticles: popularArticles?.map(article => ({
             ...article,
             views: Math.floor(Math.random() * 1000) + 100
           }))

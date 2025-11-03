@@ -1,15 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/models/prisma';
 import { verifyJWT } from '@/lib/auth';
-import { toast } from "@/lib/toast";
+
 
 // Helper function to verify admin access
 async function verifyAdminAccess(request: Request) {
-  const authHeader = request.headers.get("Authorization");
+  const authHeader = request.headers.get("Authorization") 
+ 
   if (!authHeader?.startsWith("Bearer ")) {
     return { error: "No token provided", status: 401 };
   }
 
+  
   const token = authHeader.split(" ")[1];
   const validation = await verifyJWT(token);
   if (!validation || !validation.isValid || !validation.payload) {

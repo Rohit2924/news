@@ -41,7 +41,7 @@ export default function EntertainmentPage() {
       <div className="container mx-auto px-4 py-8 grid lg:grid-cols-4 gap-8">
         <div className="lg:col-span-3 space-y-10">
           <NewsGrid articles={articles}/>
-          {subcats.map((sc) => (
+          {subcats?.map((sc) => (
             <SubcategorySection key={sc.name} subcategory={sc.name} />
           ))}
         </div>

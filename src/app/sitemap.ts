@@ -53,7 +53,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ];
   
   // News article routes
-  const newsRoutes = news.map((article) => ({
+  const newsRoutes = news?.map((article) => ({
     url: `${siteUrl}/news/${article.id}`,
     lastModified: article.updatedAt,
     changeFrequency: 'weekly' as const,
@@ -61,7 +61,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }));
   
   // Dynamic page routes
-  const pageRoutes = pages.map((page) => ({
+  const pageRoutes = pages?.map((page) => ({
     url: `${siteUrl}/page/${page.pageSlug}`,
     lastModified: page.updatedAt,
     changeFrequency: 'monthly' as const,

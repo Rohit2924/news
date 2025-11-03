@@ -2,37 +2,76 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/models/prisma';
 import { JWTPayload } from '@/lib/types/auth';
+import { getAuthToken, verifyJWT } from '@/lib/auth';
+
 
 async function verifyAdminAccess(request: Request): Promise<{ user?: JWTPayload; error?: string; status?: number }> {
   const userId = request.headers.get("x-user-id");
   const userRole = request.headers.get("x-user-role");
 
-  if (!userId || !userRole) {
-    return { error: "No authentication token found", status: 401 };
+if(userId && userRole){
+  if(userRole !== 'ADMIN'){
+    return{
+      error: "Admin access required", status:403
+    };
   }
-
-  if (userRole !== 'ADMIN') {
-    return { error: "Admin access required", status: 403 };
-  }
-
+  
   const user: JWTPayload = {
     id: userId,
     email: request.headers.get("x-user-email") || '',
     name: request.headers.get("x-user-name") || undefined,
     role: 'ADMIN',
   };
-
+  
   return { user };
+}
+
+
+
+  // Method 2: Fallback - verify JWT token directly from cookies/headers
+  const token = getAuthToken(request);
+  if (!token) {
+    return { error: "No authentication token found", status: 401 };
+  }
+
+  const validation = verifyJWT(token);
+  if (!validation.isValid || !validation.payload) {
+    return { 
+      error: validation.error || "Invalid or expired token", 
+      status: 401 
+    };
+  }
+
+  if (validation.payload.role !== 'ADMIN') {
+    return { error: "Admin access required", status: 403 };
+  }
+
+  // Verify user still exists in database
+  try {
+    const user = await prisma.user.findUnique({ 
+      where: { id: validation.payload.id },
+      select: { id: true, email: true, name: true, role: true }
+    });
+
+    if (!user || user.role !== 'ADMIN') {
+      return { error: "Admin access required", status: 403 };
+    }
+
+    return { user: validation.payload };
+  } catch (error) {
+    console.error('Error verifying user:', error);
+    return { error: "Failed to verify user", status: 500 };
+  }
 }
 
 // GET /api/admin/users - List all users with pagination and search
 export async function GET(request: NextRequest) {
   try {
-    const adminCheck = await verifyAdminAccess(request);
-    if (adminCheck.error) {
+    const authCheck = await verifyAdminAccess(request);
+    if (authCheck.error) {
       return NextResponse.json(
-        { error: true, message: adminCheck.error },
-        { status: adminCheck.status }
+        { success: false, error: authCheck.error },
+        { status: authCheck.status }
       );
     }
 
@@ -41,32 +80,33 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '10', 10);
     const search = searchParams.get('search') || '';
 
-    const where = search.trim()
-      ? {
-          OR: [
-            { name: { contains: search, mode: 'insensitive' as const } },
-            { email: { contains: search, mode: 'insensitive' as const } },
-          ],
-        }
-      : undefined;
+    const where = search ? {
+      OR: [
+        { name: { contains: search, mode: 'insensitive' as const } },
+        { email: { contains: search, mode: 'insensitive' as const } }
+      ]
+    } : {};
 
     const [users, total] = await Promise.all([
       prisma.user.findMany({
         where,
         select: {
           id: true,
-          email: true,
           name: true,
+          email: true,
           role: true,
-          contactNumber: true,
           createdAt: true,
-          updatedAt: true,
+          _count: {
+            select: {
+              comments: true
+            }
+          }
         },
         orderBy: { createdAt: 'desc' },
         skip: (page - 1) * limit,
-        take: limit,
+        take: limit
       }),
-      prisma.user.count({ where }),
+      prisma.user.count({ where })
     ]);
 
     const totalPages = Math.ceil(total / limit);
@@ -76,19 +116,14 @@ export async function GET(request: NextRequest) {
       success: true,
       data: {
         users,
-        pagination: {
-          page,
-          limit,
-          total,
-          totalPages,
-          hasMore,
-        },
-      },
+        pagination: { page, limit, total, totalPages, hasMore }
+      }
     });
+
   } catch (error) {
-    console.error('Error fetching users:', error);
+    console.error('Users fetch error:', error);
     return NextResponse.json(
-      { error: true, message: 'Internal server error' },
+      { success: false, error: 'Failed to fetch users' },
       { status: 500 }
     );
   }

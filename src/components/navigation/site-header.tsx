@@ -3,6 +3,7 @@ import { Separator } from "@/components/ui/separator"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { DarkModeToggle } from "@/components/ui/dark-mode-toggle"
 import { NotificationButton } from "@/components/ui/notification-button"
+import { DarkModeProvider } from "@/components/ui/dark-mode-context";
 
 export function SiteHeader() {
   return (
@@ -16,7 +17,9 @@ export function SiteHeader() {
         <h1 className="text-base font-medium">News Portal Admin</h1>
         <div className="ml-auto flex items-center gap-2">
           <NotificationButton />
+          <DarkModeProvider>
           <DarkModeToggle />
+          </DarkModeProvider>
         </div>
       </div>
     </header>

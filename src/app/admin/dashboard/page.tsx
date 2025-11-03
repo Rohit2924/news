@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { ChartAreaInteractive } from "@/components/dashboard/chart-area-interactive";
 import { SectionCards } from "@/components/admin/section-cards";
 import AdminDashboardStats from "@/components/admin/admin-dashboard-stats";
@@ -40,16 +40,24 @@ export default function Page() {
         <SectionCards />
 
         {/* Quick Actions Panel */}
-        <div className="px-4 lg:px-6">
-          <QuickActions />
+        <Suspense fallback={
+        <div className="@container/main flex flex-1 flex-col gap-2">
+          <div className="animate-pulse">
+            <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+            <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+          </div>
         </div>
+      }>
+        <QuickActions />
+      </Suspense>
+
 
         {/* Main Content Grid */}
         <div className="px-4 lg:px-6 grid grid-cols-1 xl:grid-cols-3 gap-6">
           {/* Left Column - Charts and Tables */}
           <div className="xl:col-span-2 space-y-6">
             {/* Interactive Chart */}
-            <div className="bg-card text-card-foreground rounded-lg shadow-sm border border-border p-6 dark:bg-gray-800 dark:border-gray-700">
+            <div className="bg-card text-card-foreground rounded-lg shadow-sm border border-border p-6">
               <h3 className="text-lg font-semibold mb-4 dark:text-white">
                 User Engagement Analytics
               </h3>
@@ -58,7 +66,7 @@ export default function Page() {
             </div>
 
             {/* Recent Articles Table */}
-            <div className="bg-card text-card-foreground rounded-lg shadow-sm border border-border p-6 dark:bg-gray-800 dark:border-gray-700">
+            <div className="bg-card text-card-foreground rounded-lg shadow-sm border border-border p-6">
               <h3 className="text-lg font-semibold mb-4 dark:text-white">
                 Recent Articles
               </h3>
@@ -66,7 +74,7 @@ export default function Page() {
                 <div>Loading...</div>
               ) : (
                 <ul className="divide-y divide-border">
-                  {recentArticles.map(article => (
+                  {recentArticles?.map(article => (
                     <li key={article.id} className="py-2 flex items-center gap-4">
                       <img src={article.image} alt={article.title} className="w-12 h-12 object-cover rounded" />
                       <div className="flex-1">

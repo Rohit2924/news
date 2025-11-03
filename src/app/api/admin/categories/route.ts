@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
+import { getAuthToken, verifyJWT } from "@/lib/auth";
 
 // Schema for creating/updating a category
 const categorySchema = z.object({
@@ -11,14 +12,61 @@ const categorySchema = z.object({
 });
 
 // Verify admin access from middleware headers
-async function verifyAdminAccess(request: Request): Promise<{ error?: string; status?: number }> {
+async function verifyAdminAccess(request: Request): Promise<{ user?: any; error?: string; status?: number }> {
+  const userId = request.headers.get("x-user-id");
   const userRole = request.headers.get("x-user-role");
+    console.log("🔍 Admin Access Check - Role:", userRole);
 
-  if (!userRole || userRole !== 'ADMIN') {
+
+  if(userId && userRole){
+    if(userRole !== 'ADMIN'){
+      return{
+        error: "Admin access required", status:403
+      };
+    }
+    return{
+
+      user:   {
+        id: userId,
+        email: request.headers.get("x-user-email") || '',
+        role: 'ADMIN',
+      }
+      };
+    }
+    const token = getAuthToken(request);
+
+    if (!token) {
+    return { error: "No authentication token found", status: 401 };
+  }
+
+  const validation = verifyJWT(token);
+  if (!validation.isValid || !validation.payload) {
+    return { 
+      error: validation.error || "Invalid or expired token", 
+      status: 401 
+    };
+  }
+
+  if (validation.payload.role !== 'ADMIN') {
     return { error: "Admin access required", status: 403 };
   }
 
-  return {};
+  // Verify user still exists in database
+  try {
+    const user = await prisma.user.findUnique({ 
+      where: { id: validation.payload.id },
+      select: { id: true, email: true, name: true, role: true }
+    });
+
+    if (!user || user.role !== 'ADMIN') {
+      return { error: "Admin access required", status: 403 };
+    }
+
+    return { user: validation.payload };
+  } catch (error) {
+    console.error('Error verifying user:', error);
+    return { error: "Failed to verify user", status: 500 };
+  }
 }
 
 // GET /api/admin/categories - List all categories

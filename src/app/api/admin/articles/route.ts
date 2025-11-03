@@ -1,88 +1,93 @@
 // src/app/api/admin/articles/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyJWT } from '@/lib/auth';
 import prisma from '@/lib/models/prisma';
 import { secureLog } from '@/lib/secure-logger';
 import { AppError, ErrorCodes } from '@/lib/error-handler';
+import { getAuthToken, verifyJWT } from '@/lib/auth';
 
-interface JWTPayload {
-  id: string;
-  email: string;
-  name: string;
-  role: string;
-}
+// Verify admin or editor access from middleware headers or JWT token
+async function verifyAdminAccess(request: NextRequest): Promise<{ 
+  user?: { 
+    id: string; 
+    role: string;
+    name?: string;
+  }; 
+  error?: string; 
+  status?: number;
+}> {
+  // Method 1: Check middleware headers (preferred)
+  const userId = request.headers.get("x-user-id");
+  const userRole = request.headers.get("x-user-role");
 
-interface TokenValidationResult {
-  isValid: boolean;
-  payload?: JWTPayload;
-}
-
-function getAuthToken(request: NextRequest): string | null {
-  // First, check the x-auth-token header (set by middleware)
-  const xAuthToken = request.headers.get('x-auth-token');
-  if (xAuthToken) {
-    return xAuthToken;
-  }
-  
-  // Then, check the Authorization header with Bearer token
-  const authHeader = request.headers.get('authorization');
-  if (authHeader && authHeader.startsWith('Bearer ')) {
-    return authHeader.substring(7);
-  }
-  
-  // Finally, check cookies for all three token types with priority
-  const cookieHeader = request.headers.get('cookie');
-  if (cookieHeader) {
-    const cookies = cookieHeader.split(';').reduce((acc, cookie) => {
-      const [key, value] = cookie.trim().split('=');
-      if (key && value) {
-        acc[key] = value;
-      }
-      return acc;
-    }, {} as Record<string, string>);
-    
-    // Check tokens in priority order: admin > editor > user
-    if (cookies.adminAuthToken) {
-      return cookies.adminAuthToken;
+  if (userId && userRole) {
+    if (userRole !== 'ADMIN' && userRole !== 'EDITOR') {
+      return { error: "Admin or Editor access required", status: 403 };
     }
-    if (cookies.editorAuthToken) {
-      return cookies.editorAuthToken;
-    }
-    if (cookies.authToken) {
-      return cookies.authToken;
-    }
-  }
-  
-  return null;
-}
 
-async function verifyAdminAccess(request: NextRequest): Promise<JWTPayload> {
+    return { 
+      user: { 
+        id: userId, 
+        role: userRole,
+        name: request.headers.get("x-user-name") || undefined
+      } 
+    };
+  }
+
+  // Method 2: Fallback - verify JWT token directly from cookies/headers
   const token = getAuthToken(request);
   if (!token) {
-    throw new AppError('No token provided', ErrorCodes.AUTH_REQUIRED, 401);
+    return { error: "No authentication token found", status: 401 };
   }
 
-  const result = verifyJWT(token);
-  if (!result.isValid || !result.payload) {
-    throw new AppError('Invalid token', ErrorCodes.INVALID_TOKEN, 401);
+  const validation = verifyJWT(token);
+  if (!validation.isValid || !validation.payload) {
+    return { 
+      error: validation.error || "Invalid or expired token", 
+      status: 401 
+    };
   }
 
-  if (result.payload.role !== 'ADMIN') {
-    throw new AppError('Admin access required', ErrorCodes.INSUFFICIENT_PERMISSIONS, 403);
+  if (validation.payload.role !== 'ADMIN' && validation.payload.role !== 'EDITOR') {
+    return { error: "Admin or Editor access required", status: 403 };
   }
 
-  return result.payload as JWTPayload;
+  // Verify user still exists in database
+  try {
+    const user = await prisma.user.findUnique({ 
+      where: { id: validation.payload.id },
+      select: { id: true, email: true, name: true, role: true }
+    });
+
+    if (!user || (user.role !== 'ADMIN' && user.role !== 'EDITOR')) {
+      return { error: "Admin or Editor access required", status: 403 };
+    }
+
+    return { 
+      user: {
+        id: validation.payload.id,
+        role: validation.payload.role,
+        name: validation.payload.name
+      }
+    };
+  } catch (error) {
+    console.error('Error verifying user:', error);
+    return { error: "Failed to verify user", status: 500 };
+  }
 }
 
 // GET /api/admin/articles - Get all articles (with role-based filtering)
 export async function GET(request: NextRequest) {
   try {
-    // Pagination and search support
     const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get('page') || '1', 10);
-    const limit = parseInt(searchParams.get('limit') || '10', 10);
-    const search = searchParams.get('search') || '';
+    const page = Math.max(parseInt(searchParams.get('page') || '1', 10), 1);
+    const rawLimit = parseInt(searchParams.get('limit') || '20', 10);
+    const limit = Math.min(rawLimit, 50); // max 50
+    const search = searchParams.get('search');
     const categoryId = searchParams.get('categoryId');
+    const sortBy = searchParams.get('sortBy') || 'createdAt';
+    const sortOrder = searchParams.get('sortOrder') || 'desc';
+    const startDate = searchParams.get('startDate');
+    const endDate = searchParams.get('endDate');
     
     const where = {
       ...(search && {
@@ -91,17 +96,33 @@ export async function GET(request: NextRequest) {
           { author: { contains: search, mode: 'insensitive' as const } }
         ]
       }),
-      ...(categoryId && { categoryId })
+      ...(categoryId && { categoryId }),
+      ...((startDate || endDate) && {
+        published_date: {
+          ...(startDate && { gte: new Date(startDate).toISOString().split('T')[0] }),
+          ...(endDate && { lte: new Date(endDate).toISOString().split('T')[0] })
+        }
+      })
     };
     
+    const orderBy = {
+      [sortBy]: sortOrder
+    };    
+    
     // Auth check
-    const admin = await verifyAdminAccess(request);
+    const authCheck = await verifyAdminAccess(request);
+    if (authCheck.error) {
+      return NextResponse.json(
+        { success: false, error: authCheck.error },
+        { status: authCheck.status || 401 }
+      );
+    }
     
     // Fetch articles (model is News)
     const [newsArticles, total] = await Promise.all([
       prisma.news.findMany({
         where,
-        orderBy: { createdAt: 'desc' },
+        orderBy,
         skip: (page - 1) * limit,
         take: limit,
         select: {
@@ -137,24 +158,19 @@ export async function GET(request: NextRequest) {
     const hasMore = page < totalPages;
     
     return NextResponse.json({
-      error: false,
+      success: true, 
       data: {
         articles: newsArticles,
         pagination: { page, limit, total, totalPages, hasMore }
       }
     });
   } catch (error) {
-    secureLog.error('Failed to fetch articles', error);
+    // SECURE ERROR LOGGING - No sensitive data
+    secureLog.error('Failed to fetch articles', {
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
     
-    // Handle AppError instances
-    if (error instanceof AppError) {
-      return NextResponse.json(
-        { success: false, error: error.message },
-        { status: error.statusCode }
-      );
-    }
-    
-    // Handle other errors
+    // Generic error response
     return NextResponse.json(
       { success: false, error: 'Failed to fetch articles' },
       { status: 500 }
@@ -162,11 +178,24 @@ export async function GET(request: NextRequest) {
   }
 }
 
+
 // POST /api/admin/articles - Create new article
 export async function POST(request: NextRequest) {
   try {
-    const payload = await verifyAdminAccess(request);
-    
+    const authCheck = await verifyAdminAccess(request);
+    if (authCheck.error) {
+      return NextResponse.json(
+        { success: false, error: authCheck.error },
+        { status: authCheck.status || 401 }
+      );
+    }
+
+    // Get user info to use as author
+    const user = await prisma.user.findUnique({
+      where: { id: authCheck.user!.id },
+      select: { name: true, email: true }
+    });
+
     const body = await request.json();
     const { 
       title, 
@@ -175,33 +204,70 @@ export async function POST(request: NextRequest) {
       imageUrl, 
       summary, 
       image,
-      tags 
+      tags,
+      author,
+      status = 'published',
+      published_date
     } = body;
+
+    // SECURE DEVELOPMENT LOGGING
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Creating article with data:', { 
+        titleLength: title?.length || 0,
+        categoryId: categoryId ? 'provided' : 'missing',
+        contentLength: content?.length || 0,
+        tagsCount: Array.isArray(tags) ? tags.length : 0,
+        status: status,
+        hasPublishedDate: !!published_date
+      });
+    }
     
-    // Validate required fields
-    if (!title || !content || !categoryId) {
+    // Input sanitization
+    const sanitizedTitle = title?.trim().substring(0, 500) || '';
+    const sanitizedContent = content?.trim().substring(0, 10000) || '';
+
+    // Validate required fields for ALL articles (both draft and published)
+    if (!sanitizedTitle || !sanitizedContent || !categoryId) {
       throw new AppError('Title, content, and category are required', ErrorCodes.MISSING_REQUIRED_FIELD, 400);
     }
     
-    // Verify the category exists
+    // Verify the category exists (required for all articles)
     const category = await prisma.category.findUnique({
       where: { id: categoryId }
     });
-    
 
-    // Create the article with all required fields
+    if (!category) {
+      throw new AppError('Category not found', ErrorCodes.RECORD_NOT_FOUND, 400);
+    }
+    
+    // Handle published_date - for drafts it can be null, for published use provided or current date
+    let finalPublishedDate: string | undefined = undefined;
+    if (status === 'published') {
+      finalPublishedDate = published_date 
+        ? new Date(published_date).toISOString().split('T')[0] 
+        : new Date().toISOString().split('T')[0];
+    }
+    
+    // Create the article data object
+    const articleData: any = {
+      title: sanitizedTitle,
+      content: sanitizedContent,
+      categoryId: categoryId,
+      imageUrl: imageUrl || '',
+      image: image || '',
+      summary: summary ? summary.trim().substring(0, 500) : (sanitizedContent ? sanitizedContent.substring(0, 200) + '...' : ''),
+      author: author || user?.name || authCheck.user!.id,
+      tags: Array.isArray(tags) ? tags.slice(0, 10) : [],
+      status: status
+    };
+
+    // Only add published_date if it's not null/undefined
+    if (finalPublishedDate) {
+      articleData.published_date = finalPublishedDate;
+    }
+    
     const article = await prisma.news.create({
-      data: {
-        title,
-        content,
-        categoryId,
-        imageUrl: imageUrl || '',
-        image: image || 'https://via.placeholder.com/800x400?text=News+Article',
-        published_date: new Date().toISOString().split('T')[0],
-        summary: summary || content.substring(0, 200) + '...',
-        author: payload.name,
-        tags: Array.isArray(tags) ? tags : []
-      },
+      data: articleData,
       include: {
         category: {
           select: {
@@ -213,15 +279,26 @@ export async function POST(request: NextRequest) {
       }
     });
     
-    secureLog.api('Created new article', true);
+    // SECURE LOGGING - Fix the category access
+    secureLog.api('Article created', true);
+    secureLog.success('Article created details', {
+      articleId: article.id,
+      category: article.category?.name || 'Unknown category',
+      status: status,
+      action: status === 'draft' ? 'draft_save' : 'publish'
+    });
+
     return NextResponse.json({
       success: true,
       data: article,
-      message: 'Article created successfully'
+      message: status === 'draft' ? 'Draft saved successfully' : 'Article published successfully'
     }, { status: 201 });
     
   } catch (error) {
-    secureLog.error('Failed to create article', error);
+    // SECURE ERROR LOGGING
+    secureLog.error('Failed to create article', {
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
     
     // Handle AppError instances
     if (error instanceof AppError) {
@@ -231,26 +308,7 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    // Handle Prisma errors
-    if (error && typeof error === 'object' && 'code' in error) {
-      if (error.code === 'P2002') {
-        return NextResponse.json(
-          { success: false, error: 'Article with this title already exists' },
-          { status: 409 }
-        );
-      }
-      if (error.code === 'P2025') {
-        return NextResponse.json(
-          { success: false, error: 'Category not found' },
-          { status: 400 }
-        );
-      }
-    }
-    
-
-    
-    // Handle other errors
-    console.error('Create article error:', error);
+    // SECURE ERROR HANDLING
     return NextResponse.json(
       { success: false, error: 'Failed to create article' },
       { status: 500 }
@@ -261,10 +319,16 @@ export async function POST(request: NextRequest) {
 // PUT /api/admin/articles - Bulk update articles (Admin only)
 export async function PUT(request: NextRequest) {
   try {
-    const payload = await verifyAdminAccess(request);
+    const authCheck = await verifyAdminAccess(request);
+    if (authCheck.error) {
+      return NextResponse.json(
+        { success: false, error: authCheck.error },
+        { status: authCheck.status || 401 }
+      );
+    }
     
     // Only ADMIN can perform bulk operations
-    if (payload.role !== 'ADMIN') {
+    if (authCheck.user!.role !== 'ADMIN') {
       return NextResponse.json(
         { success: false, error: 'Admin access required for bulk operations' },
         { status: 403 }
@@ -324,7 +388,12 @@ export async function PUT(request: NextRequest) {
         );
     }
     
-    secureLog.api(`Bulk ${action} articles`, true);
+    secureLog.api(`Bulk ${action} operation completed`, true);
+    secureLog.success(`Bulk ${action} details`, {
+      action,
+      affectedCount: result.count
+    });
+    
     return NextResponse.json({
       success: true,
       message: `Bulk ${action} completed`,
@@ -332,18 +401,10 @@ export async function PUT(request: NextRequest) {
     });
     
   } catch (error) {
-    secureLog.error(`Failed to bulk ${request.json().then(body => body.action)} articles`, error);
+    secureLog.error('Failed to perform bulk operation', {
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
     
-    // Handle AppError instances
-    if (error instanceof AppError) {
-      return NextResponse.json(
-        { success: false, error: error.message },
-        { status: error.statusCode }
-      );
-    }
-    
-    // Handle other errors
-    console.error('Bulk operation error:', error);
     return NextResponse.json(
       { success: false, error: 'Failed to perform bulk operation' },
       { status: 500 }
@@ -354,10 +415,16 @@ export async function PUT(request: NextRequest) {
 // DELETE /api/admin/articles - Delete all articles (Admin only - dangerous)
 export async function DELETE(request: NextRequest) {
   try {
-    const payload = await verifyAdminAccess(request);
+    const authCheck = await verifyAdminAccess(request);
+    if (authCheck.error) {
+      return NextResponse.json(
+        { success: false, error: authCheck.error },
+        { status: authCheck.status || 401 }
+      );
+    }
     
     // Only ADMIN can delete all articles
-    if (payload.role !== 'ADMIN') {
+    if (authCheck.user!.role !== 'ADMIN') {
       return NextResponse.json(
         { success: false, error: 'Admin access required' },
         { status: 403 }
@@ -382,7 +449,10 @@ export async function DELETE(request: NextRequest) {
     // Delete all articles
     const result = await prisma.news.deleteMany({});
     
-    secureLog.api('Deleted all articles', true);
+    secureLog.api('All articles deleted', true);
+    secureLog.success('Articles deletion details', {
+      deletedCount: result.count
+    });
     return NextResponse.json({
       success: true,
       message: `Deleted ${result.count} articles`,
@@ -390,18 +460,10 @@ export async function DELETE(request: NextRequest) {
     });
     
   } catch (error) {
-    secureLog.error('Failed to delete all articles', error);
+    secureLog.error('Failed to delete all articles', {
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
     
-    // Handle AppError instances
-    if (error instanceof AppError) {
-      return NextResponse.json(
-        { success: false, error: error.message },
-        { status: error.statusCode }
-      );
-    }
-    
-    // Handle other errors
-    console.error('Delete all articles error:', error);
     return NextResponse.json(
       { success: false, error: 'Failed to delete articles' },
       { status: 500 }

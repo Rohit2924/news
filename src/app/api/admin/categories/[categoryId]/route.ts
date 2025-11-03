@@ -1,33 +1,54 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
-import { getAdminSession } from "@/lib/adminAuth";
 
 // Schema for updating a category
 const updateCategorySchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters").optional(),
   description: z.string().optional(),
-  parentId: z.string().optional(),
+  parentId: z.string().optional().nullable(),
 });
+
+// Verify admin access from middleware headers
+async function verifyAdminAccess(request: Request): Promise<{ 
+  user?: any; 
+  error?: string; 
+  status?: number 
+}> {
+  const userId = request.headers.get("x-user-id");
+  const userRole = request.headers.get("x-user-role");
+
+  console.log("🔍 Admin Access Check:", { userId, userRole });
+
+  if (!userId) {
+    return { error: "Authentication required", status: 401 };
+  }
+
+  if (userRole !== 'ADMIN') {
+    return { error: "Admin access required", status: 403 };
+  }
+
+  return { user: { id: userId, role: userRole } };
+}
 
 export async function DELETE(
   request: NextRequest,
   { params }: { params: { categoryId: string } }
 ) {
   try {
-    // Verify admin session
-    const session = await getAdminSession();
-    if (!session.isAdmin) {
+    // Use middleware-based authentication instead of getAdminSession
+    const authCheck = await verifyAdminAccess(request);
+    if (authCheck.error) {
       return NextResponse.json(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
+        { success: false, error: authCheck.error },
+        { status: authCheck.status }
       );
     }
 
     const { categoryId } = params;
 
     // Check if category exists
-          const category = await prisma.category.findUnique({
+    const category = await prisma.category.findUnique({
       where: { id: categoryId },
       include: {
         _count: {
@@ -51,15 +72,14 @@ export async function DELETE(
       return NextResponse.json(
         {
           success: false,
-          error:
-            "Cannot delete category with existing articles or subcategories",
+          error: "Cannot delete category with existing articles or subcategories",
         },
         { status: 400 }
       );
     }
 
     // Delete the category
-  await prisma.category.delete({
+    await prisma.category.delete({
       where: { id: categoryId },
     });
 
@@ -81,12 +101,12 @@ export async function PATCH(
   { params }: { params: { categoryId: string } }
 ) {
   try {
-    // Verify admin session
-    const session = await getAdminSession();
-    if (!session.isAdmin) {
+    // Use middleware-based authentication
+    const authCheck = await verifyAdminAccess(request);
+    if (authCheck.error) {
       return NextResponse.json(
-        { success: false, error: "Unauthorized" },
-        { status: 401 }
+        { success: false, error: authCheck.error },
+        { status: authCheck.status }
       );
     }
 
@@ -97,7 +117,7 @@ export async function PATCH(
     const validatedData = updateCategorySchema.parse(body);
 
     // Check if category exists
-  const category = await prisma.category.findUnique({
+    const category = await prisma.category.findUnique({
       where: { id: categoryId },
     });
 
@@ -116,7 +136,7 @@ export async function PATCH(
         .replace(/[^a-z0-9]+/g, "-")
         .replace(/(^-|-$)/g, "");
 
-  const existingCategory = await prisma.category.findFirst({
+      const existingCategory = await prisma.category.findFirst({
         where: {
           slug,
           NOT: { id: categoryId },
@@ -134,7 +154,7 @@ export async function PATCH(
     // If parentId is provided, verify it exists and prevent circular references
     if (validatedData.parentId) {
       // Check if parent exists
-  const parentCategory = await prisma.category.findUnique({
+      const parentCategory = await prisma.category.findUnique({
         where: { id: validatedData.parentId },
       });
 
@@ -171,7 +191,7 @@ export async function PATCH(
     }
 
     // Update category
-  const updatedCategory = await prisma.category.update({
+    const updatedCategory = await prisma.category.update({
       where: { id: categoryId },
       data: {
         ...(validatedData.name && { name: validatedData.name, slug }),

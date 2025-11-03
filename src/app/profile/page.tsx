@@ -718,7 +718,7 @@ export default function Profile() {
       <div className="container mx-auto max-w-2xl px-4">
         <div className="mb-4 flex items-center justify-between flex-wrap gap-3">
           <button
-            onClick={() => router.back()}
+            onClick={() => router.push('/')}
             className="inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700 transition-colors"
           >
             Back

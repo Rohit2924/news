@@ -79,7 +79,7 @@ const data = {
     },
     {
       title: "Categories",
-      url: "/admin/catageories",
+      url: "/admin/categories",
       icon: IconFolder,
     },
     {

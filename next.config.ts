@@ -1,24 +1,25 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
-  images: {
-    domains: ['via.placeholder.com', 'nanglokhaber.com', 'images.unsplash.com', 'randomuser.me'],
+  
+ images: {
+    unoptimized: true, // This disables Next.js image optimization but allows any URL
+    // OR use:
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'images.unsplash.com',
-        port: '',
-        pathname: '/**',
+        hostname: '**', // Allow any HTTPS domain
+        pathname: '**', // Allow any path
       },
       {
-        protocol: 'https',
-        hostname: 'randomuser.me',
-        port: '',
-        pathname: '/**',
+        protocol: 'http',
+        hostname: '**', // Allow any HTTP domain  
+        pathname: '**',
       },
     ],
   },
-};
+}
+
+module.exports = nextConfig
 
 export default nextConfig;

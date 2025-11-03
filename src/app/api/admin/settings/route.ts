@@ -1,6 +1,6 @@
 // api/admin/settings/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyJWT } from '@/lib/auth';
+import { verifyJWT, getAuthToken } from '@/lib/auth';
 import prisma from '@/lib/models/prisma';
 import fs from 'fs';
 import path from 'path';
@@ -22,48 +22,61 @@ const logger = {
 // Ensure Node.js runtime so fs is available
 export const runtime = 'nodejs';
 
-function getAuthToken(request: NextRequest): string | null {
-  const authHeader = request.headers.get('authorization');
-  if (authHeader && authHeader.startsWith('Bearer ')) {
-    return authHeader.substring(7);
-  }
-  // Check for auth cookies
-  return (
-    request.cookies.get('adminAuthToken')?.value ||
-    request.cookies.get('editorAuthToken')?.value ||
-    request.cookies.get('authToken')?.value ||
-    null
-  );
-}
+async function verifyAdminAccess(request: NextRequest): Promise<{ user?: any; error?: string; status?: number }> {
+  // Method 1: Check middleware headers (preferred)
+  const userId = request.headers.get("x-user-id");
+  const userRole = request.headers.get("x-user-role");
 
-async function verifyAdminAccess(request: NextRequest) {
+  if (userId && userRole) {
+    // Allow both ADMIN and EDITOR roles to access settings
+    if (userRole !== 'ADMIN' && userRole !== 'EDITOR') {
+      return { error: "Admin or Editor access required", status: 403 };
+    }
+
+    return { 
+      user: {
+        id: userId,
+        email: request.headers.get("x-user-email") || '',
+        role: userRole,
+      }
+    };
+  }
+
+  // Method 2: Fallback - verify JWT token directly from cookies/headers
   const token = getAuthToken(request);
-  logger.info('Token found', { hasToken: !!token });
   
   if (!token) {
-    logger.info('No token provided');
-    return { error: 'No token provided', status: 401 };
+    return { error: "No authentication token found", status: 401 };
   }
 
+  const validation = verifyJWT(token);
+  if (!validation.isValid || !validation.payload) {
+    return { 
+      error: validation.error || "Invalid or expired token", 
+      status: 401 
+    };
+  }
+
+  // Allow both ADMIN and EDITOR roles to access settings
+  if (validation.payload.role !== 'ADMIN' && validation.payload.role !== 'EDITOR') {
+    return { error: "Admin or Editor access required", status: 403 };
+  }
+
+  // Verify user still exists in database
   try {
-    const result = verifyJWT(token);
-    logger.info('Token payload', { result });
-    
-    if (!result.isValid || !result.payload) {
-      logger.info('Invalid token');
-      return { error: 'Invalid token', status: 401 };
-    }
-    
-    // Allow both ADMIN and EDITOR roles to access settings
-    if (result.payload.role !== 'ADMIN' && result.payload.role !== 'EDITOR') {
-      logger.info('Unauthorized access attempt');
-      return { error: 'Unauthorized', status: 403 };
+    const user = await prisma.user.findUnique({ 
+      where: { id: validation.payload.id },
+      select: { id: true, email: true, name: true, role: true }
+    });
+
+    if (!user || (user.role !== 'ADMIN' && user.role !== 'EDITOR')) {
+      return { error: "Admin or Editor access required", status: 403 };
     }
 
-    return { payload: result.payload };
+    return { user: validation.payload };
   } catch (error) {
-    logger.error('Token verification error', error);
-    return { error: 'Token verification failed', status: 401 };
+    logger.error('Error verifying user:', error);
+    return { error: "Failed to verify user", status: 500 };
   }
 }
 
@@ -73,7 +86,10 @@ export async function GET(request: NextRequest) {
     
     const authResult = await verifyAdminAccess(request);
     if (authResult.error) {
-      return NextResponse.json({ error: authResult.error }, { status: authResult.status });
+      return NextResponse.json(
+        { success: false, error: authResult.error },
+        { status: authResult.status || 401 }
+      );
     }
 
     // Test database connection
@@ -123,7 +139,10 @@ export async function PUT(request: NextRequest) {
     
     const authResult = await verifyAdminAccess(request);
     if (authResult.error) {
-      return NextResponse.json({ error: authResult.error }, { status: authResult.status });
+      return NextResponse.json(
+        { success: false, error: authResult.error },
+        { status: authResult.status || 401 }
+      );
     }
 
     // Decide between JSON and multipart/form-data

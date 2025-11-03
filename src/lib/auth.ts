@@ -4,20 +4,40 @@
  * Usage: getAuthToken(request)
  */
 export function getAuthToken(request: any): string | null {
+  // Method 1: Check cookies using NextRequest API (primary method for middleware)
   if (request?.cookies?.get) {
-    return request.cookies.get('auth-token')?.value || null;
+    const cookieToken = request.cookies.get('auth-token')?.value;
+    if (cookieToken) {
+      console.log('🔐 Token found in cookies via NextRequest API');
+      return cookieToken;
+    }
   }
 
+  // Method 2: Check Authorization header (fallback)
+  const authHeader = request?.headers?.get('authorization');
+  if (authHeader?.startsWith('Bearer ')) {
+    console.log('🔐 Token found in Authorization header');
+    return authHeader.substring(7);
+  }
+
+  // Method 3: Manual cookie parsing (for non-NextRequest objects)
   const cookieHeader = request?.headers?.get('cookie');
-  if (!cookieHeader) return null;
+  if (cookieHeader) {
+    const cookies = cookieHeader.split(';').reduce((acc: Record<string, string>, cookie: string) => {
+      const [name, value] = cookie.trim().split('=');
+      acc[name] = value;
+      return acc;
+    }, {});
+    
+    const manualToken = cookies['auth-token'];
+    if (manualToken) {
+      console.log('🔐 Token found in cookies via manual parsing');
+      return manualToken;
+    }
+  }
 
-  const cookies = cookieHeader.split(';').reduce((acc: Record<string, string>, cookie: string) => {
-    const [name, value] = cookie.trim().split('=');
-    acc[name] = value;
-    return acc;
-  }, {});
-
-  return cookies['auth-token'] || null;
+  console.log('❌ No auth token found in request');
+  return null;
 }
 import jwt from 'jsonwebtoken';
 
@@ -58,12 +78,7 @@ export interface TokenValidationResult {
   errorType?: 'expired' | 'invalid' | 'malformed';
 }
 
-// --- 4. CORE JWT FUNCTIONS ---
 
-/**
- * Creates a signed JWT token for an access or refresh token.
- * The role is included as a standard claim.
- */
 export function signJWT(payload: Omit<JWTPayload, 'iat' | 'exp'>, expiresIn: string): string {
   try {
     if (!payload.id || !payload.email || !payload.role) {

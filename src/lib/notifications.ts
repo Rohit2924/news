@@ -86,7 +86,7 @@ export class NotificationService {
         console.error('SSE Error:', error);
         this.disconnect();
         // Attempt to reconnect after 5 seconds
-        setTimeout(() => this.connect(), 5000);
+        setTimeout(() => this.connect(), 3000);
       };
 
     } catch (error) {

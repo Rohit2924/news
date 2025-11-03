@@ -24,5 +24,8 @@ export async function POST(req: Request) {
         tags: body.tags,
         },
   })
+  http://localhost:3000/api/auth/me
+
   return NextResponse.json(newNews)
 }
+

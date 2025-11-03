@@ -164,7 +164,7 @@ export default function AdminCommentsPage() {
     
     // Create a URL-friendly slug from the title
     const slug = newsTitle.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
-    const articleUrl = `/article/${slug}`;
+    const articleUrl = `/articles/${slug}`;
     
     toast.success(
       <div className="flex flex-col gap-2">

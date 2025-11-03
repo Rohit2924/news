@@ -34,7 +34,7 @@ export default function Home() {
       .finally(() => setLoading(false));
   }, []);
 
-  const breakingTitles = articles.slice(0, 5).map((a) => a.title);
+  const breakingTitles = articles.slice(0, 5)?.map((a) => a.title);
 
   if (loading) {
     return (

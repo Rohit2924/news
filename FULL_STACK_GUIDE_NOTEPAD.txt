@@ -30,26 +30,70 @@
 📁 PROJECT STRUCTURE:
 news_portal/
 ├── src/
-│   ├── app/                    # Next.js app directory
-│   │   ├── api/               # Backend API routes
-│   │   │   ├── auth/         # Authentication APIs
-│   │   │   ├── admin/        # Admin management APIs
-│   │   │   ├── comments/     # Comment system APIs
-│   │   │   └── socket/       # Real-time APIs
-│   │   ├── admin/            # Admin dashboard pages
-│   │   ├── article/          # Article display pages
+│   ├── app/                     # Next.js app directory
+│   │   ├── api/                # Backend API routes
+│   │   │   ├── auth/          # Authentication APIs
+│   │   │   ├── admin/         # Admin management APIs
+│   │   │   ├── articles/      # Article management APIs
+│   │   │   ├── careers/       # Career management
+│   │   │   ├── comments/      # Comment system APIs
+│   │   │   ├── editor/        # Editor APIs
+│   │   │   ├── news/          # News APIs
+│   │   │   ├── profile/       # Profile APIs
+│   │   │   └── socket/        # Real-time APIs
+│   │   ├── admin/             # Admin dashboard pages
+│   │   │   ├── analytics/     # Analytics dashboard
+│   │   │   ├── articles/      # Article management
+│   │   │   ├── categories/    # Category management
+│   │   │   ├── comments/      # Comment management
+│   │   │   ├── users/         # User management
+│   │   │   └── settings/      # Site settings
+│   │   ├── article/           # Article display pages
+│   │   ├── business/          # Business news
+│   │   ├── economy/           # Economy news
+│   │   ├── Editor/            # Editor dashboard
+│   │   ├── entertainment/     # Entertainment news
+│   │   ├── health/           # Health news
+│   │   ├── international/     # International news
 │   │   ├── login/            # Authentication pages
-│   │   └── profile/          # User profile pages
-│   ├── components/           # Reusable React components
-│   │   ├── ui/              # UI components (buttons, forms, etc.)
-│   │   └── ...              # Feature-specific components
-│   ├── lib/                 # Utility functions
-│   │   ├── auth.ts          # JWT authentication
-│   │   ├── db.ts            # Database connection
-│   │   └── error-handler.ts # Error handling
-│   └── prisma/              # Database schema
-├── public/                  # Static files
-└── package.json            # Dependencies
+│   │   ├── politics/         # Politics news
+│   │   ├── profile/          # User profile pages
+│   │   ├── sports/           # Sports news
+│   │   └── technology/       # Technology news
+│   ├── components/            # Reusable React components
+│   │   ├── admin/           # Admin components
+│   │   ├── common/          # Shared components
+│   │   ├── dashboard/       # Dashboard components
+│   │   ├── editor/         # Editor components
+│   │   ├── layout/         # Layout components
+│   │   ├── navigation/     # Navigation components
+│   │   ├── news/          # News components
+│   │   └── ui/            # Basic UI components
+│   ├── context/            # React contexts
+│   │   └── AuthContext.tsx # Authentication context
+│   ├── hooks/              # Custom React hooks
+│   ├── lib/               # Utility functions
+│   │   ├── api.ts         # API client utilities
+│   │   ├── auth.ts        # Authentication utilities
+│   │   ├── db.ts          # Database connection
+│   │   ├── models/        # Data models
+│   │   ├── types/         # TypeScript types
+│   │   └── utils/         # Helper functions
+│   ├── middleware/         # Next.js middleware
+│   │   └── admin.ts       # Admin route protection
+│   └── utils/             # Utility functions
+├── prisma/                # Database
+│   ├── schema.prisma      # Database schema
+│   └── migrations/        # Database migrations
+├── public/               # Static files
+│   ├── images/           # Static images
+│   └── uploads/          # User uploads
+├── components.json       # UI components config
+├── next.config.ts       # Next.js config
+├── package.json         # Dependencies
+├── postcss.config.mjs   # PostCSS config
+├── tailwind.config.js   # Tailwind config
+└── tsconfig.json        # TypeScript config
 
 ================================================================================
 2. DATABASE SCHEMA & RELATIONSHIPS

@@ -49,13 +49,13 @@ export default async function ArticlesPage() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {articles.map((article) => (
+              {articles?.map((article) => (
                 <tr key={article.id}>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900">{article.title}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{article.category}</div>
+                    <div className="text-sm text-gray-900">{article.categoryId}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-900">{article._count.comments}</div>

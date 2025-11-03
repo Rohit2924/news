@@ -110,7 +110,7 @@ category: (typeof a.category === 'string' ? a.category : a.category?.name) || ca
           </div>
           <div className="order-1 md:order-2 space-y-4">
             {/* Featured Cards */}
-            {sideArticles.map((article, index) => (
+            {sideArticles?.map((article, index) => (
               <div key={index} className="bg-white dark:bg-gray-900 rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
                 <div className="flex">
                   <a href={`/article/${slugify(article.title)}`} className="flex flex-1">

@@ -30,8 +30,9 @@ interface SiteSettings {
 }
 
 export default function AdminSettingsPage() {
-  const { isAuthenticated, userRole } = useAuth();
-  const [activeTab, setActiveTab] = useState('general');
+const { isAuthenticated, user } = useAuth();
+const userRole = user?.role;
+const [activeTab, setActiveTab] = useState('general');
   const [settings, setSettings] = useState<SiteSettings>({
     siteName: '',
     siteDescription: '',

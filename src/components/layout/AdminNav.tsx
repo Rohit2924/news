@@ -12,13 +12,16 @@ import {
   MessageCircle,
   LogOut 
 } from 'lucide-react';
-import { useAuth } from './ui/AuthContext';
+import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 
 const AdminNav = () => {
   const pathname = usePathname();
-  const { logout, username } = useAuth();
+ const { logout, user: authUser } = useAuth();
   const router = useRouter();
+  const username = authUser?.name || '';
+  const email = authUser?.email || '';
+
 
   const handleLogout = () => {
     logout?.();
@@ -28,7 +31,7 @@ const AdminNav = () => {
   const links = [
     { href: '/admin/dashboard', label: 'Dashboard', icon: <Home size={20} /> },
     { href: '/admin/analytics', label: 'Analytics', icon: <BarChart2 size={20} /> },
-    { href: '/admin/catageories', label: 'Categories', icon: <Folder size={20} /> },
+    { href: '/admin/categories', label: 'Categories', icon: <Folder size={20} /> },
     { href: '/admin/articles', label: 'Articles', icon: <FileText size={20} /> },
     { href: '/admin/users', label: 'Users', icon: <Users size={20} /> },
     { href: '/admin/comments', label: 'Comments', icon: <MessageCircle size={20} /> },

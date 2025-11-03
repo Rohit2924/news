@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { UserCog, Loader2 } from "lucide-react";
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { toast } from "@/lib/toast";
 
 interface User {
@@ -13,8 +13,11 @@ interface User {
   contactNumber?: string | null;
 }
 
-export default function EditUserPage({ params }: { params: { id: string } }) {
+export default function EditUserPage() {
   const router = useRouter();
+  const params = useParams();
+  const userId = params.id as string;
+  
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -26,8 +29,10 @@ export default function EditUserPage({ params }: { params: { id: string } }) {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    fetchUser();
-  }, []);
+    if (userId){
+      fetchUser();
+    }
+  }, [userId]);
 
   const fetchUser = async () => {
     setFetching(true);
@@ -37,7 +42,7 @@ export default function EditUserPage({ params }: { params: { id: string } }) {
         return;
       }
 
-      const response = await fetch(`/api/admin/users/${params.id}`, {
+      const response = await fetch(`/api/admin/users/${userId}`, {
         credentials: 'include'
       });
 
@@ -74,11 +79,10 @@ export default function EditUserPage({ params }: { params: { id: string } }) {
         return;
       }
 
-      const response = await fetch(`/api/admin/users/${params.id}`, {
+      const response = await fetch(`/api/admin/users/${userId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'credential': 'include'
         },
         body: JSON.stringify(formData),
       });

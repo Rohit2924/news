@@ -1,161 +1,174 @@
 // src/app/api/admin/articles/[id]/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/models/prisma';
-import { verifyJWT } from '@/lib/auth';
-import { parse } from 'cookie';
+import { getAuthToken, verifyJWT } from '@/lib/auth';
 
-// Helper function to verify admin or editor access
-async function verifyArticleAccess(request: Request, articleId?: number) {
-  // Try to get token from Authorization header first
-  let token = null;
-  const authHeader = request.headers.get("Authorization");
-  if (authHeader?.startsWith("Bearer ")) {
-    token = authHeader.split(" ")[1];
+// Use the SAME verifyAdminAccess function as your main route
+async function verifyAdminAccess(request: NextRequest): Promise<{ 
+  user?: { 
+    id: string; 
+    role: string;
+    name?: string;
+  }; 
+  error?: string; 
+  status?: number;
+}> {
+  // Method 1: Check middleware headers (preferred)
+  const userId = request.headers.get("x-user-id");
+  const userRole = request.headers.get("x-user-role");
+
+  if (userId && userRole) {
+    if (userRole !== 'ADMIN' && userRole !== 'EDITOR') {
+      return { error: "Admin or Editor access required", status: 403 };
+    }
+
+    return { 
+      user: { 
+        id: userId, 
+        role: userRole,
+        name: request.headers.get("x-user-name") || undefined
+      } 
+    };
   }
-  
-  // If not in header, try to get from cookie
+
+  // Method 2: Fallback - verify JWT token directly from cookies/headers
+  const token = getAuthToken(request);
   if (!token) {
-    const cookies = request.headers.get("cookie") || '';
-    const parsedCookies = parse(cookies);
-    token = parsedCookies.authToken || parsedCookies.editorAuthToken || parsedCookies.adminAuthToken;
+    return { error: "No authentication token found", status: 401 };
   }
-  
-  if (!token) {
-    return { error: "No token provided", status: 401, user: null };
+
+  const validation = verifyJWT(token);
+  if (!validation.isValid || !validation.payload) {
+    return { 
+      error: validation.error || "Invalid or expired token", 
+      status: 401 
+    };
   }
-  
-  const validation = await verifyJWT(token);
-  if (!validation || !validation.isValid || !validation.payload) {
-    return { error: "Invalid token", status: 401, user: null };
+
+  if (validation.payload.role !== 'ADMIN' && validation.payload.role !== 'EDITOR') {
+    return { error: "Admin or Editor access required", status: 403 };
   }
-  const payload = validation.payload;
-  
+
+  // Verify user still exists in database
   try {
     const user = await prisma.user.findUnique({ 
-      where: { id: payload.id },
+      where: { id: validation.payload.id },
       select: { id: true, email: true, name: true, role: true }
     });
-    
+
     if (!user || (user.role !== 'ADMIN' && user.role !== 'EDITOR')) {
-      return { error: "Admin or editor access required", status: 403, user: null };
+      return { error: "Admin or Editor access required", status: 403 };
     }
-    
-    // If user is an editor and articleId is provided, check if they own the article
-    if (user.role === 'EDITOR' && articleId) {
-      const article = await prisma.news.findUnique({
-        where: { id: articleId },
-        select: { author: true }
-      });
-      
-      if (!article) {
-        return { error: "Article not found", status: 404, user: null };
+
+    return { 
+      user: {
+        id: validation.payload.id,
+        role: validation.payload.role,
+        name: validation.payload.name
       }
-      
-      // Check if the editor is the author of the article
-      if (article.author !== user.name) {
-        return { error: "You can only edit your own articles", status: 403, user: null };
-      }
-    }
-    
-    return { user };
+    };
   } catch (error) {
-    // If database fails, allow mock admin access
-    if (payload.email === 'admin@example.com') {
-      return { user: { id: payload.id, email: payload.email, name: 'Admin User', role: 'ADMIN' } };
-    }
-    return { error: "Admin or editor access required", status: 403, user: null };
+    console.error('Error verifying user:', error);
+    return { error: "Failed to verify user", status: 500 };
   }
 }
 
 // GET /api/admin/articles/[id] - Get specific article
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(
+  request: NextRequest, 
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
-    const id = parseInt(params.id);
-    const adminCheck = await verifyArticleAccess(request, id);
+    const { id } = await params;
+    const articleId = parseInt(id);
     
-    if (adminCheck.error) {
+    if (isNaN(articleId)) {
       return NextResponse.json(
-        { error: true, message: adminCheck.error },
-        { status: adminCheck.status }
+        { success: false, error: 'Invalid article ID' },
+        { status: 400 }
       );
     }
     
-    try {
-      const article = await prisma.news.findUnique({
-        where: { id },
-        include: {
-          category: {
-            select: {
-              id: true,
-              name: true,
-              slug: true
-            }
-          },
-          _count: {
-            select: {
-              comments: true
-            }
+    // Use the SAME auth function as main route
+    const authCheck = await verifyAdminAccess(request);
+    if (authCheck.error) {
+      return NextResponse.json(
+        { success: false, error: authCheck.error },
+        { status: authCheck.status || 401 }
+      );
+    }
+    
+    const article = await prisma.news.findUnique({
+      where: { id: articleId },
+      include: {
+        category: {
+          select: {
+            id: true,
+            name: true,
+            slug: true
+          }
+        },
+        _count: {
+          select: {
+            comments: true
           }
         }
-      });
-      
-      if (!article) {
-        return NextResponse.json(
-          { error: true, message: 'Article not found' },
-          { status: 404 }
-        );
       }
-      
-      return NextResponse.json({
-        error: false,
-        data: article
-      });
-    } catch (dbError) {
-      // Return mock article if database not available
-      const mockArticle = {
-        id: id,
-        title: 'Mock Article',
-        category: { id: '1', name: 'Technology', slug: 'technology' },
-        author: adminCheck.user?.name || 'Admin User',
-        published_date: new Date().toISOString().split('T')[0],
-        image: 'https://via.placeholder.com/400x300',
-        imageUrl: 'https://via.placeholder.com/400x300',
-        summary: 'This is a mock article for testing',
-        content: '<p>Mock content for testing</p>',
-        tags: ['mock', 'test'],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        _count: { comments: 0 }
-      };
-      
-      return NextResponse.json({
-        error: false,
-        data: mockArticle,
-        note: 'Mock data - database not connected'
-      });
+    });
+    
+    if (!article) {
+      return NextResponse.json(
+        { success: false, error: 'Article not found' },
+        { status: 404 }
+      );
     }
+    
+    console.log('📥 [BACKEND GET] Article data:', {
+      id: article.id,
+      categoryId: article.categoryId,
+      category: article.category
+    });
+    
+    return NextResponse.json({
+      success: true,
+      data: article
+    });
   } catch (error) {
     console.error('Error fetching article:', error);
     return NextResponse.json(
-      { error: true, message: 'Internal server error' },
+      { success: false, error: 'Internal server error' },
       { status: 500 }
     );
   }
 }
 
+// Update the PUT handler in your backend API
 // PUT /api/admin/articles/[id] - Update article
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(
+  request: NextRequest, 
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
-    const id = parseInt(params.id);
-    const adminCheck = await verifyArticleAccess(request, id);
+    const { id } = await params;
+    const articleId = parseInt(id);
     
-    if (adminCheck.error) {
+    if (isNaN(articleId)) {
       return NextResponse.json(
-        { error: true, message: adminCheck.error },
-        { status: adminCheck.status }
+        { success: false, error: 'Invalid article ID' },
+        { status: 400 }
       );
     }
     
+    // Use the SAME auth function as main route
+    const authCheck = await verifyAdminAccess(request);
+    if (authCheck.error) {
+      return NextResponse.json(
+        { success: false, error: authCheck.error },
+        { status: authCheck.status || 401 }
+      );
+    }
+    
+    const body = await request.json();
     const { 
       title, 
       categoryId, 
@@ -166,126 +179,133 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
       summary, 
       content, 
       tags 
-    } = await request.json();
+    } = body;
+    
+    console.log('📥 [BACKEND] Received update data:', body);
+    console.log('📥 [BACKEND] CategoryId type:', typeof categoryId, 'value:', categoryId);
     
     // Validate required fields
     if (!title || !categoryId || !author || !content) {
       return NextResponse.json(
-        { error: true, message: 'Title, category, author, and content are required' },
+        { success: false, error: 'Title, category, author, and content are required' },
         { status: 400 }
       );
     }
     
-    try {
-      // Verify the category exists
-      const category = await prisma.category.findUnique({
-        where: { id: categoryId }
-      });
-      
-      if (!category) {
-        return NextResponse.json(
-          { error: true, message: 'Invalid category' },
-          { status: 400 }
-        );
-      }
-      
-      const updatedArticle = await prisma.news.update({
-        where: { id },
-        data: {
-          title,
-          categoryId,
-          author,
-          published_date: published_date || new Date().toISOString().split('T')[0],
-          image: image || 'https://via.placeholder.com/400x300',
-          imageUrl: imageUrl || '',
-          summary: summary || '',
-          content,
-          tags: tags || [],
-          updatedAt: new Date()
-        },
-        include: {
-          category: {
-            select: {
-              id: true,
-              name: true,
-              slug: true
-            }
-          }
-        }
-      });
-      
-      return NextResponse.json({
-        error: false,
-        message: 'Article updated successfully',
-        data: updatedArticle
-      });
-    } catch (dbError) {
-      // Mock update if database not available
-      const updatedArticle = {
-        id,
+    // Verify the category exists - use string ID directly
+    const category = await prisma.category.findUnique({
+      where: { id: categoryId } // Use as string, no parsing needed
+    });
+    
+    console.log('📥 [BACKEND] Found category:', category);
+    
+    if (!category) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid category' },
+        { status: 400 }
+      );
+    }
+    
+    const updatedArticle = await prisma.news.update({
+      where: { id: articleId },
+      data: {
         title,
-        category: { id: categoryId, name: 'Mock Category', slug: 'mock-category' },
+        categoryId: categoryId, // Store as string
         author,
         published_date: published_date || new Date().toISOString().split('T')[0],
-        image: image || 'https://via.placeholder.com/400x300',
-        imageUrl: imageUrl || '',
+        image: image ||  '',
+        imageUrl: image || imageUrl || '',
         summary: summary || '',
         content,
-        tags: tags || [],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      };
-      
-      return NextResponse.json({
-        error: false,
-        message: 'Article updated successfully (mock)',
-        data: updatedArticle,
-        note: 'Mock update - database not connected'
-      });
-    }
+        tags: Array.isArray(tags) ? tags : [],
+        updatedAt: new Date()
+      },
+      include: {
+        category: {
+          select: {
+            id: true,
+            name: true,
+            slug: true
+          }
+        }
+      }
+    });
+    
+    return NextResponse.json({
+      success: true,
+      message: 'Article updated successfully',
+      data: updatedArticle
+    });
   } catch (error) {
     console.error('Error updating article:', error);
+    
+    // Type-safe error checking
+    if (error && typeof error === 'object' && 'code' in error) {
+      const prismaError = error as { code: string };
+      if (prismaError.code === 'P2025') {
+        return NextResponse.json(
+          { success: false, error: 'Article not found' },
+          { status: 404 }
+        );
+      }
+    }
+    
     return NextResponse.json(
-      { error: true, message: 'Internal server error' },
+      { success: false, error: 'Internal server error' },
       { status: 500 }
     );
   }
 }
 
 // DELETE /api/admin/articles/[id] - Delete article
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(
+  request: NextRequest, 
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
-    const id = parseInt(params.id);
-    const adminCheck = await verifyArticleAccess(request, id);
+    const { id } = await params;
+    const articleId = parseInt(id);
     
-    if (adminCheck.error) {
+    if (isNaN(articleId)) {
       return NextResponse.json(
-        { error: true, message: adminCheck.error },
-        { status: adminCheck.status }
+        { success: false, error: 'Invalid article ID' },
+        { status: 400 }
       );
     }
     
-    try {
-      await prisma.news.delete({
-        where: { id }
-      });
-      
-      return NextResponse.json({
-        error: false,
-        message: 'Article deleted successfully'
-      });
-    } catch (dbError) {
-      // Mock deletion if database not available
-      return NextResponse.json({
-        error: false,
-        message: 'Article deleted successfully (mock)',
-        note: 'Mock deletion - database not connected'
-      });
+    // Use the SAME auth function as main route
+    const authCheck = await verifyAdminAccess(request);
+    if (authCheck.error) {
+      return NextResponse.json(
+        { success: false, error: authCheck.error },
+        { status: authCheck.status || 401 }
+      );
     }
+    
+    await prisma.news.delete({
+      where: { id: articleId }
+    });
+    
+    return NextResponse.json({
+      success: true,
+      message: 'Article deleted successfully'
+    });
   } catch (error) {
     console.error('Error deleting article:', error);
+    
+    // Type-safe error checking
+    if (error && typeof error === 'object' && 'code' in error) {
+      const prismaError = error as { code: string };
+      if (prismaError.code === 'P2025') {
+        return NextResponse.json(
+          { success: false, error: 'Article not found' },
+          { status: 404 }
+        );
+      }
+    }
+    
     return NextResponse.json(
-      { error: true, message: 'Internal server error' },
+      { success: false, error: 'Internal server error' },
       { status: 500 }
     );
   }

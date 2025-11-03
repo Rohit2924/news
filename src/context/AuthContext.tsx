@@ -30,20 +30,71 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [authError, setAuthError] = useState<string | null>(null);
 
+  const refreshToken = async (): Promise<boolean> => {
+  try {
+    const response = await fetch("/api/auth/refresh", {
+      method: "POST",
+      credentials: "include",
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      if (data.data?.user) {
+        setUser(data.data.user);
+        return true;
+      }
+    }
+    return false;
+  } catch (error) {
+    console.error("Token refresh error:", error);
+    return false;
+  }
+};
+
   // ✅ NEW: Rehydrate user from cookies on mount
   useEffect(() => {
     const rehydrateUser = async () => {
       try {
         const response = await fetch("/api/auth/me", {
-          credentials: "include", // Include cookies
+          credentials: "include", 
         });
+       
+    if (response.status === 401) {
+      // Token might be expired, try to refresh
+      console.log("Token expired or missing, attempting refresh...");
+      const refreshResponse = await fetch("/api/auth/refresh", {
+        method: "POST",
+        credentials: "include",
+      });
 
-        if (response.ok) {
-          const data = await response.json();
+      if (refreshResponse.ok) {
+        // Retry getting user info after refresh
+        const retryResponse = await fetch("/api/auth/me", {
+          credentials: "include",
+        });
+        
+        if (retryResponse.ok) {
+          const data = await retryResponse.json();
           if (data.authenticated && data.data?.user) {
             setUser(data.data.user);
+            console.log("User rehydrated after token refresh");
           }
         }
+      } else {
+        // No valid refresh token, user needs to login
+        console.log("No valid refresh token, user needs to login");
+        setUser(null);
+      }
+    } else if (response.ok) {
+      const data = await response.json();
+      if (data.authenticated && data.data?.user) {
+        setUser(data.data.user);
+        console.log("User rehydrated successfully");
+      }
+    } else {
+      // Other error case
+      setUser(null);
+    }
       } catch (error) {
         console.error("Rehydration error:", error);
       } finally {
@@ -54,39 +105,50 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     rehydrateUser();
   }, []);
 
-  const login = async (email: string, password: string): Promise<boolean> => {
-    try {
-      setIsLoading(true);
-      setAuthError(null);
+const login = async (email: string, password: string): Promise<boolean> => {
+  try {
+    setIsLoading(true);
+    setAuthError(null);
 
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include", // Include cookies
-        body: JSON.stringify({ email, password }),
-      });
+    const response = await fetch("/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include", // This is crucial!
+      body: JSON.stringify({ email, password }),
+    });
 
-      if (!response.ok) {
-        const error = await response.json();
-        setAuthError(error.error || "Login failed");
-        return false;
-      }
+    if (!response.ok) {
+      const error = await response.json();
+      setAuthError(error.error || "Login failed");
+      return false;
+    }
 
-      const data = await response.json();
-      if (data.data?.user) {
-        setUser(data.data.user);
+    const data = await response.json();
+    
+    // Immediately verify the session
+    const meResponse = await fetch("/api/auth/me", {
+      credentials: "include",
+    });
+    
+    if (meResponse.ok) {
+      const meData = await meResponse.json();
+      if (meData.authenticated && meData.data?.user) {
+        setUser(meData.data.user);
+        console.log("✅ Login successful, user:", meData.data.user);
         return true;
       }
-
-      return false;
-    } catch (error) {
-      setAuthError("An error occurred during login");
-      console.error("Login error:", error);
-      return false;
-    } finally {
-      setIsLoading(false);
     }
-  };
+    
+    setAuthError("Login successful but session verification failed");
+    return false;
+  } catch (error) {
+    setAuthError("An error occurred during login");
+    console.error("Login error:", error);
+    return false;
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   const register = async (email: string, password: string, name: string): Promise<boolean> => {
     try {

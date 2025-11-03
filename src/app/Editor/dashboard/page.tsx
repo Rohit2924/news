@@ -28,7 +28,7 @@ type ArticleData = {
   id: number;
   title: string;
   createdAt: Date;
-  category: string;
+  categoryId: string;
   author: string;
   _count: {
     comments: number;
@@ -561,7 +561,7 @@ function UserArticlesList({ articles }: { articles: ArticleData[] }) {
 
   return (
     <div className="space-y-4">
-      {articles.map((article) => (
+      {articles?.map((article) => (
         <div 
           key={article.id} 
           className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors gap-3"
@@ -580,7 +580,7 @@ function UserArticlesList({ articles }: { articles: ArticleData[] }) {
                 {article._count.comments} comments
               </div>
               <Badge variant="secondary" className="text-xs">
-                {article.category}
+                {article.categoryId}
               </Badge>
             </div>
           </div>
@@ -647,7 +647,7 @@ async function SystemArticlesList({ userName }: { userName: string }) {
         <div className="text-sm text-gray-600 dark:text-gray-400 mb-4 p-3 bg-blue-50 dark:bg-blue-950 rounded-lg">
           <strong>Note:</strong> Showing recent articles from all authors since you don't have any articles yet.
         </div>
-        {recentSystemArticles.map((article) => (
+        {recentSystemArticles?.map((article) => (
           <div 
             key={article.id} 
             className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors gap-3"
@@ -669,7 +669,7 @@ async function SystemArticlesList({ userName }: { userName: string }) {
                   by {article.author}
                 </Badge>
                 <Badge variant="secondary" className="text-xs">
-                  {article.category}
+                  {article.categoryId}
                 </Badge>
               </div>
             </div>

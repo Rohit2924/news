@@ -29,15 +29,16 @@ model User {
 model News {
   id             Int       @id @default(autoincrement())
   title          String
-    categoryId     String
-    category      Category   @relation("NewsCategory", fields: [categoryId], references: [id])
+  categoryId     String
+  category      Category   @relation("NewsCategory", fields: [categoryId], references: [id])
   author         String
-  published_date String
-  image          String
-  imageUrl       String // newly added line 
-  summary        String
+  published_date String?
+  image          String?
+  imageUrl       String?
+  summary        String?
   content        String
   tags           String[]
+  status          String    @default("published") // Add this line
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
   comments       Comment[]

@@ -69,7 +69,7 @@ const QuickActions = () => {
   ];
 
   return (
-    <div className="bg-card text-card-foreground rounded-lg shadow-sm border border-border p-6">
+    <div className="bg-card text-card-foreground rounded-lg shadow-sm border border-border p-6  mx-6">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="text-xl font-semibold">

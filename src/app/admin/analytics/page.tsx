@@ -137,7 +137,7 @@ export default function AnalyticsPage() {
           <div className="text-muted-foreground">No popular articles found.</div>
         ) : (
           <div className="space-y-4">
-            {popularArticles.map(({ rank, title, category, views }) => (
+            {popularArticles?.map(({ rank, title, category, views }) => (
               <div key={rank} className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                   <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">

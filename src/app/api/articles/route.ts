@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/models/prisma";
-// import * as cookie from "cookie";
-// import { jwtVerify } from "jose";
 import { AppError, ErrorCodes, handleApiError } from "@/lib/error-handler";
 import type { JWTPayload } from "@/lib/types/auth";
 
@@ -57,8 +55,8 @@ export async function GET(req: NextRequest) {
     const limit = limitParam ? Math.max(1, Math.min(100, parseInt(limitParam, 10))) : 20;
     
     const whereClause: any = {};
-    if (category) whereClause.category = { equals: category, mode: "insensitive" };
-    if (subcategory) whereClause.subcategory = { equals: subcategory, mode: "insensitive" };
+    if (category) whereClause.category = {is:{ name: {equals: category, mode: "insensitive"}} };
+    if (subcategory) whereClause.subcategory ={ is:{ name: {equals: category, mode: "insensitive"}} };
     
     const articles = await prisma.news.findMany({
       where: whereClause,
@@ -114,8 +112,6 @@ export async function GET(req: NextRequest) {
 
 // POST /api/articles
 export async function POST(req: NextRequest) {
-  // Check authentication
-// PASTE THIS IN ITS PLACE
 const authCheck = await verifyEditorOrAdminAccess(req);
 if (authCheck.error) {
   return NextResponse.json({ success: false, error: authCheck.error }, { status: authCheck.status });
@@ -123,9 +119,9 @@ if (authCheck.error) {
   
   try {
     const body = await req.json();
-    const { title, category, subcategory, author, published_date, image, imageUrl, summary, content, tags } = body;
+    const { title, categoryId,author, published_date, image, imageUrl, summary, content, tags } = body;
     
-    if (!title || !category || !author || !published_date) {
+    if (!title || !categoryId || !author || !published_date) {
       throw new AppError(
         "Missing required fields",
         ErrorCodes.MISSING_REQUIRED_FIELD,
@@ -138,7 +134,7 @@ if (authCheck.error) {
     const article = await prisma.news.create({
       data: {
         title,
-        category,
+        categoryId,
         // subcategory: subcategory || null,
         author,
         published_date,

@@ -4,6 +4,7 @@ import { prisma } from '@/lib/db';
 import bcrypt from 'bcryptjs';
 import { signJWT, ACCESS_TOKEN_EXPIRES_IN, REFRESH_TOKEN_EXPIRES_IN } from '@/lib/auth';
 import { z } from 'zod';
+// import { SignJWT } from 'jose';
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email format"),
@@ -36,6 +37,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
+
+
     // Create JWTs
     const tokenPayload = {
       id: user.id,
@@ -67,7 +70,7 @@ export async function POST(request: NextRequest) {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
-      maxAge: 15 * 60, // 15 minutes
+      maxAge: 15 * 60, // minutes
       path: '/',
     });
 

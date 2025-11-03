@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Set the access token cookie
-    response.cookies.set('authToken', accessToken, {
+    response.cookies.set('auth-token', accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
@@ -88,7 +88,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Set the refresh token cookie
-    response.cookies.set('refreshToken', refreshToken, {
+    response.cookies.set('refresh-token', refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',

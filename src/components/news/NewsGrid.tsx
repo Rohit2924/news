@@ -21,7 +21,7 @@ const NewsGrid = ({ articles }: { articles: Article[] }) => (
     <div className="container mx-auto px-4">
       <h2 className="text-3xl font-bold text-center mb-10 text-gray-800 dark:text-white">Latest News</h2>
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {articles.map((article) => (
+        {articles?.map((article) => (
           <NewsCard
             key={article.id}
             image={article.image || article.imageUrl || ""}

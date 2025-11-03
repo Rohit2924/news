@@ -63,7 +63,7 @@ export default function BusinessPage() {
           <NewsGrid articles={articles}/>
 
           {/* Subcategory sections */}
-          {subcats.map((sc) => (
+          {subcats?.map((sc) => (
             <SubcategorySection key={sc.name} subcategory={sc.name} />
           ))}
         </div>

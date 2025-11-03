@@ -1,41 +1,64 @@
+// /admin/articles/[id]/page.tsx
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, use } from "react";
 import { FileText, Loader2, Edit, ArrowLeft, Calendar, User, Tag } from "lucide-react";
 import { useRouter } from 'next/navigation';
 import Link from "next/link";
 import Image from "next/image";
-import { apiCall } from '@/lib/api';
 
 interface Article {
   id: number;
   title: string;
-  category: string;
-  subcategory?: string;
+  categoryId: number;
+  category?: {
+    id: number;
+    name: string;
+    slug: string;
+  };
   author: string;
   published_date: string;
   image: string;
+  imageUrl: string;
   summary: string;
   content: string;
   tags: string[];
   createdAt: string;
   updatedAt: string;
+  _count?: {
+    comments: number;
+  };
 }
 
-export default function ViewArticlePage({ params }: { params: { id: string } }) {
+export default function ViewArticlePage({ params }: { params: Promise< { id: string }> }) {
   const router = useRouter();
   const [article, setArticle] = useState<Article | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const {id} = use(params); 
+
+  
 
   useEffect(() => {
-    fetchArticle();
-  }, []);
+    if (id){
+      fetchArticle();
+
+    }
+  }, [id]);
 
   const fetchArticle = async () => {
     setLoading(true);
     try {
-      const data = await apiCall<{ data: Article }>(`/api/admin/articles/${params.id}`);
+      const response = await fetch(`/api/admin/articles/${id}`, {
+        credentials: 'include'
+      });
+      const data = await response.json();
+      
+      if (!data.success) {
+        setError(data.error || 'Failed to load article');
+        return;
+      }
+      
       setArticle(data.data);
       setError("");
     } catch (err) {
@@ -77,6 +100,8 @@ export default function ViewArticlePage({ params }: { params: { id: string } }) 
     );
   }
 
+  const displayImage = article.image || article.imageUrl;
+
   return (
     <div className="p-6">
       <div className="mb-8 mx-5">
@@ -87,7 +112,7 @@ export default function ViewArticlePage({ params }: { params: { id: string } }) 
           >
             <ArrowLeft size={20} />
           </button>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+          <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
             <FileText className="text-red-600" /> Article Details
           </h2>
         </div>
@@ -111,26 +136,26 @@ export default function ViewArticlePage({ params }: { params: { id: string } }) 
             
             <div className="flex items-center gap-2">
               <span className="px-2 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
-                {article.category}
+                {article.category?.name || 'Uncategorized'}
               </span>
-              {article.subcategory && (
-                <span className="px-2 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-800">
-                  {article.subcategory}
-                </span>
-              )}
             </div>
           </div>
         </div>
 
         {/* Article Image */}
-        {article.image && (
+        {displayImage && (
           <div className="mb-6">
             <div className="relative w-full h-64 rounded-lg overflow-hidden">
               <Image
-                src={article.image}
+                src={displayImage}
                 alt={article.title}
                 fill
                 className="object-cover"
+                onError={(e) => {
+                  // Fallback if image fails to load
+                  const target = e.target as HTMLImageElement;
+                  target.src = 'https://via.placeholder.com/800x400?text=Image+Not+Found';
+                }}
               />
             </div>
           </div>
@@ -148,9 +173,10 @@ export default function ViewArticlePage({ params }: { params: { id: string } }) 
         <div className="mb-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-2">Content</h3>
           <div 
-            className="prose max-w-none text-gray-700 leading-relaxed"
-            dangerouslySetInnerHTML={{ __html: article.content }}
-          />
+            className="prose max-w-none text-gray-700 leading-relaxed whitespace-pre-wrap"
+          >
+            {article.content}
+          </div>
         </div>
 
         {/* Tags */}
@@ -179,6 +205,11 @@ export default function ViewArticlePage({ params }: { params: { id: string } }) 
             <div>
               <span className="font-medium">Last Updated:</span> {new Date(article.updatedAt).toLocaleString()}
             </div>
+            {article._count && (
+              <div>
+                <span className="font-medium">Comments:</span> {article._count.comments}
+              </div>
+            )}
           </div>
         </div>
 

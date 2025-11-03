@@ -73,6 +73,7 @@ const ROUTES = {
     /^\/articles?\/[^/]+$/,
     /^\/api\/auth\/(login|register|forgot-password)$/,
     /^\/api\/articles(\?.*)?$/,
+    /^\/api\/test-auth$/, // Add test endpoint to public
     /^\/public\/.+$/,
   ],
   PROTECTED: {
@@ -86,7 +87,6 @@ const ROUTES = {
     ],
     user: [
       /^\/profile$/,
-      /^\/dashboard$/,
       /^\/api\/(profile|dashboard)\/.+$/,
       /^\/api\/comments\/.+$/,
     ],
@@ -149,7 +149,7 @@ function getRoleRedirectUrl(role: Role): string {
   switch (role) {
     case 'ADMIN': return '/admin/dashboard';
     case 'EDITOR': return '/editor/dashboard';
-    case 'USER': return '/dashboard';
+    case 'USER': return '/profile';
     default: return '/profile';
   }
 }
@@ -208,6 +208,9 @@ export async function middleware(request: NextRequest) {
   const userAgent = request.headers.get('user-agent') || 'unknown';
   const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
+  console.log('🚨 MIDDLEWARE EXECUTING FOR:', pathname);
+  console.log('🛡️ Route security:', { isPublic, routeType, requiredRole });
+
   // A. Rate Limiting for Auth Endpoints
   if (pathname.startsWith('/api/auth/login') && request.method === 'POST') {
     if (await isRateLimited(clientIP)) {
@@ -219,6 +222,9 @@ export async function middleware(request: NextRequest) {
   // B. Extract Tokens
   const authToken = request.cookies.get(SECURITY_CONFIG.COOKIE.AUTH)?.value;
   const refreshToken = request.cookies.get(SECURITY_CONFIG.COOKIE.REFRESH)?.value;
+
+  console.log('🔐 Auth token:', authToken ? 'PRESENT' : 'MISSING');
+  console.log('🔐 Refresh token:', refreshToken ? 'PRESENT' : 'MISSING');
 
   // C. Handle Public Routes
   if (isPublic) {
@@ -235,61 +241,112 @@ export async function middleware(request: NextRequest) {
     return addSecurityHeaders(response, request);
   }
 
-  // D. Handle Protected Routes
+  // D. Handle Protected Routes - Authenticate User
   const token = getAuthToken(request);
+  console.log('🔐 Token from getAuthToken:', token ? 'FOUND' : 'NULL');
   
   if (!token) {
+    console.log('❌ BLOCKING: No token found for protected route');
     auditLog('UNAUTHORIZED_ACCESS_NO_TOKEN', { ip: clientIP, pathname, routeType, requestId }, 'warn');
+    
+    // For API routes, return 401 JSON instead of redirect
+    if (pathname.startsWith('/api/')) {
+      return NextResponse.json(
+        { success: false, error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+    
+    // For page routes, redirect to login
     const response = NextResponse.redirect(new URL(getLoginRedirectUrl(), request.url));
     return addSecurityHeaders(response, request);
   }
 
-  const verificationResult: TokenValidationResult = verifyJWT(token);
-
-  if (!verificationResult.isValid || !verificationResult.payload) {
-    // E. Handle Expired/Invalid Token
-    if (refreshToken && verificationResult.errorType === 'expired') {
-      auditLog('TOKEN_REFRESH_REDIRECT', { pathname, routeType, requestId });
-      const response = NextResponse.redirect(new URL(`/api/auth/refresh?redirect=${encodeURIComponent(pathname)}`, request.url));
-      return addSecurityHeaders(response, request);
+  // E. Verify JWT Token
+  const result: TokenValidationResult = verifyJWT(token);
+  console.log('🔐 JWT verification:', result.isValid ? 'VALID' : 'INVALID');
+  
+  if (!result.isValid || !result.payload) {
+    console.log('❌ BLOCKING: Invalid or expired token');
+    auditLog('INVALID_TOKEN', { ip: clientIP, pathname, error: result.error, requestId }, 'warn');
+    
+    // For API routes, return 401 JSON
+    if (pathname.startsWith('/api/')) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid or expired token' },
+        { status: 401 }
+      );
     }
-
-    auditLog('UNAUTHORIZED_ACCESS_INVALID_TOKEN', { ip: clientIP, pathname, error: verificationResult.error, requestId }, 'warn');
-    const response = NextResponse.redirect(new URL(`${getLoginRedirectUrl()}?expired=true`, request.url));
-    response.cookies.delete(SECURITY_CONFIG.COOKIE.AUTH);
+    
+    // For page routes, redirect to login
+    const response = NextResponse.redirect(new URL(getLoginRedirectUrl(), request.url));
     return addSecurityHeaders(response, request);
   }
 
-  const user = verificationResult.payload;
-  const userRole = user.role as Role;
-
-  // F. Authorization Check
+  // F. Check Role-Based Access Control
+  const userRole = result.payload.role as Role;
+  console.log('👤 User role:', userRole, '| Required:', requiredRole);
+  
   if (!hasPermission(userRole, requiredRole)) {
-    auditLog('INSUFFICIENT_PERMISSIONS', { userId: user.id, userRole, requiredRole, pathname, requestId }, 'warn');
+    console.log('❌ BLOCKING: Insufficient permissions');
+    auditLog('INSUFFICIENT_PERMISSIONS', { 
+      userId: result.payload.id, 
+      userRole, 
+      requiredRole, 
+      pathname, 
+      requestId 
+    }, 'warn');
+    
+    // For API routes, return 403 JSON
+    if (pathname.startsWith('/api/')) {
+      return NextResponse.json(
+        { success: false, error: 'Insufficient permissions' },
+        { status: 403 }
+      );
+    }
+    
+    // For page routes, redirect to appropriate dashboard
     const response = NextResponse.redirect(new URL(getRoleRedirectUrl(userRole), request.url));
     return addSecurityHeaders(response, request);
   }
 
-  // G. Add User Context to API Requests
-  let response = NextResponse.next();
-  if (pathname.startsWith('/api/')) {
-    const requestHeaders = new Headers(request.headers);
-    requestHeaders.set(SECURITY_CONFIG.HEADERS.USER_ID, user.id);
-    requestHeaders.set(SECURITY_CONFIG.HEADERS.USER_EMAIL, user.email);
-    requestHeaders.set(SECURITY_CONFIG.HEADERS.USER_ROLE, userRole);
-    requestHeaders.set(SECURITY_CONFIG.HEADERS.REQUEST_ID, requestId);
-    requestHeaders.set('x-auth-token', token);
+  // G. SUCCESS - Set Authentication Headers for API Routes
+  const response = NextResponse.next();
+  
+  console.log('✅ AUTHENTICATED - Setting headers');
+  response.headers.set(SECURITY_CONFIG.HEADERS.USER_ID, result.payload.id);
+  response.headers.set(SECURITY_CONFIG.HEADERS.USER_EMAIL, result.payload.email);
+  response.headers.set(SECURITY_CONFIG.HEADERS.USER_ROLE, result.payload.role);
+  response.headers.set(SECURITY_CONFIG.HEADERS.REQUEST_ID, requestId);
+  
+  auditLog('AUTHORIZED_ACCESS', { 
+    userId: result.payload.id, 
+    userRole, 
+    pathname, 
+    requestId 
+  });
 
-    response = NextResponse.next({ request: { headers: requestHeaders } });
-  }
-
-  auditLog('AUTHORIZED_ACCESS', { userId: user.id, userRole, pathname, requestId });
   return addSecurityHeaders(response, request);
 }
 
-// --- 8. CONFIGURATION ---
+// --- 8. CONFIGURATION - FIXED TO INCLUDE API ROUTES ---
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|woff|woff2|ttf|eot)$).*)',
+    // Admin routes (pages and API)
+    '/admin/:path*',
+    '/api/admin/:path*',
+    
+    // Editor routes (pages and API)
+    '/editor/:path*',
+    '/api/editor/:path*',
+    
+    // User protected routes
+    '/profile',
+    '/api/profile/:path*',
+    '/api/dashboard/:path*',
+    '/api/comments/:path*',
+    
+    // All other pages except public resources
+    '/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|public/|api/auth/|api/articles|api/test-auth|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|woff|woff2|ttf|eot)$).*)',
   ],
 };

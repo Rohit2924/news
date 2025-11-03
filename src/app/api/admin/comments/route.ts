@@ -1,26 +1,73 @@
 // app/api/admin/comments/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/models/prisma';
-import { jwtVerify } from 'jose';
-import { parse } from 'cookie';
+import { getAuthToken, verifyJWT } from '@/lib/auth';
 
-const getTokenPayload = async (req: NextRequest) => {
-  // Get token from cookie instead of Authorization header
-  const cookies = req.headers.get('cookie') || '';
-  const parsedCookies = parse(cookies);
-  const token = parsedCookies.authToken;
-  
-  if (!token) throw new Error('Unauthorized');
-  
-  const secretKey = new TextEncoder().encode(process.env.JWT_SECRET || 'fallback-secret-key-for-dev');
-  const { payload } = await jwtVerify(token, secretKey);
-  return payload as any;
-};
+// Helper function to verify admin access
+async function verifyAdminAccess(request: NextRequest): Promise<{ user?: any; error?: string; status?: number }> {
+  // Method 1: Check middleware headers (preferred)
+  const userId = request.headers.get("x-user-id");
+  const userRole = request.headers.get("x-user-role");
+
+  if (userId && userRole) {
+    if (userRole !== 'ADMIN' && userRole !== 'EDITOR') {
+      return { error: "Admin or Editor access required", status: 403 };
+    }
+
+    return { 
+      user: {
+        id: userId,
+        email: request.headers.get("x-user-email") || '',
+        role: userRole,
+      }
+    };
+  }
+
+  // Method 2: Fallback - verify JWT token directly from cookies/headers
+  const token = getAuthToken(request);
+  if (!token) {
+    return { error: "No authentication token found", status: 401 };
+  }
+
+  const validation = verifyJWT(token);
+  if (!validation.isValid || !validation.payload) {
+    return { 
+      error: validation.error || "Invalid or expired token", 
+      status: 401 
+    };
+  }
+
+  if (validation.payload.role !== 'ADMIN' && validation.payload.role !== 'EDITOR') {
+    return { error: "Admin or Editor access required", status: 403 };
+  }
+
+  // Verify user still exists in database
+  try {
+    const user = await prisma.user.findUnique({ 
+      where: { id: validation.payload.id },
+      select: { id: true, email: true, name: true, role: true }
+    });
+
+    if (!user || (user.role !== 'ADMIN' && user.role !== 'EDITOR')) {
+      return { error: "Admin or Editor access required", status: 403 };
+    }
+
+    return { user: validation.payload };
+  } catch (error) {
+    console.error('Error verifying user:', error);
+    return { error: "Failed to verify user", status: 500 };
+  }
+}
 
 export async function GET(req: NextRequest) {
   try {
-    const payload = await getTokenPayload(req);
-    if (payload.role !== 'ADMIN') return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
+    const authCheck = await verifyAdminAccess(req);
+    if (authCheck.error) {
+      return NextResponse.json(
+        { success: false, error: authCheck.error },
+        { status: authCheck.status || 401 }
+      );
+    }
 
     const { searchParams } = new URL(req.url);
     const page = parseInt(searchParams.get('page') || '1');
@@ -61,8 +108,13 @@ export async function GET(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
-    const payload = await getTokenPayload(req);
-    if (payload.role !== 'ADMIN') return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
+    const authCheck = await verifyAdminAccess(req);
+    if (authCheck.error) {
+      return NextResponse.json(
+        { success: false, error: authCheck.error },
+        { status: authCheck.status || 401 }
+      );
+    }
 
     const { searchParams } = new URL(req.url);
     const id = parseInt(searchParams.get('id') || '');
