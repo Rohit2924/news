@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Edit, Trash2, Plus, FolderTree, Loader2, Search } from "lucide-react";
+import { Edit, Trash2, Plus, FolderTree, Loader2, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 
@@ -20,6 +20,14 @@ interface Category {
   updatedAt: string;
 }
 
+interface PaginationInfo {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasMore: boolean;
+}
+
 export default function CategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
@@ -31,16 +39,34 @@ export default function CategoriesPage() {
     description: "",
     parentId: "",
   });
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pagination, setPagination] = useState<PaginationInfo>({
+    page: 1,
+    limit: 10,
+    total: 0,
+    totalPages: 0,
+    hasMore: false
+  });
 
   // Fetch categories from API
   useEffect(() => {
     fetchCategories();
-  }, []);
+  }, [currentPage]);
 
   const fetchCategories = async () => {
     setLoading(true);
     try {
-      const response = await fetch('/api/admin/categories', {
+      const params = new URLSearchParams();
+      params.set('page', currentPage.toString());
+      params.set('limit', '10');
+      
+      if (search.trim()) {
+        params.set('search', search.trim());
+      }
+
+      const response = await fetch(`/api/admin/categories?${params.toString()}`, {
         credentials: 'include',
       });
 
@@ -51,7 +77,14 @@ export default function CategoriesPage() {
 
       const data = await response.json();
       if (data.success) {
-        setCategories(data.data.categories);
+        setCategories(data.data.categories || []);
+        setPagination(data.data.pagination || {
+          page: 1,
+          limit: 10,
+          total: 0,
+          totalPages: 0,
+          hasMore: false
+        });
         setError("");
       } else {
         setError(data.error || 'Failed to fetch categories');
@@ -65,6 +98,16 @@ export default function CategoriesPage() {
       setLoading(false);
     }
   };
+
+  // Search with debounce
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      setCurrentPage(1);
+      fetchCategories();
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [search]);
 
   const handleCreateCategory = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -142,158 +185,192 @@ export default function CategoriesPage() {
             }
           },
         },
-  cancel: { label: 'Cancel', onClick: () => {} },
+        cancel: { label: 'Cancel', onClick: () => {} },
         duration: 10000,
       }
     );
   };
 
-  const filteredCategories = search.trim()
-    ? categories.filter(cat => 
-        cat.name.toLowerCase().includes(search.toLowerCase()) ||
-        cat.description?.toLowerCase().includes(search.toLowerCase())
-      )
-    : categories;
-
   return (
-    <div className="p-6">
+    <div className="p-6 bg-[#0D0D0D] min-h-screen">
       <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold">Categories</h1>
-          <p className="text-sm text-muted-foreground">Manage news categories and subcategories</p>
+          <h1 className="text-2xl font-semibold text-white">Categories</h1>
+          <p className="text-sm text-gray-400">Manage news categories and subcategories</p>
         </div>
         
         <button
           onClick={() => setShowNewCategoryModal(true)}
-          className="inline-flex items-center justify-center whitespace-nowrap rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow hover:bg-primary/90"
+          className="inline-flex items-center justify-center whitespace-nowrap rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white shadow hover:bg-red-700 transition-colors"
         >
           <Plus className="mr-2 h-4 w-4" />
           New Category
         </button>
       </div>
 
+      {/* Search */}
       <div className="mb-4">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search categories..."
-            className="w-full rounded-md border border-input bg-background pl-10 pr-4 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="w-full rounded-md border border-[#262626] bg-[#171717] pl-10 pr-4 py-2 text-sm text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors"
           />
         </div>
       </div>
 
-      <div className="rounded-md border">
+      {/* Categories Table */}
+      <div className="rounded-md border border-[#262626] bg-[#171717]">
         {loading ? (
           <div className="p-8 text-center">
-            <Loader2 className="mx-auto h-6 w-6 animate-spin" />
-            <p className="mt-2 text-sm text-muted-foreground">Loading categories...</p>
+            <Loader2 className="mx-auto h-6 w-6 animate-spin text-red-600" />
+            <p className="mt-2 text-sm text-gray-400">Loading categories...</p>
           </div>
         ) : error ? (
-          <div className="p-8 text-center text-red-500">
+          <div className="p-8 text-center text-red-400">
             <p>{error}</p>
+            <button 
+              onClick={fetchCategories}
+              className="mt-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+            >
+              Retry
+            </button>
           </div>
-        ) : filteredCategories.length === 0 ? (
-          <div className="p-8 text-center text-muted-foreground">
-            No categories found
+        ) : categories.length === 0 ? (
+          <div className="p-8 text-center text-gray-400">
+            {search ? 'No categories match your search' : 'No categories found'}
           </div>
         ) : (
-          <table className="min-w-full divide-y divide-border">
-            <thead className="bg-muted">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Name</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Description</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Articles</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Parent</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {filteredCategories.map(category => (
-                <tr key={category.id} className="hover:bg-muted/50">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <FolderTree className="h-4 w-4 mr-2 text-muted-foreground" />
-                      <span className="text-sm font-medium">{category.name}</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className="text-sm text-muted-foreground line-clamp-2">{category.description || 'No description'}</span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className="inline-flex items-center rounded-full bg-blue-50 dark:bg-blue-900/20 px-2 py-1 text-xs font-medium text-blue-700 dark:text-blue-300">
-                      {category._count.articles} articles
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    {category.parent ? (
-                      <span className="text-sm text-muted-foreground">{category.parent.name}</span>
-                    ) : (
-                      <span className="text-xs text-muted-foreground">None</span>
-                    )}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right">
-                    <div className="flex items-center justify-end space-x-2">
-                      <Link
-                        href={`/admin/categories/${category.id}/edit`}
-                        className="p-2 rounded hover:bg-muted text-yellow-600"
-                        title="Edit"
-                      >
-                        <Edit size={18} />
-                      </Link>
-                      <button
-                        onClick={() => handleDelete(category.id, category.name)}
-                        className="p-2 rounded hover:bg-muted text-red-600"
-                        title="Delete"
-                      >
-                        <Trash2 size={18} />
-                      </button>
-                    </div>
-                  </td>
+          <>
+            <table className="min-w-full divide-y divide-[#262626]">
+              <thead className="bg-[#171717]">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Name</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Description</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Articles</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Parent</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-[#262626]">
+                {categories.map(category => (
+                  <tr key={category.id} className="hover:bg-[#262626]/50 transition-colors">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <FolderTree className="h-4 w-4 mr-2 text-gray-400" />
+                        <span className="text-sm font-medium text-white">{category.name}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="text-sm text-gray-400 line-clamp-2">{category.description || 'No description'}</span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="inline-flex items-center rounded-full bg-blue-500/20 px-2 py-1 text-xs font-medium text-blue-300 border border-blue-500/30">
+                        {category._count.articles} articles
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      {category.parent ? (
+                        <span className="text-sm text-gray-400">{category.parent.name}</span>
+                      ) : (
+                        <span className="text-xs text-gray-500">None</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right">
+                      <div className="flex items-center justify-end space-x-2">
+                        <Link
+                          href={`/admin/categories/${category.id}/edit`}
+                          className="p-2 rounded hover:bg-[#262626] text-yellow-400 transition-colors"
+                          title="Edit"
+                        >
+                          <Edit size={18} />
+                        </Link>
+                        <button
+                          onClick={() => handleDelete(category.id, category.name)}
+                          className="p-2 rounded hover:bg-[#262626] text-red-400 transition-colors"
+                          title="Delete"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            {/* Pagination */}
+            {pagination.totalPages > 1 && (
+              <div className="flex items-center justify-between px-6 py-4 border-t border-[#262626]">
+                <div className="text-sm text-gray-400">
+                  Showing {categories.length} of {pagination.total} categories
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                    className="p-2 rounded border border-[#262626] bg-[#171717] text-gray-400 hover:bg-[#262626] disabled:opacity-50 transition-colors"
+                  >
+                    <ChevronLeft size={16} />
+                  </button>
+                  
+                  <span className="text-sm text-gray-400 px-3">
+                    Page {pagination.page} of {pagination.totalPages}
+                  </span>
+                  
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, pagination.totalPages))}
+                    disabled={currentPage === pagination.totalPages}
+                    className="p-2 rounded border border-[#262626] bg-[#171717] text-gray-400 hover:bg-[#262626] disabled:opacity-50 transition-colors"
+                  >
+                    <ChevronRight size={16} />
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
 
+      {/* New Category Modal */}
       {showNewCategoryModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-background rounded-lg shadow-lg max-w-md w-full p-6">
-            <h2 className="text-lg font-semibold mb-4">Create New Category</h2>
+          <div className="bg-[#171717] border border-[#262626] rounded-lg shadow-lg max-w-md w-full p-6">
+            <h2 className="text-lg font-semibold text-white mb-4">Create New Category</h2>
             <form onSubmit={handleCreateCategory}>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1">Name *</label>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">Name *</label>
                   <input
                     type="text"
                     value={newCategory.name}
                     onChange={e => setNewCategory(prev => ({ ...prev, name: e.target.value }))}
-                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    className="w-full rounded-md border border-[#262626] bg-[#0D0D0D] px-3 py-2 text-sm text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors"
                     placeholder="Enter category name"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Description</label>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">Description</label>
                   <textarea
                     value={newCategory.description}
                     onChange={e => setNewCategory(prev => ({ ...prev, description: e.target.value }))}
-                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring min-h-[100px]"
+                    className="w-full rounded-md border border-[#262626] bg-[#0D0D0D] px-3 py-2 text-sm text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors min-h-[100px]"
                     placeholder="Enter category description"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Parent Category</label>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">Parent Category</label>
                   <select
                     value={newCategory.parentId}
                     onChange={e => setNewCategory(prev => ({ ...prev, parentId: e.target.value }))}
-                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    className="w-full rounded-md border border-[#262626] bg-[#0D0D0D] px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors"
                   >
-                    <option value="">None (Top Level)</option>
+                    <option value="" className="text-gray-400">None (Top Level)</option>
                     {categories.map(cat => (
-                      <option key={cat.id} value={cat.id}>{cat.name}</option>
+                      <option key={cat.id} value={cat.id} className="text-white">{cat.name}</option>
                     ))}
                   </select>
                 </div>
@@ -305,13 +382,13 @@ export default function CategoriesPage() {
                     setShowNewCategoryModal(false);
                     setNewCategory({ name: "", description: "", parentId: "" });
                   }}
-                  className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium shadow-sm hover:bg-accent"
+                  className="inline-flex items-center justify-center rounded-md border border-[#262626] bg-[#171717] px-4 py-2 text-sm font-medium text-gray-300 shadow-sm hover:bg-[#262626] transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow hover:bg-primary/90"
+                  className="inline-flex items-center justify-center rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white shadow hover:bg-red-700 transition-colors"
                 >
                   Create Category
                 </button>

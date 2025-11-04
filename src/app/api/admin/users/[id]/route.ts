@@ -2,17 +2,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/models/prisma';
 import { verifyJWT } from '@/lib/auth';
 
-
-// Helper function to verify admin access
-async function verifyAdminAccess(request: Request) {
-  const authHeader = request.headers.get("Authorization") 
- 
-  if (!authHeader?.startsWith("Bearer ")) {
+// Helper function to verify admin access from cookies
+async function verifyAdminAccess(request: NextRequest) {
+  // Get token from cookies instead of Authorization header
+  const token = request.cookies.get('token')?.value;
+  
+  if (!token) {
     return { error: "No token provided", status: 401 };
   }
 
-  
-  const token = authHeader.split(" ")[1];
   const validation = await verifyJWT(token);
   if (!validation || !validation.isValid || !validation.payload) {
     return { error: "Invalid token", status: 401 };
@@ -74,23 +72,11 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         data: user
       });
     } catch (dbError) {
-      // Return mock user if database not available
-      const mockUser = {
-        id: id,
-        email: 'admin@example.com',
-        name: 'admin123',
-        role: 'admin',
-        image: null,
-        contactNumber: null,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      };
-
-      return NextResponse.json({
-        error: false,
-        data: mockUser,
-        note: 'Mock data - database not connected'
-      });
+      console.error('Database error:', dbError);
+      return NextResponse.json(
+        { error: true, message: 'Database error' },
+        { status: 500 }
+      );
     }
   } catch (error) {
     console.error('Error fetching user:', error);
@@ -157,24 +143,11 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
         data: updatedUser
       });
     } catch (dbError) {
-      // Mock update if database not available
-      const updatedUser = {
-        id,
-        email: email.toLowerCase(),
-        name,
-        role: role || 'user',
-        contactNumber: contactNumber || null,
-        image: null,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      };
-
-      return NextResponse.json({
-        error: false,
-        message: 'User updated successfully (mock)',
-        data: updatedUser,
-        note: 'Mock update - database not connected'
-      });
+      console.error('Database error:', dbError);
+      return NextResponse.json(
+        { error: true, message: 'Database error' },
+        { status: 500 }
+      );
     }
   } catch (error) {
     console.error('Error updating user:', error);
@@ -216,12 +189,11 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
         message: 'User deleted successfully'
       });
     } catch (dbError) {
-      // Mock deletion if database not available
-      return NextResponse.json({
-        error: false,
-        message: 'User deleted successfully (mock)',
-        note: 'Mock deletion - database not connected'
-      });
+      console.error('Database error:', dbError);
+      return NextResponse.json(
+        { error: true, message: 'Database error' },
+        { status: 500 }
+      );
     }
   } catch (error) {
     console.error('Error deleting user:', error);

@@ -3,6 +3,18 @@ import { getSession } from '@/lib/getSession';
 import prisma from '@/lib/models/prisma';
 import Link from 'next/link';
 
+// Define the article type
+interface Article {
+  id: string;
+  title: string;
+  categoryId: string;
+  createdAt: Date;
+  author: string;
+  _count: {
+    comments: number;
+  };
+}
+
 export default async function ArticlesPage() {
   const session = await getSession();
   
@@ -12,7 +24,7 @@ export default async function ArticlesPage() {
     include: {
       _count: { select: { comments: true } }
     }
-  });
+  }) as Article[];
 
   return (
     <EditorLayoutWrapper>
@@ -49,7 +61,7 @@ export default async function ArticlesPage() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {articles?.map((article) => (
+              {articles?.map((article: Article) => (
                 <tr key={article.id}>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900">{article.title}</div>

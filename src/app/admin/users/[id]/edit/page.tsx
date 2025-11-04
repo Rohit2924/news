@@ -37,14 +37,30 @@ export default function EditUserPage() {
   const fetchUser = async () => {
     setFetching(true);
     try {
-      if (!Credential) {
-        setError('No authentication token found');
+      const response = await fetch(`/api/admin/users/${userId}`, {
+        method: 'GET',
+        credentials: 'include', // This sends cookies automatically
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+
+      if (response.status === 401) {
+        setError('Please login to access this page');
+        setTimeout(() => router.push('/admin'), 2000);
         return;
       }
 
-      const response = await fetch(`/api/admin/users/${userId}`, {
-        credentials: 'include'
-      });
+      if (response.status === 403) {
+        setError('You do not have permission to access this page');
+        return;
+      }
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        setError(errorData.message || `Failed to fetch user (HTTP ${response.status})`);
+        return;
+      }
 
       const data = await response.json();
       
@@ -62,7 +78,7 @@ export default function EditUserPage() {
       }
     } catch (err) {
       console.error('Error fetching user:', err);
-      setError('Failed to load user');
+      setError('Failed to load user. Please check your connection.');
     } finally {
       setFetching(false);
     }
@@ -73,19 +89,25 @@ export default function EditUserPage() {
     setLoading(true);
     
     try {
-      if (!Credential) {
-        toast.error('No authentication token found');
-        setLoading(false);
-        return;
-      }
-
       const response = await fetch(`/api/admin/users/${userId}`, {
         method: 'PUT',
+        credentials: 'include', // This sends cookies automatically
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(formData),
       });
+
+      if (response.status === 401) {
+        toast.error('Please login to continue');
+        setTimeout(() => router.push('/admin'), 2000);
+        return;
+      }
+
+      if (response.status === 403) {
+        toast.error('You do not have permission to update users');
+        return;
+      }
 
       const data = await response.json();
 
@@ -105,11 +127,11 @@ export default function EditUserPage() {
 
   if (fetching) {
     return (
-      <div className="p-6">
+      <div className="p-6 dark:bg-[#0D0D0D] min-h-screen">
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
             <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-red-600" />
-            <p className="text-gray-500">Loading user...</p>
+            <p className="text-gray-500 dark:text-gray-400">Loading user...</p>
           </div>
         </div>
       </div>
@@ -118,16 +140,26 @@ export default function EditUserPage() {
 
   if (error) {
     return (
-      <div className="p-6">
+      <div className="p-6 dark:bg-[#0D0D0D] min-h-screen">
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
-            <p className="text-red-500 mb-4">{error}</p>
-            <button 
-              onClick={fetchUser}
-              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
-            >
-              Retry
-            </button>
+            <p className="text-red-500 dark:text-red-400 mb-4">{error}</p>
+            <div className="space-x-4">
+              <button 
+                onClick={fetchUser}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+              >
+                Retry
+              </button>
+              {error.includes('login') && (
+                <button 
+                  onClick={() => router.push('/admin')}
+                  className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                >
+                  Go to Login
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -135,36 +167,36 @@ export default function EditUserPage() {
   }
 
   return (
-    <div className="p-6">
+    <div className="p-6 dark:bg-[#0D0D0D] min-h-screen">
       <div className="mb-8 mx-5">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
           <UserCog className="text-red-600" /> Edit User
         </h2>
       </div>
-      <div className="bg-white rounded-lg shadow p-6 mx-5 dark:bg-gray-900">
+      <div className="bg-white dark:bg-[#171717] rounded-lg shadow p-6 mx-5 border dark:border-[#262626]">
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2 ">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Full Name *
               </label>
               <input
                 type="text"
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-[#262626] rounded-md shadow-sm focus:ring-red-500 focus:border-red-500 dark:bg-[#0D0D0D] dark:text-white"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 placeholder="Enter full name"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Email Address *
               </label>
               <input
                 type="email"
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-[#262626] rounded-md shadow-sm focus:ring-red-500 focus:border-red-500 dark:bg-[#0D0D0D] dark:text-white"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 placeholder="user@example.com"
@@ -172,13 +204,13 @@ export default function EditUserPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 dark:bg-gary-900">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Role
               </label>
               <select
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500 dark:bg-gray-900"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-[#262626] rounded-md shadow-sm focus:ring-red-500 focus:border-red-500 dark:bg-[#0D0D0D] dark:text-white"
                 value={formData.role}
                 onChange={(e) => setFormData({ ...formData, role: e.target.value })}
               >
@@ -188,12 +220,12 @@ export default function EditUserPage() {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Contact Number
               </label>
               <input
                 type="tel"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-[#262626] rounded-md shadow-sm focus:ring-red-500 focus:border-red-500 dark:bg-[#0D0D0D] dark:text-white"
                 value={formData.contactNumber}
                 onChange={(e) => setFormData({ ...formData, contactNumber: e.target.value })}
                 placeholder="+1234567890"
@@ -205,14 +237,14 @@ export default function EditUserPage() {
             <button
               type="button"
               onClick={() => router.back()}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+              className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-[#262626] border border-gray-300 dark:border-[#404040] rounded-md hover:bg-gray-50 dark:hover:bg-[#363636] transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 disabled:opacity-50"
+              className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 disabled:opacity-50 transition-colors"
             >
               {loading ? 'Updating...' : 'Update User'}
             </button>

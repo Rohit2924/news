@@ -1,7 +1,7 @@
 // /admin/articles/[id]/edit/page.tsx
 "use client";
 import { useState, useEffect, useRef, use } from "react";
-import { FileEdit, Loader2,Upload,Link, X } from "lucide-react";
+import { FileEdit, Loader2, Upload, Link, X } from "lucide-react";
 import { useRouter } from 'next/navigation';
 import { toast } from "sonner";
 
@@ -32,9 +32,8 @@ interface Category {
 export default function EditArticlePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const router = useRouter();
-  const fileInputRef = useRef<HTMLInputElement>(null); // ← Add this line
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  
   const [formData, setFormData] = useState({
     title: "",
     categoryId: "",
@@ -45,13 +44,12 @@ export default function EditArticlePage({ params }: { params: Promise<{ id: stri
     content: "",
     tags: ""
   });
-  
+
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [imagePreview, setImagePreview] = useState("");
-
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -90,25 +88,18 @@ export default function EditArticlePage({ params }: { params: Promise<{ id: stri
       }
 
       const article = data.data;
-      console.log('📥 [DEBUG] Fetched article data:', article);
       
-      // Determine categoryId with proper fallback logic
       let categoryIdValue = "";
       
-      // Priority 1: Use article's categoryId if available
       if (article.categoryId) {
         categoryIdValue = article.categoryId.toString();
       }
-      // Priority 2: Use category object's id if available
       else if (article.category?.id) {
         categoryIdValue = article.category.id.toString();
       }
-      // Priority 3: Use first category from categories list as default
       else if (categoriesList.length > 0) {
         categoryIdValue = categoriesList[0].id.toString();
       }
-      
-      console.log('🎯 [DEBUG] Final categoryId set to:', categoryIdValue);
       
       setFormData({
         title: article.title || "",
@@ -129,31 +120,25 @@ export default function EditArticlePage({ params }: { params: Promise<{ id: stri
     }
   };
 
-  const handleFileUpload = async (file: File) =>{
+  const handleFileUpload = async (file: File) => {
     setUploading(true);
-    try{
-    console.log('📤 Starting file upload:', {
-      fileName: file.name,
-      fileSize: file.size,
-      fileType: file.type
-    });
-      
+    try {
       const formData = new FormData(); 
-      formData.append('image',file);
+      formData.append('image', file);
 
-      const response = await fetch('/api/admin/upload',{
+      const response = await fetch('/api/admin/upload', {
         method: 'POST',
-       credentials: 'include',
+        credentials: 'include',
         body: formData,
       });
       const data = await response.json();
       
       if (data.success) {
-      const uploadedUrl = data.data.imageUrl.startsWith('http') 
-        ? data.data.imageUrl 
-        : `${window.location.origin}${data.data.imageUrl}`;  
+        const uploadedUrl = data.data.imageUrl.startsWith('http') 
+          ? data.data.imageUrl 
+          : `${window.location.origin}${data.data.imageUrl}`;  
 
-          setFormData(prev => ({ 
+        setFormData(prev => ({ 
           ...prev, 
           image: uploadedUrl 
         }));
@@ -170,26 +155,20 @@ export default function EditArticlePage({ params }: { params: Promise<{ id: stri
     }
   };
 
-  // Handle file selection
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Create preview
       const previewUrl = URL.createObjectURL(file);
       setImagePreview(previewUrl);
-      
-      // Upload file
       handleFileUpload(file);
     }
   };
 
-  // Handle URL input
   const handleUrlChange = (url: string) => {
     setFormData(prev => ({ ...prev, image: url }));
     setImagePreview(url);
   };
 
-  // Clear image
   const clearImage = () => {
     setFormData(prev => ({ ...prev, image: "" }));
     setImagePreview("");
@@ -198,98 +177,66 @@ export default function EditArticlePage({ params }: { params: Promise<{ id: stri
     }
   };
 
-  
-
-// Update the handleSubmit function in your frontend
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setLoading(true);
-  
-  try {
-
-     console.log('🎯 Form data before submission:', {
-      title: formData.title,
-      image: formData.image, // Check if this has the uploaded URL
-      imageLength: formData.image?.length,
-      hasImage: !!formData.image
-    });
-    console.log('🔍 [DEBUG] Form data on submit:', formData);
-    console.log('🔍 [DEBUG] Available categories:', categories);
-
-    // Validate all required fields first
-    if (!formData.title.trim() || !formData.author.trim() || !formData.content.trim()) {
-      throw new Error('Title, author, and content are required');
-    }
-
-    // Debug category validation step by step
-    if (!formData.categoryId) {
-      console.log('❌ [DEBUG] CategoryId is empty/null');
-      throw new Error('Please select a valid category');
-    }
-
-    if (formData.categoryId.trim() === '') {
-      console.log('❌ [DEBUG] CategoryId is empty string');
-      throw new Error('Please select a valid category');
-    }
-
-    // DON'T parse to number - category IDs are strings!
-    const categoryIdValue = formData.categoryId;
-    console.log('🔍 [DEBUG] Using categoryId as string:', categoryIdValue);
-
-    // Additional validation to ensure the category exists
-const categoryExists = categories.some(cat => cat.id.toString() === categoryIdValue.toString());
-    console.log('🔍 [DEBUG] Category exists check:', categoryExists, 'Looking for ID:', categoryIdValue);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
     
-    if (!categoryExists) {
-      console.log('❌ [DEBUG] Category not found in available categories');
-      console.log('🔍 [DEBUG] Available category IDs:', categories.map(cat => cat.id));
-      throw new Error('Selected category does not exist in available categories');
+    try {
+      if (!formData.title.trim() || !formData.author.trim() || !formData.content.trim()) {
+        throw new Error('Title, author, and content are required');
+      }
+
+      if (!formData.categoryId) {
+        throw new Error('Please select a valid category');
+      }
+
+      const categoryIdValue = formData.categoryId;
+      const categoryExists = categories.some(cat => cat.id.toString() === categoryIdValue.toString());
+      
+      if (!categoryExists) {
+        throw new Error('Selected category does not exist in available categories');
+      }
+
+      const tagsArray = formData.tags 
+        ? formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0)
+        : [];
+
+      const requestData = {
+        title: formData.title,
+        categoryId: categoryIdValue,
+        author: formData.author,
+        published_date: formData.published_date,
+        image: formData.image,
+        imageUrl: formData.image,
+        summary: formData.summary,
+        content: formData.content,
+        tags: tagsArray,
+      };    
+
+      const response = await fetch(`/api/admin/articles/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify(requestData),
+      });
+
+      const data = await response.json();
+      
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to update article');
+      }
+      
+      toast.success('Article updated successfully');
+      router.push('/admin/articles');
+    } catch (error) {
+      console.error('Error updating article:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to update article');
+    } finally {
+      setLoading(false);
     }
-
-    // Process tags from comma-separated string to array
-    const tagsArray = formData.tags 
-      ? formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0)
-      : [];
-
-    const requestData = {
-      title: formData.title,
-      categoryId: categoryIdValue, // Send as string
-      author: formData.author,
-      published_date: formData.published_date,
-      image: formData.image,
-      imageUrl: formData.image,
-      summary: formData.summary,
-      content: formData.content,
-      tags: tagsArray,
-    };    
-
-    console.log('📤 [DEBUG] Sending update data:', requestData);
-
-    const response = await fetch(`/api/admin/articles/${id}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include',
-      body: JSON.stringify(requestData),
-    });
-
-    const data = await response.json();
-    console.log('📥 [DEBUG] Update response:', data);
-    
-    if (!data.success) {
-      throw new Error(data.error || 'Failed to update article');
-    }
-    
-    toast.success('Article updated successfully');
-    router.push('/admin/articles');
-  } catch (error) {
-    console.error('❌ [DEBUG] Error updating article:', error);
-    toast.error(error instanceof Error ? error.message : 'Failed to update article');
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   const handleChange = (field: keyof typeof formData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -297,11 +244,11 @@ const categoryExists = categories.some(cat => cat.id.toString() === categoryIdVa
 
   if (fetching) {
     return (
-      <div className="p-6">
+      <div className="p-6 bg-[#0D0D0D] min-h-screen">
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
             <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-red-600" />
-            <p className="text-gray-500">Loading article...</p>
+            <p className="text-gray-400">Loading article...</p>
           </div>
         </div>
       </div>
@@ -310,7 +257,7 @@ const categoryExists = categories.some(cat => cat.id.toString() === categoryIdVa
 
   if (error) {
     return (
-      <div className="p-6">
+      <div className="p-6 bg-[#0D0D0D] min-h-screen">
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
             <p className="text-red-500 mb-4">{error}</p>
@@ -319,7 +266,7 @@ const categoryExists = categories.some(cat => cat.id.toString() === categoryIdVa
                 setFetching(true);
                 fetchCategories();
               }}
-              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
             >
               Retry
             </button>
@@ -330,54 +277,57 @@ const categoryExists = categories.some(cat => cat.id.toString() === categoryIdVa
   }
 
   return (
-    <div className="p-6">
+    <div className="p-6 bg-[#0D0D0D] min-h-screen">
       <div className="mb-8 mx-5">
-        <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+        <h2 className="text-2xl font-bold text-white flex items-center gap-2">
           <FileEdit className="text-red-600" /> Edit Article
         </h2>
       </div>
-      <div className="bg-white rounded-lg shadow p-6 mx-5">
+      
+      <div className="bg-[#171717] rounded-lg shadow border border-[#262626] p-6 mx-5">
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-200 mb-2">
                 Title *
               </label>
               <input
                 type="text"
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500"
+                className="w-full px-3 py-2 border border-[#262626] rounded-md shadow-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 bg-[#171717] text-white placeholder-gray-500 transition-colors"
                 value={formData.title}
                 onChange={(e) => handleChange('title', e.target.value)}
+                placeholder="Enter article title"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-200 mb-2">
                 Author *
               </label>
               <input
                 type="text"
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500"
+                className="w-full px-3 py-2 border border-[#262626] rounded-md shadow-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 bg-[#171717] text-white placeholder-gray-500 transition-colors"
                 value={formData.author}
                 onChange={(e) => handleChange('author', e.target.value)}
+                placeholder="Enter author name"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-200 mb-2">
               Category *
             </label>
             <select
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500"
+              className="w-full px-3 py-2 border border-[#262626] rounded-md shadow-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 bg-[#171717] text-white transition-colors"
               value={formData.categoryId}
               onChange={(e) => handleChange('categoryId', e.target.value)}
             >
-              <option value="">Select Category</option>
+              <option value="" className="text-gray-500">Select Category</option>
               {categories.map(category => (
-                <option key={category.id} value={category.id}>
+                <option key={category.id} value={category.id} className="text-white">
                   {category.name}
                 </option>
               ))}
@@ -389,115 +339,122 @@ const categoryExists = categories.some(cat => cat.id.toString() === categoryIdVa
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-200 mb-2">
                 Published Date
               </label>
               <input
                 type="date"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500"
+                className="w-full px-3 py-2 border border-[#262626] rounded-md shadow-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 bg-[#171717] text-white transition-colors"
                 value={formData.published_date}
                 onChange={(e) => handleChange('published_date', e.target.value)}
               />
             </div>
-          <div>
-             <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Image URL
-                  </label>
-                  <input
-                    type="url"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500"
-                    value={formData.image}
-                    onChange={(e) => handleChange('image', e.target.value)}
-                    placeholder="https://example.com/image.jpg"
-                  />
-                </div>
-          </div>
-          {/* Enhanced Image Section - Fixed Version */}
-        <div className="space-y-4">
-          <label className="block text-sm font-medium text-gray-700">
-            Upload Image (Alternative to URL above)
-          </label>
-          
-          {/* Image Preview */}
-          {imagePreview && (
-            <div className="relative inline-block">
-              <img 
-                src={imagePreview} 
-                alt="Preview" 
-                className="h-32 w-auto rounded-lg border"
-              />
-              <button
-                type="button"
-                onClick={clearImage}
-                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-          )}
-
-          {/* Upload Options */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* File Upload */}
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleFileSelect}
-                className="hidden"
-              />
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={uploading}
-                className="w-full flex flex-col items-center justify-center space-y-2 p-4 hover:bg-gray-50 rounded-md disabled:opacity-50"
-              >
-                {uploading ? (
-                  <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-                ) : (
-                  <Upload className="h-8 w-8 text-gray-400" />
-                )}
-                <span className="text-sm font-medium">
-                  {uploading ? 'Uploading...' : 'Upload from Computer'}
-                </span>
-                <span className="text-xs text-gray-500">
-                  PNG, JPG, GIF up to 5MB
-                </span>
-              </button>
-            </div>
-
-            {/* URL Input */}
-            <div className="border-2 border-gray-300 rounded-lg p-4">
-              <div className="flex items-center mb-2">
-                <Link className="h-5 w-5 text-gray-400 mr-2" />
-                <span className="text-sm font-medium">Or enter URL</span>
-              </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-200 mb-2">
+                Image URL
+              </label>
               <input
                 type="url"
+                className="w-full px-3 py-2 border border-[#262626] rounded-md shadow-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 bg-[#171717] text-white placeholder-gray-500 transition-colors"
                 value={formData.image}
-                onChange={(e) => handleUrlChange(e.target.value)}
+                onChange={(e) => handleChange('image', e.target.value)}
                 placeholder="https://example.com/image.jpg"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
               />
             </div>
           </div>
 
-          {/* Current Image Display */}
-          {formData.image && (
-            <div className="text-xs text-gray-500">
-              Current image: {formData.image}
+          {/* Enhanced Image Section */}
+          <div className="space-y-4">
+            <label className="block text-sm font-medium text-gray-200">
+              Upload Image (Alternative to URL above)
+            </label>
+            
+            {/* Image Preview */}
+            {imagePreview && (
+              <div className="relative inline-block">
+                <img 
+                  src={imagePreview} 
+                  alt="Preview" 
+                  className="h-32 w-auto rounded-lg border border-[#262626]"
+                />
+                <button
+                  type="button"
+                  onClick={clearImage}
+                  className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            )}
+
+            {/* Upload Options */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* File Upload */}
+              <div className="border-2 border-dashed border-[#262626] rounded-lg p-4 text-center bg-[#171717] transition-colors">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileSelect}
+                  className="hidden"
+                />
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
+                  className="w-full flex flex-col items-center justify-center space-y-2 p-4 hover:bg-[#262626] rounded-md disabled:opacity-50 transition-colors"
+                >
+                  {uploading ? (
+                    <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+                  ) : (
+                    <Upload className="h-8 w-8 text-gray-400" />
+                  )}
+                  <span className="text-sm font-medium text-gray-200">
+                    {uploading ? 'Uploading...' : 'Upload from Computer'}
+                  </span>
+                  <span className="text-xs text-gray-400">
+                    PNG, JPG, GIF up to 5MB
+                  </span>
+                </button>
+              </div>
+
+              {/* URL Input */}
+              <div className="border-2 border-[#262626] rounded-lg p-4 bg-[#171717] transition-colors">
+                <div className="flex items-center mb-2">
+                  <Link className="h-5 w-5 text-gray-400 mr-2" />
+                  <span className="text-sm font-medium text-gray-200">Or enter URL</span>
+                </div>
+                <input
+                  type="url"
+                  value={formData.image}
+                  onChange={(e) => handleUrlChange(e.target.value)}
+                  placeholder="https://example.com/image.jpg"
+                  className="w-full px-3 py-2 border border-[#262626] rounded-md text-sm bg-[#171717] text-white placeholder-gray-500 transition-colors"
+                />
+              </div>
             </div>
-          )}
-        </div>
-     
+
+            {/* Current Image Display - Fixed */}
+            {formData.image && (
+              <div className="text-xs text-gray-400 mt-2">
+                <span className="font-medium text-gray-200">Current image:</span>
+                <div 
+                  className="truncate mt-1 bg-[#262626] px-3 py-2 rounded border border-[#404040] text-gray-300"
+                  title={formData.image}
+                >
+                  {formData.image}
+                </div>
+              </div>
+            )}
+          </div>
+
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-200 mb-2">
               Summary
             </label>
             <textarea
               rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500"
+              className="w-full px-3 py-2 border border-[#262626] rounded-md shadow-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 bg-[#171717] text-white placeholder-gray-500 transition-colors"
               value={formData.summary}
               onChange={(e) => handleChange('summary', e.target.value)}
               placeholder="Brief summary of the article"
@@ -505,13 +462,13 @@ const categoryExists = categories.some(cat => cat.id.toString() === categoryIdVa
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-200 mb-2">
               Content *
             </label>
             <textarea
               required
               rows={8}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500"
+              className="w-full px-3 py-2 border border-[#262626] rounded-md shadow-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 bg-[#171717] text-white placeholder-gray-500 transition-colors"
               value={formData.content}
               onChange={(e) => handleChange('content', e.target.value)}
               placeholder="Article content"
@@ -519,33 +476,40 @@ const categoryExists = categories.some(cat => cat.id.toString() === categoryIdVa
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-200 mb-2">
               Tags
             </label>
             <input
               type="text"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500"
+              className="w-full px-3 py-2 border border-[#262626] rounded-md shadow-sm focus:ring-2 focus:ring-red-500 focus:border-red-500 bg-[#171717] text-white placeholder-gray-500 transition-colors"
               value={formData.tags}
               onChange={(e) => handleChange('tags', e.target.value)}
               placeholder="Comma-separated tags (e.g., tech, ai, news)"
             />
-            <p className="text-xs text-gray-500 mt-1">Separate tags with commas</p>
+            <p className="text-xs text-gray-400 mt-1">Separate tags with commas</p>
           </div>
 
-          <div className="flex justify-end space-x-4">
+          <div className="flex justify-end space-x-4 pt-4 border-t border-[#262626]">
             <button
               type="button"
               onClick={() => router.back()}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+              className="px-6 py-2 text-sm font-medium text-gray-200 bg-[#171717] border border-[#262626] rounded-md hover:bg-[#262626] transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading || !formData.categoryId}
-              className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 disabled:opacity-50"
+              className="px-6 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              {loading ? 'Updating...' : 'Update Article'}
+              {loading ? (
+                <span className="flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Updating...
+                </span>
+              ) : (
+                'Update Article'
+              )}
             </button>
           </div>
         </form>

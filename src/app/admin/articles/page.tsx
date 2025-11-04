@@ -21,7 +21,7 @@ interface Article {
   summary: string;
   content: string;
   tags: string[];
-  status: string; // Add status field
+  status: string;
   createdAt: string;
   updatedAt: string;
   _count?: {
@@ -48,8 +48,47 @@ interface FilterState {
   categoryId: string;
   startDate: string;
   endDate: string;
-  status: string; // Add status filter
+  status: string;
 }
+
+// Skeleton Loading Components
+const TableSkeleton = () => (
+  <div className="hidden md:block space-y-4 p-6">
+    {[...Array(5)].map((_, i) => (
+      <div key={i} className="flex items-center space-x-4 animate-pulse">
+        <div className="w-8 h-8 bg-[#262626] rounded"></div>
+        <div className="flex-1 space-y-2">
+          <div className="h-4 bg-[#262626] rounded w-3/4"></div>
+          <div className="h-3 bg-[#262626] rounded w-1/2"></div>
+        </div>
+        <div className="h-8 bg-[#262626] rounded w-20"></div>
+        <div className="h-8 bg-[#262626] rounded w-24"></div>
+      </div>
+    ))}
+  </div>
+);
+
+const MobileCardSkeleton = () => (
+  <div className="md:hidden space-y-4 p-4">
+    {[...Array(3)].map((_, i) => (
+      <div key={i} className="bg-[#171717] border border-[#262626] rounded-lg p-4 animate-pulse">
+        <div className="flex items-start justify-between mb-3">
+          <div className="flex items-center gap-3">
+            <div className="w-6 h-6 bg-[#262626] rounded"></div>
+            <div className="space-y-2">
+              <div className="h-4 bg-[#262626] rounded w-48"></div>
+              <div className="flex gap-2">
+                <div className="h-6 bg-[#262626] rounded w-16"></div>
+                <div className="h-6 bg-[#262626] rounded w-20"></div>
+              </div>
+            </div>
+          </div>
+          <div className="w-6 h-6 bg-[#262626] rounded"></div>
+        </div>
+      </div>
+    ))}
+  </div>
+);
 
 export default function ArticlesPage() {
   const [articles, setArticles] = useState<Article[]>([]);
@@ -74,7 +113,7 @@ export default function ArticlesPage() {
     categoryId: "",
     startDate: "",
     endDate: "",
-    status: "" // Add status filter
+    status: ""
   });
 
   const allIds = useMemo(() => articles.map(a => a.id), [articles]);
@@ -87,7 +126,6 @@ export default function ArticlesPage() {
     fetchCategories();
   }, [currentPage]);
 
-  // Fetch categories for filter dropdown
   const fetchCategories = async () => {
     try {
       const response = await fetch('/api/categories', {
@@ -109,12 +147,11 @@ export default function ArticlesPage() {
     try {
       const params = new URLSearchParams();
       
-      // Add all filters to params
       if (filters.search.trim()) params.set('search', filters.search.trim());
       if (filters.categoryId) params.set('categoryId', filters.categoryId);
       if (filters.startDate) params.set('startDate', filters.startDate);
       if (filters.endDate) params.set('endDate', filters.endDate);
-      if (filters.status) params.set('filter', filters.status); // Add status filter
+      if (filters.status) params.set('filter', filters.status);
       
       params.set('page', page.toString());
       params.set('limit', '10');
@@ -146,13 +183,11 @@ export default function ArticlesPage() {
     }
   };
 
-  // Apply filters and reset to page 1
   const applyFilters = () => {
     setCurrentPage(1);
     fetchArticles(1);
   };
 
-  // Clear all filters
   const clearFilters = () => {
     setFilters({
       search: "",
@@ -165,12 +200,10 @@ export default function ArticlesPage() {
     setTimeout(() => fetchArticles(1), 100);
   };
 
-  // Handle individual filter changes
   const handleFilterChange = (key: keyof FilterState, value: string) => {
     setFilters(prev => ({ ...prev, [key]: value }));
   };
 
-  // Toggle row expansion for mobile view
   const toggleRowExpand = (id: number) => {
     setExpandedRows(prev => ({
       ...prev,
@@ -178,7 +211,6 @@ export default function ArticlesPage() {
     }));
   };
 
-  // Single delete using the bulk endpoint
   const deleteOne = async (id: number) => {
     try {
       const response = await fetch('/api/admin/articles', {
@@ -202,7 +234,6 @@ export default function ArticlesPage() {
         setArticles(prev => prev.filter(article => article.id !== id));
         toast.success('Article deleted successfully');
         
-        // Refresh the list if we're on the last page with few items
         if (articles.length === 1 && currentPage > 1) {
           setCurrentPage(currentPage - 1);
         } else {
@@ -217,7 +248,6 @@ export default function ArticlesPage() {
     }
   };
 
-  // Bulk delete using the bulk endpoint
   const handleBulkDelete = async () => {
     if (selectedIds.length === 0) return;
     
@@ -285,7 +315,6 @@ export default function ArticlesPage() {
     );
   };
 
-  // Select all on current page
   const toggleSelectAll = () => {
     if (allSelected) {
       setSelected({});
@@ -296,229 +325,224 @@ export default function ArticlesPage() {
     }
   };
 
-  // Individual row selection
   const toggleSelectRow = (id: number) => {
     setSelected(prev => ({ ...prev, [id]: !prev[id] }));
   };
 
-  // Check if any filters are active
   const hasActiveFilters = filters.search || filters.categoryId || filters.startDate || filters.endDate || filters.status;
 
-  // Get status badge color
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'draft':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-yellow-500/20 text-yellow-300 border border-yellow-500/30';
       case 'published':
-        return 'bg-green-100 text-green-800';
+        return 'bg-green-500/20 text-green-300 border border-green-500/30';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gray-500/20 text-gray-300 border border-gray-500/30';
     }
   };
 
   return (
-   <div className="p-6">
-  {/* Header with Title on Top */}
-  <div className="flex flex-col gap-4 mb-6 ">
-    <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
-      <FileText className="text-red-600" /> Articles Management
-    </h2>
-    
-    {/* Controls Row */}
-    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-      {/* Left Side - Search and Filters */}
-      <div className="flex  sm:flex-row items-start sm:items-center gap-3">
-        {/* Search Input */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <input
-            value={filters.search}
-            onChange={(e) => handleFilterChange('search', e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter') applyFilters(); }}
-            placeholder="Search articles..."
-            className="pl-9 pr-3 py-2 rounded-md border border-border bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-red-500 w-full sm:w-48 md:w-64"
-          />
+    <div className="p-6 bg-[#0D0D0D] min-h-screen">
+      {/* Header */}
+      <div className="flex flex-col gap-4 mb-6">
+        <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+          <FileText className="text-red-600" /> Articles Management
+        </h2>
+        
+        {/* Controls Row */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          {/* Left Side - Search and Filters */}
+          <div className="flex sm:flex-row items-start sm:items-center gap-3">
+            {/* Search Input */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <input
+                value={filters.search}
+                onChange={(e) => handleFilterChange('search', e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') applyFilters(); }}
+                placeholder="Search articles..."
+                className="pl-9 pr-3 py-2 rounded-md border border-[#262626] bg-[#171717] text-sm text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 w-full sm:w-48 md:w-64 transition-colors"
+              />
+            </div>
+
+            {/* Filter Toggle Button */}
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className={`flex items-center gap-2 px-3 py-2 rounded-md border text-sm transition-colors ${
+                showFilters || hasActiveFilters 
+                  ? 'bg-red-500/20 border-red-500/50 text-red-300' 
+                  : 'bg-[#171717] border-[#262626] text-gray-300 hover:bg-[#262626]'
+              }`}
+            >
+              <Filter size={16} />
+              Filters
+              {hasActiveFilters && (
+                <span className="bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center">
+                  !
+                </span>
+              )}
+            </button>
+          </div>
+
+          {/* Right Side - Actions */}
+          <div className="flex items-center gap-3">
+            {/* Bulk Delete Button */}
+            {selectedIds.length > 0 && (
+              <button
+                onClick={handleBulkDeleteConfirm}
+                className="px-3 py-2 text-sm bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+              >
+                Delete ({selectedIds.length})
+              </button>
+            )}
+
+            {/* Add Article Button */}
+            <Link 
+              href="/admin/articles/add" 
+              className="inline-flex items-center px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors duration-200 gap-2"
+            >
+              <Plus size={18} /> Add Article
+            </Link>
+          </div>
         </div>
-
-        {/* Filter Toggle Button */}
-        <button
-          onClick={() => setShowFilters(!showFilters)}
-          className={`flex items-center gap-2 px-3 py-2 rounded-md border text-sm text-primary-foreground bg-primary ${
-            showFilters || hasActiveFilters 
-              ? 'bg-red-100 border-red-300 text-red-700' 
-              : 'bg-gray-100 border-gray-300 text-gray-700'
-          }`}
-        >
-          <Filter size={16} />
-          Filters
-          {hasActiveFilters && (
-            <span className="bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center ">
-              !
-            </span>
-          )}
-        </button>
       </div>
-
-      {/* Right Side - Actions */}
-      <div className="flex items-center gap-3">
-        {/* Bulk Delete Button */}
-        {selectedIds.length > 0 && (
-          <button
-            onClick={handleBulkDeleteConfirm}
-            className="px-3 py-2 text-sm bg-red-600 text-white rounded-md hover:bg-red-700"
-          >
-            Delete ({selectedIds.length})
-          </button>
-        )}
-
-        {/* Add Article Button */}
-        <Link 
-          href="/admin/articles/add" 
-          className="inline-flex items-center px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors duration-200 gap-2"
-        >
-          <Plus size={18} /> Add Article
-        </Link>
-      </div>
-    </div>
-  </div>
-
-  {/* Rest of your code remains the same... */}
 
       {/* Advanced Filters Panel */}
-     {showFilters && (
-  <div className="bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-gray-700 rounded-lg p-4 mb-6">
-    <div className="flex items-center justify-between mb-4">
-      <h3 className="font-medium text-gray-900 dark:text-white">Advanced Filters</h3>
-      <div className="flex items-center gap-2">
-        {hasActiveFilters && (
-          <button
-            onClick={clearFilters}
-            className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
-          >
-            <X size={14} />
-            Clear All
-          </button>
-        )}
-        <button
-          onClick={applyFilters}
-          className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-sm rounded transition-colors"
-        >
-          Apply Filters
-        </button>
-      </div>
-    </div>
-    
-    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-      {/* Status Filter */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Status
-        </label>
-        <select
-          value={filters.status}
-          onChange={(e) => handleFilterChange('status', e.target.value)}
-          className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
-        >
-          <option value="">All Status</option>
-          <option value="published">Published</option>
-          <option value="drafts">Drafts</option>
-        </select>
-      </div>
+      {showFilters && (
+        <div className="bg-[#171717] border border-[#262626] rounded-lg p-4 mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-medium text-white">Advanced Filters</h3>
+            <div className="flex items-center gap-2">
+              {hasActiveFilters && (
+                <button
+                  onClick={clearFilters}
+                  className="flex items-center gap-1 text-sm text-gray-400 hover:text-gray-200 transition-colors"
+                >
+                  <X size={14} />
+                  Clear All
+                </button>
+              )}
+              <button
+                onClick={applyFilters}
+                className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-sm rounded transition-colors"
+              >
+                Apply Filters
+              </button>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {/* Status Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1">
+                Status
+              </label>
+              <select
+                value={filters.status}
+                onChange={(e) => handleFilterChange('status', e.target.value)}
+                className="w-full p-2 border border-[#262626] rounded-md bg-[#171717] text-white text-sm focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors"
+              >
+                <option value="" className="text-gray-400">All Status</option>
+                <option value="published" className="text-white">Published</option>
+                <option value="drafts" className="text-white">Drafts</option>
+              </select>
+            </div>
 
-      {/* Category Filter */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Category
-        </label>
-        <select
-          value={filters.categoryId}
-          onChange={(e) => handleFilterChange('categoryId', e.target.value)}
-          className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
-        >
-          <option value="">All Categories</option>
-          {categories.map(category => (
-            <option key={category.id} value={category.id}>
-              {category.name}
-            </option>
-          ))}
-        </select>
-      </div>
+            {/* Category Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1">
+                Category
+              </label>
+              <select
+                value={filters.categoryId}
+                onChange={(e) => handleFilterChange('categoryId', e.target.value)}
+                className="w-full p-2 border border-[#262626] rounded-md bg-[#171717] text-white text-sm focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors"
+              >
+                <option value="" className="text-gray-400">All Categories</option>
+                {categories.map(category => (
+                  <option key={category.id} value={category.id} className="text-white">
+                    {category.name}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-      {/* Start Date Filter */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          From Date
-        </label>
-        <div className="relative">
-          <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500" />
-          <input
-            type="date"
-            value={filters.startDate}
-            onChange={(e) => handleFilterChange('startDate', e.target.value)}
-            className="w-full pl-10 p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
-          />
+            {/* Start Date Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1">
+                From Date
+              </label>
+              <div className="relative">
+                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <input
+                  type="date"
+                  value={filters.startDate}
+                  onChange={(e) => handleFilterChange('startDate', e.target.value)}
+                  className="w-full pl-10 p-2 border border-[#262626] rounded-md bg-[#171717] text-white text-sm focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors"
+                />
+              </div>
+            </div>
+
+            {/* End Date Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1">
+                To Date
+              </label>
+              <div className="relative">
+                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <input
+                  type="date"
+                  value={filters.endDate}
+                  onChange={(e) => handleFilterChange('endDate', e.target.value)}
+                  className="w-full pl-10 p-2 border border-[#262626] rounded-md bg-[#171717] text-white text-sm focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors"
+                />
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
-
-      {/* End Date Filter */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          To Date
-        </label>
-        <div className="relative">
-          <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500" />
-          <input
-            type="date"
-            value={filters.endDate}
-            onChange={(e) => handleFilterChange('endDate', e.target.value)}
-            className="w-full pl-10 p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
-          />
-        </div>
-      </div>
-    </div>
-  </div>
-)}
+      )}
 
       {/* Active Filters Display */}
       {hasActiveFilters && (
         <div className="flex items-center gap-2 mb-4 flex-wrap">
-          <span className="text-sm text-gray-600">Active filters:</span>
+          <span className="text-sm text-gray-400">Active filters:</span>
           {filters.search && (
-            <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 text-sm rounded-full">
+            <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-500/20 text-blue-300 text-sm rounded-full border border-blue-500/30">
               Search: "{filters.search}"
-              <button onClick={() => handleFilterChange('search', '')} className="hover:text-blue-900">
+              <button onClick={() => handleFilterChange('search', '')} className="hover:text-blue-200">
                 <X size={12} />
               </button>
             </span>
           )}
           {filters.status && (
-            <span className="inline-flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-800 text-sm rounded-full">
+            <span className="inline-flex items-center gap-1 px-2 py-1 bg-purple-500/20 text-purple-300 text-sm rounded-full border border-purple-500/30">
               Status: {filters.status === 'drafts' ? 'Drafts' : 'Published'}
-              <button onClick={() => handleFilterChange('status', '')} className="hover:text-purple-900">
+              <button onClick={() => handleFilterChange('status', '')} className="hover:text-purple-200">
                 <X size={12} />
               </button>
             </span>
           )}
           {filters.categoryId && (
-            <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-800 text-sm rounded-full">
+            <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-500/20 text-green-300 text-sm rounded-full border border-green-500/30">
               Category: {categories.find(c => c.id.toString() === filters.categoryId)?.name}
-              <button onClick={() => handleFilterChange('categoryId', '')} className="hover:text-green-900">
+              <button onClick={() => handleFilterChange('categoryId', '')} className="hover:text-green-200">
                 <X size={12} />
               </button>
             </span>
           )}
           {filters.startDate && (
-            <span className="inline-flex items-center gap-1 px-2 py-1 bg-orange-100 text-orange-800 text-sm rounded-full">
+            <span className="inline-flex items-center gap-1 px-2 py-1 bg-orange-500/20 text-orange-300 text-sm rounded-full border border-orange-500/30">
               From: {new Date(filters.startDate).toLocaleDateString()}
-              <button onClick={() => handleFilterChange('startDate', '')} className="hover:text-orange-900">
+              <button onClick={() => handleFilterChange('startDate', '')} className="hover:text-orange-200">
                 <X size={12} />
               </button>
             </span>
           )}
           {filters.endDate && (
-            <span className="inline-flex items-center gap-1 px-2 py-1 bg-pink-100 text-pink-800 text-sm rounded-full">
+            <span className="inline-flex items-center gap-1 px-2 py-1 bg-pink-500/20 text-pink-300 text-sm rounded-full border border-pink-500/30">
               To: {new Date(filters.endDate).toLocaleDateString()}
-              <button onClick={() => handleFilterChange('endDate', '')} className="hover:text-pink-900">
+              <button onClick={() => handleFilterChange('endDate', '')} className="hover:text-pink-200">
                 <X size={12} />
               </button>
             </span>
@@ -526,64 +550,65 @@ export default function ArticlesPage() {
         </div>
       )}
       
-      <div className="overflow-x-auto bg-card text-card-foreground rounded-lg shadow-sm border border-border">
+      {/* Main Content */}
+      <div className="overflow-x-auto bg-[#171717] rounded-lg shadow-sm border border-[#262626]">
         {loading ? (
-          <div className="p-8 text-center">
-            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-red-600" />
-            <p className="text-muted-foreground">Loading articles...</p>
-          </div>
+          <>
+            <TableSkeleton />
+            <MobileCardSkeleton />
+          </>
         ) : error ? (
           <div className="p-8 text-center">
-            <p className="text-red-500 mb-4">{error}</p>
+            <p className="text-red-400 mb-4">{error}</p>
             <button 
               onClick={() => fetchArticles(currentPage)}
-              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
             >
               Retry
             </button>
           </div>
         ) : articles.length === 0 ? (
-          <div className="p-8 text-center text-muted-foreground">
+          <div className="p-8 text-center text-gray-400">
             {hasActiveFilters ? 'No articles match your filters' : 'No articles found'}
           </div>
         ) : (
           <>
             {/* Desktop Table */}
             <div className="hidden md:block">
-              <table className="min-w-full divide-y divide-border">
-                <thead className="bg-muted">
-                  <tr className="hover:bg-muted/50 dark:hover:bg-gray-700/5">
+              <table className="min-w-full divide-y divide-[#262626]">
+                <thead className="bg-[#171717]">
+                  <tr>
                     <th className="px-6 py-3 w-12">
                       <button 
                         onClick={toggleSelectAll}
-                        className="p-1 rounded hover:bg-muted transition-colors"
+                        className="p-1 rounded hover:bg-[#262626] transition-colors"
                         title={allSelected ? "Deselect all" : "Select all"}
                       >
                         {allSelected ? (
                           <CheckSquare className="h-4 w-4 text-red-600" />
                         ) : someSelected ? (
-                          <div className="w-4 h-4 border-2 border-red-600 bg-red-100 rounded" />
+                          <div className="w-4 h-4 border-2 border-red-600 bg-red-500/20 rounded" />
                         ) : (
                           <Square className="h-4 w-4 text-gray-400" />
                         )}
                       </button>
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Title</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Category</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Status</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Author</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Published Date</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Created</th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">Actions</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Title</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Category</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Status</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Author</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Published Date</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Created</th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border  dark:divide-gray-700/50">
+                <tbody className="divide-y divide-[#262626]">
                   {articles.map((article) => (
-                    <tr key={article.id} className="">
+                    <tr key={article.id} className="hover:bg-[#262626]/50 transition-colors">
                       <td className="px-6 py-4">
                         <button 
                           onClick={() => toggleSelectRow(article.id)}
-                          className="p-1 rounded hover:bg-muted transition-colors"
+                          className="p-1 rounded hover:bg-[#262626] transition-colors"
                         >
                           {selected[article.id] ? (
                             <CheckSquare className="h-4 w-4 text-red-600" />
@@ -592,48 +617,48 @@ export default function ArticlesPage() {
                           )}
                         </button>
                       </td>
-                      <td className="px-6 py-4 text-sm font-medium text-foreground bg-primary">
+                      <td className="px-6 py-4 text-sm font-medium text-white">
                         <div className="max-w-xs truncate" title={article.title}>
                           {article.title}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="px-2 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
+                        <span className="px-2 py-1 rounded-full text-xs font-semibold  bg-blue-100 text-blue-800">
                           {article.category?.name || '-'}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getStatusBadge(article.status)}`}>
+                        <span className={`px-2 py-1 rounded-full text-xs font-semibold bg-white dark:text-gray-600 ${getStatusBadge(article.status)}`}>
                           {article.status || 'published'}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
                         {article.author}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
                         {article.published_date ? new Date(article.published_date).toLocaleDateString() : '-'}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
                         {new Date(article.createdAt).toLocaleDateString()}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right">
                         <div className="flex gap-2 justify-end">
                           <Link 
                             href={`/admin/articles/${article.id}`} 
-                            className="p-2 rounded hover:bg-muted text-blue-600 transition-colors" 
+                            className="p-2 rounded hover:bg-[#262626] text-blue-400 transition-colors" 
                             title="View"
                           >
                             <Eye size={18} />
                           </Link>
                           <Link 
                             href={`/admin/articles/${article.id}/edit`} 
-                            className="p-2 rounded hover:bg-muted text-yellow-600 transition-colors" 
+                            className="p-2 rounded hover:bg-[#262626] text-yellow-400 transition-colors" 
                             title="Edit"
                           >
                             <Edit size={18} />
                           </Link>
                           <button 
-                            className="p-2 rounded hover:bg-muted text-red-600 transition-colors" 
+                            className="p-2 rounded hover:bg-[#262626] text-red-400 transition-colors" 
                             title="Delete" 
                             onClick={() => handleDelete(article.id, article.title)}
                           >
@@ -650,23 +675,23 @@ export default function ArticlesPage() {
             {/* Mobile Cards */}
             <div className="md:hidden space-y-4 p-4">
               {articles.map((article) => (
-                <div key={article.id} className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700/50 rounded-lg p-4 shadow-sm transition-colors duration-200 hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                <div key={article.id} className="bg-[#171717] border border-[#262626] rounded-lg p-4 shadow-sm transition-colors duration-200 hover:bg-[#262626]/50">
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-3">
                       <button 
                         onClick={() => toggleSelectRow(article.id)}
-                        className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                        className="p-1 rounded hover:bg-[#262626] transition-colors"
                       >
                         {selected[article.id] ? (
                           <CheckSquare className="h-4 w-4 text-red-600" />
                         ) : (
-                          <Square className="h-4 w-4 text-gray-400 dark:text-gray-500" />
+                          <Square className="h-4 w-4 text-gray-400" />
                         )}
                       </button>
                       <div>
-                        <h3 className="font-medium text-gray-900 dark:text-white line-clamp-2">{article.title}</h3>
+                        <h3 className="font-medium text-white line-clamp-2">{article.title}</h3>
                         <div className="flex items-center gap-2 mt-1">
-                          <span className="px-2 py-1 rounded-full text-xs font-semibold bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300">
+                          <span className="px-2 py-1 rounded-full text-xs font-semibold bg-blue-500/20 text-blue-300 border border-blue-500/30">
                             {article.category?.name || '-'}
                           </span>
                           <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getStatusBadge(article.status)}`}>
@@ -677,28 +702,28 @@ export default function ArticlesPage() {
                     </div>
                     <button 
                       onClick={() => toggleRowExpand(article.id)}
-                      className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                      className="p-1 rounded hover:bg-[#262626] transition-colors text-gray-400"
                     >
                       {expandedRows[article.id] ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                     </button>
                   </div>
 
                   {expandedRows[article.id] && (
-                    <div className="border-t border-gray-200 dark:border-gray-700 pt-3 mt-3 space-y-2">
+                    <div className="border-t border-[#262626] pt-3 mt-3 space-y-2">
                       <div className="grid grid-cols-2 gap-2 text-sm">
                         <div>
-                          <span className="font-medium text-gray-700 dark:text-gray-300">Author:</span>
-                          <p className="text-gray-600 dark:text-gray-400">{article.author}</p>
+                          <span className="font-medium text-gray-300">Author:</span>
+                          <p className="text-gray-400">{article.author}</p>
                         </div>
                         <div>
-                          <span className="font-medium text-gray-700 dark:text-gray-300">Published:</span>
-                          <p className="text-gray-600 dark:text-gray-400">
+                          <span className="font-medium text-gray-300">Published:</span>
+                          <p className="text-gray-400">
                             {article.published_date ? new Date(article.published_date).toLocaleDateString() : '-'}
                           </p>
                         </div>
                         <div>
-                          <span className="font-medium text-gray-700 dark:text-gray-300">Created:</span>
-                          <p className="text-gray-600 dark:text-gray-400">{new Date(article.createdAt).toLocaleDateString()}</p>
+                          <span className="font-medium text-gray-300">Created:</span>
+                          <p className="text-gray-400">{new Date(article.createdAt).toLocaleDateString()}</p>
                         </div>
                       </div>
                       <div className="flex gap-2 pt-2">
@@ -727,29 +752,29 @@ export default function ArticlesPage() {
               ))}
             </div>
             
-          {/* Pagination */}
-          <div className="flex justify-between items-center m-2 px-6 mb-8">
-            <button
-              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-              disabled={currentPage === 1}
-              className="px-3 py-1 mr-4 rounded bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50 transition-colors text-gray-900 dark:text-white"
-            >
-              Previous
-            </button>
+            {/* Pagination */}
+            <div className="flex justify-between items-center m-2 px-6 mb-8">
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className="px-3 py-1 mr-4 rounded bg-[#262626] hover:bg-[#404040] disabled:opacity-50 transition-colors text-white"
+              >
+                Previous
+              </button>
 
-            <span className="text-sm text-gray-700 dark:text-gray-300">
-              Page {pagination.page} of {pagination.totalPages} 
-              {pagination.total > 0 && ` (${pagination.total} All articles)`}
-            </span>
+              <span className="text-sm text-gray-300">
+                Page {pagination.page} of {pagination.totalPages} 
+                {pagination.total > 0 && ` (${pagination.total} All articles)`}
+              </span>
 
-            <button
-              onClick={() => setCurrentPage(prev => Math.min(prev + 1, pagination.totalPages))}
-              disabled={currentPage === pagination.totalPages || pagination.totalPages === 0}
-              className="px-3 py-1 ml-2 rounded bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50 transition-colors text-gray-900 dark:text-white"
-            >
-              Next
-            </button>
-          </div>
+              <button
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, pagination.totalPages))}
+                disabled={currentPage === pagination.totalPages || pagination.totalPages === 0}
+                className="px-3 py-1 ml-2 rounded bg-[#262626] hover:bg-[#404040] disabled:opacity-50 transition-colors text-white"
+              >
+                Next
+              </button>
+            </div>
           </>
         )}
       </div>

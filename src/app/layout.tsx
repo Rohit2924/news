@@ -1,5 +1,4 @@
 // src/app/layout.tsx
-// src/app/layout.tsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -55,7 +54,7 @@ export default function RootLayout({
   // Don't render chrome until after hydration to prevent mismatch
   if (!mounted) {
     return (
-      <html lang="en">
+      <html lang="en" className="dark">
         <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-white dark:bg-black text-black dark:text-white transition-colors duration-300`}>
           <AuthProvider>
             <main>{children}</main>
@@ -67,7 +66,7 @@ export default function RootLayout({
   }
 
   return (
-    <html lang="en">
+    <html lang="en" className="dark">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-white dark:bg-black text-black dark:text-white transition-colors duration-300`}>
         <AuthProvider>
           {!hideChrome && <BreakingBar />}

@@ -22,6 +22,89 @@ interface DraftData {
   tags: string;
 }
 
+// Skeleton Loading Component
+const FormSkeleton = () => (
+  <div className="p-6 bg-[#0D0D0D] min-h-screen">
+    <div className="mb-8 mx-5">
+      <div className="flex justify-between items-center">
+        <div className="h-8 bg-[#262626] rounded w-64 animate-pulse"></div>
+        <div className="flex gap-2">
+          <div className="h-10 bg-[#262626] rounded w-24 animate-pulse"></div>
+          <div className="h-10 bg-[#262626] rounded w-24 animate-pulse"></div>
+        </div>
+      </div>
+    </div>
+    
+    <div className="bg-[#171717] rounded-lg border border-[#262626] p-6 mx-5">
+      <div className="space-y-6">
+        {/* Title & Author */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-2">
+            <div className="h-4 bg-[#262626] rounded w-20 animate-pulse"></div>
+            <div className="h-10 bg-[#262626] rounded animate-pulse"></div>
+          </div>
+          <div className="space-y-2">
+            <div className="h-4 bg-[#262626] rounded w-20 animate-pulse"></div>
+            <div className="h-10 bg-[#262626] rounded animate-pulse"></div>
+          </div>
+        </div>
+
+        {/* Category */}
+        <div className="space-y-2">
+          <div className="h-4 bg-[#262626] rounded w-24 animate-pulse"></div>
+          <div className="h-10 bg-[#262626] rounded animate-pulse"></div>
+        </div>
+
+        {/* Date & Image URL */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-2">
+            <div className="h-4 bg-[#262626] rounded w-32 animate-pulse"></div>
+            <div className="h-10 bg-[#262626] rounded animate-pulse"></div>
+          </div>
+          <div className="space-y-2">
+            <div className="h-4 bg-[#262626] rounded w-24 animate-pulse"></div>
+            <div className="h-10 bg-[#262626] rounded animate-pulse"></div>
+          </div>
+        </div>
+
+        {/* Image Upload Section */}
+        <div className="space-y-4">
+          <div className="h-4 bg-[#262626] rounded w-48 animate-pulse"></div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="h-32 bg-[#262626] rounded-lg animate-pulse"></div>
+            <div className="h-32 bg-[#262626] rounded-lg animate-pulse"></div>
+          </div>
+        </div>
+
+        {/* Summary */}
+        <div className="space-y-2">
+          <div className="h-4 bg-[#262626] rounded w-20 animate-pulse"></div>
+          <div className="h-24 bg-[#262626] rounded animate-pulse"></div>
+        </div>
+
+        {/* Content */}
+        <div className="space-y-2">
+          <div className="h-4 bg-[#262626] rounded w-24 animate-pulse"></div>
+          <div className="h-48 bg-[#262626] rounded animate-pulse"></div>
+        </div>
+
+        {/* Tags */}
+        <div className="space-y-2">
+          <div className="h-4 bg-[#262626] rounded w-16 animate-pulse"></div>
+          <div className="h-10 bg-[#262626] rounded animate-pulse"></div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex justify-end gap-4 pt-6">
+          <div className="h-10 bg-[#262626] rounded w-24 animate-pulse"></div>
+          <div className="h-10 bg-[#262626] rounded w-32 animate-pulse"></div>
+          <div className="h-10 bg-[#262626] rounded w-32 animate-pulse"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
 export default function AddArticlePage() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -204,6 +287,11 @@ export default function AddArticlePage() {
         throw new Error('Title, author, category, and content are required to publish');
       }
 
+      // For published articles, also require author
+      if (status === 'published' && !formData.author.trim()) {
+        throw new Error('Author is required to publish');
+      }
+
       // Process tags
       const tagsArray = formData.tags 
         ? formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0)
@@ -225,14 +313,9 @@ export default function AddArticlePage() {
           summary: formData.summary,
           content: formData.content,
           tags: tagsArray,
-          status: status // Send draft or published status
+          status: status
         }),
       });
-      
-    // For published articles, also require author
-    if (status === 'published' && !formData.author.trim()) {
-      throw new Error('Author is required to publish');
-    }
 
       const data = await response.json();
       
@@ -272,29 +355,20 @@ export default function AddArticlePage() {
   }, [hasUnsavedChanges]);
 
   if (fetching) {
-    return (
-      <div className="p-6">
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-red-600" />
-            <p className="text-gray-500">Loading categories...</p>
-          </div>
-        </div>
-      </div>
-    );
+    return <FormSkeleton />;
   }
 
   return (
-    <div className="p-6 dark:bg-gray-900">
+    <div className="p-6 bg-[#0D0D0D] min-h-screen">
       {/* Header with Save Status */}
       <div className="mb-8 mx-5">
         <div className="flex justify-between items-center">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+          <h2 className="text-2xl font-bold text-white flex items-center gap-2">
             <FilePlus className="text-red-600" /> Add New Article
           </h2>
           <div className="flex items-center gap-4">
             {/* Save Status */}
-            <div className="text-sm text-gray-500 dark:text-gray-400">
+            <div className="text-sm text-gray-400">
               {saving ? (
                 <div className="flex items-center gap-2">
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -311,7 +385,7 @@ export default function AddArticlePage() {
                 type="button"
                 onClick={handleSaveDraft}
                 disabled={saving}
-                className="px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 flex items-center gap-2"
+                className="px-3 py-2 text-sm font-medium text-gray-300 bg-[#171717] border border-[#262626] rounded-md hover:bg-[#262626] disabled:opacity-50 flex items-center gap-2 transition-colors"
               >
                 <Save className="h-4 w-4" />
                 Save Draft
@@ -320,7 +394,7 @@ export default function AddArticlePage() {
               <button
                 type="button"
                 onClick={clearDraft}
-                className="px-3 py-2 text-sm font-medium text-red-600 dark:text-red-400 bg-white dark:bg-gray-700 border border-red-300 dark:border-red-600 rounded-md hover:bg-red-50 dark:hover:bg-red-900/20"
+                className="px-3 py-2 text-sm font-medium text-red-400 bg-[#171717] border border-red-500/30 rounded-md hover:bg-red-500/10 transition-colors"
               >
                 Clear Draft
               </button>
@@ -329,48 +403,50 @@ export default function AddArticlePage() {
         </div>
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mx-5">
+      <div className="bg-[#171717] rounded-lg border border-[#262626] p-6 mx-5">
         <form onSubmit={(e) => handleSubmit(e, 'published')} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-gray-300 mb-2">
                 Title *
               </label>
               <input
                 type="text"
                 required
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                className="w-full px-3 py-2 border border-[#262626] rounded-md focus:ring-2 focus:ring-red-500 focus:border-red-500 bg-[#171717] text-white placeholder-gray-400 transition-colors"
                 value={formData.title}
                 onChange={(e) => handleFormChange('title', e.target.value)}
+                placeholder="Enter article title"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-gray-300 mb-2">
                 Author *
               </label>
               <input
                 type="text"
                 required
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                className="w-full px-3 py-2 border border-[#262626] rounded-md focus:ring-2 focus:ring-red-500 focus:border-red-500 bg-[#171717] text-white placeholder-gray-400 transition-colors"
                 value={formData.author}
                 onChange={(e) => handleFormChange('author', e.target.value)}
+                placeholder="Enter author name"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-gray-300 mb-2">
               Category *
             </label>
             <select
               required
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              className="w-full px-3 py-2 border border-[#262626] rounded-md focus:ring-2 focus:ring-red-500 focus:border-red-500 bg-[#171717] text-white transition-colors"
               value={formData.categoryId}
               onChange={(e) => handleFormChange('categoryId', e.target.value)}
             >
-              <option value="">Select Category</option>
+              <option value="" className="text-gray-400">Select Category</option>
               {categories.map(category => (
-                <option key={category.id} value={category.id}>
+                <option key={category.id} value={category.id} className="text-white">
                   {category.name}
                 </option>
               ))}
@@ -379,23 +455,23 @@ export default function AddArticlePage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-gray-300 mb-2">
                 Published Date
               </label>
               <input
                 type="date"
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                className="w-full px-3 py-2 border border-[#262626] rounded-md focus:ring-2 focus:ring-red-500 focus:border-red-500 bg-[#171717] text-white transition-colors"
                 value={formData.published_date}
                 onChange={(e) => handleFormChange('published_date', e.target.value)}
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-gray-300 mb-2">
                 Image URL (Optional)
               </label>
               <input
                 type="text"
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                className="w-full px-3 py-2 border border-[#262626] rounded-md focus:ring-2 focus:ring-red-500 focus:border-red-500 bg-[#171717] text-white placeholder-gray-400 transition-colors"
                 value={formData.image}
                 onChange={(e) => handleUrlChange(e.target.value)}
                 placeholder="https://example.com/image.jpg (or use upload below)"
@@ -405,7 +481,7 @@ export default function AddArticlePage() {
 
           {/* Enhanced Image Upload Section */}
           <div className="space-y-4">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label className="block text-sm font-medium text-gray-300">
               Upload Image (Alternative to URL above)
             </label>
             
@@ -415,12 +491,12 @@ export default function AddArticlePage() {
                 <img 
                   src={imagePreview} 
                   alt="Preview" 
-                  className="h-32 w-auto rounded-lg border"
+                  className="h-32 w-auto rounded-lg border border-[#262626]"
                 />
                 <button
                   type="button"
                   onClick={clearImage}
-                  className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                  className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -430,7 +506,7 @@ export default function AddArticlePage() {
             {/* Upload Options */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* File Upload */}
-              <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-4 text-center">
+              <div className="border-2 border-dashed border-[#262626] rounded-lg p-4 text-center bg-[#171717] transition-colors">
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -442,53 +518,56 @@ export default function AddArticlePage() {
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={uploading}
-                  className="w-full flex flex-col items-center justify-center space-y-2 p-4 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md disabled:opacity-50"
+                  className="w-full flex flex-col items-center justify-center space-y-2 p-4 hover:bg-[#262626] rounded-md disabled:opacity-50 transition-colors"
                 >
                   {uploading ? (
                     <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
                   ) : (
                     <Upload className="h-8 w-8 text-gray-400" />
                   )}
-                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <span className="text-sm font-medium text-gray-300">
                     {uploading ? 'Uploading...' : 'Upload from Computer'}
                   </span>
-                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                  <span className="text-xs text-gray-400">
                     PNG, JPG, GIF up to 5MB
                   </span>
                 </button>
               </div>
 
               {/* URL Input */}
-              <div className="border-2 border-gray-300 dark:border-gray-600 rounded-lg p-4">
+              <div className="border-2 border-[#262626] rounded-lg p-4 bg-[#171717] transition-colors">
                 <div className="flex items-center mb-2">
                   <Link className="h-5 w-5 text-gray-400 mr-2" />
-                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Or enter URL</span>
+                  <span className="text-sm font-medium text-gray-300">Or enter URL</span>
                 </div>
                 <input
                   type="text"
                   value={formData.image}
                   onChange={(e) => handleUrlChange(e.target.value)}
                   placeholder="https://example.com/image.jpg"
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  className="w-full px-3 py-2 border border-[#262626] rounded-md text-sm bg-[#171717] text-white placeholder-gray-400 transition-colors"
                 />
               </div>
             </div>
 
             {/* Current Image Display */}
             {formData.image && (
-              <div className="text-xs text-gray-500 dark:text-gray-400">
-                Current image: {formData.image}
+              <div className="text-xs text-gray-400">
+                <span className="font-medium text-gray-300">Current image:</span>
+                <div className="truncate mt-1 bg-[#262626] px-3 py-2 rounded border border-[#404040] text-gray-300">
+                  {formData.image}
+                </div>
               </div>
             )}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-gray-300 mb-2">
               Summary
             </label>
             <textarea
               rows={3}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              className="w-full px-3 py-2 border border-[#262626] rounded-md focus:ring-2 focus:ring-red-500 focus:border-red-500 bg-[#171717] text-white placeholder-gray-400 transition-colors"
               value={formData.summary}
               onChange={(e) => handleFormChange('summary', e.target.value)}
               placeholder="Brief summary of the article"
@@ -496,13 +575,13 @@ export default function AddArticlePage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-gray-300 mb-2">
               Content *
             </label>
             <textarea
               required
               rows={8}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              className="w-full px-3 py-2 border border-[#262626] rounded-md focus:ring-2 focus:ring-red-500 focus:border-red-500 bg-[#171717] text-white placeholder-gray-400 transition-colors"
               value={formData.content}
               onChange={(e) => handleFormChange('content', e.target.value)}
               placeholder="Article content (HTML supported)"
@@ -510,21 +589,21 @@ export default function AddArticlePage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-gray-300 mb-2">
               Tags
             </label>
             <input
               type="text"
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              className="w-full px-3 py-2 border border-[#262626] rounded-md focus:ring-2 focus:ring-red-500 focus:border-red-500 bg-[#171717] text-white placeholder-gray-400 transition-colors"
               value={formData.tags}
               onChange={(e) => handleFormChange('tags', e.target.value)}
               placeholder="Comma-separated tags (e.g., tech, ai, news)"
             />
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Separate tags with commas</p>
+            <p className="text-xs text-gray-400 mt-1">Separate tags with commas</p>
           </div>
 
           {/* Action Buttons */}
-          <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200 dark:border-gray-700">
+          <div className="flex justify-end space-x-4 pt-6 border-t border-[#262626]">
             <button
               type="button"
               onClick={() => {
@@ -533,7 +612,7 @@ export default function AddArticlePage() {
                 }
                 router.back();
               }}
-              className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600"
+              className="px-4 py-2 text-sm font-medium text-gray-300 bg-[#171717] border border-[#262626] rounded-md hover:bg-[#262626] transition-colors"
             >
               Cancel
             </button>
@@ -542,17 +621,31 @@ export default function AddArticlePage() {
               type="button"
               onClick={(e) => handleSubmit(e, 'draft')}
               disabled={loading || (!formData.title && !formData.content)}
-              className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-yellow-100 dark:bg-yellow-900/30 border border-yellow-300 dark:border-yellow-600 rounded-md hover:bg-yellow-200 dark:hover:bg-yellow-800/40 disabled:opacity-50"
+              className="px-4 py-2 text-sm font-medium text-yellow-300 bg-yellow-500/20 border border-yellow-500/30 rounded-md hover:bg-yellow-500/30 disabled:opacity-50 transition-colors"
             >
-              {loading ? 'Saving...' : 'Save as Draft'}
+              {loading ? (
+                <span className="flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Saving...
+                </span>
+              ) : (
+                'Save as Draft'
+              )}
             </button>
             
             <button
               type="submit"
               disabled={loading}
-              className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 disabled:opacity-50"
+              className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 disabled:opacity-50 transition-colors"
             >
-              {loading ? 'Publishing...' : 'Publish Article'}
+              {loading ? (
+                <span className="flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Publishing...
+                </span>
+              ) : (
+                'Publish Article'
+              )}
             </button>
           </div>
         </form>
