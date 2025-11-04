@@ -10,8 +10,11 @@ function getToken(req: NextRequest) {
 }
 
 // PUT - Edit comment
-export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    // FIX: Await the params Promise
+    const { id } = await params;
+    
     const token = getToken(req);
     if (!token) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
@@ -29,7 +32,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     }
 
     const existingComment = await prisma.comment.findUnique({
-      where: { id: Number(params.id) },
+      where: { id: Number(id) },  
       include: { user: true }
     });
 
@@ -42,7 +45,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     }
 
     const updatedComment = await prisma.comment.update({
-      where: { id: Number(params.id) },
+      where: { id: Number(id) },  
       data: { content: content.trim() },
       include: { user: { select: { id: true, name: true, email: true } } }
     });
@@ -56,8 +59,11 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 }
 
 // DELETE - Delete comment
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    // FIX: Await the params Promise
+    const { id } = await params;
+    
     const token = getToken(req);
     if (!token) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
@@ -68,7 +74,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
     const userId = (payload.payload as any).id as string;
 
     const existingComment = await prisma.comment.findUnique({
-      where: { id: Number(params.id) },
+      where: { id: Number(id) },  
       include: { user: true }
     });
 
@@ -80,7 +86,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
       return NextResponse.json({ success: false, error: 'You can only delete your own comments' }, { status: 403 });
     }
 
-    await prisma.comment.delete({ where: { id: Number(params.id) } });
+    await prisma.comment.delete({ where: { id: Number(id) } });  
 
     return NextResponse.json({ success: true, message: 'Comment deleted successfully' });
 

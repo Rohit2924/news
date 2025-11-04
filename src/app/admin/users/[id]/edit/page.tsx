@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, use } from "react";
 import { UserCog, Loader2 } from "lucide-react";
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { toast } from "@/lib/toast";
 
 interface User {
@@ -13,10 +13,11 @@ interface User {
   contactNumber?: string | null;
 }
 
-export default function EditUserPage() {
+export default function EditUserPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
-  const params = useParams();
-  const userId = params.id as string;
+  
+  // FIX: Use React.use() to unwrap the params Promise
+  const { id: userId } = use(params);
   
   const [formData, setFormData] = useState({
     name: "",
@@ -29,7 +30,7 @@ export default function EditUserPage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (userId){
+    if (userId) {
       fetchUser();
     }
   }, [userId]);
@@ -39,7 +40,7 @@ export default function EditUserPage() {
     try {
       const response = await fetch(`/api/admin/users/${userId}`, {
         method: 'GET',
-        credentials: 'include', // This sends cookies automatically
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         }
@@ -91,7 +92,7 @@ export default function EditUserPage() {
     try {
       const response = await fetch(`/api/admin/users/${userId}`, {
         method: 'PUT',
-        credentials: 'include', // This sends cookies automatically
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },

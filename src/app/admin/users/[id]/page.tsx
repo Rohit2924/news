@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, use } from "react";
 import { User, Loader2, Edit, ArrowLeft } from "lucide-react";
 import { useRouter } from 'next/navigation';
 import Link from "next/link";
@@ -16,30 +16,44 @@ interface UserData {
   updatedAt: string;
 }
 
-export default function ViewUserPage({ params }: { params: { id: string } }) {
+export default function ViewUserPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
   const [user, setUser] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  // FIX 1: Use React.use() to unwrap the params Promise
+  const { id } = use(params);
+
   useEffect(() => {
-    fetchUser();
-  }, []);
+    if (id) {
+      fetchUser();
+    }
+  }, [id]); // FIX 2: Add id as dependency
 
   const fetchUser = async () => {
     setLoading(true);
     try {
-      if (!Credential) {
-        setError('No authentication token found');
-        return;
-      }
-
-      const response = await fetch(`/api/admin/users/${params.id}`, {
+      // FIX 3: Remove invalid Credential check and fix fetch headers
+      const response = await fetch(`/api/admin/users/${id}`, { 
+        method: 'GET',
+        credentials: 'include', // FIX 5: Move credentials out of headers
         headers: {
-          'credentials': 'include',
           'Content-Type': 'application/json'
         }
       });
+
+      if (response.status === 401) {
+        setError('Please login to access this page');
+        setTimeout(() => router.push('/admin'), 2000);
+        return;
+      }
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        setError(errorData.message || `Failed to fetch user (HTTP ${response.status})`);
+        return;
+      }
 
       const data = await response.json();
       
@@ -51,12 +65,13 @@ export default function ViewUserPage({ params }: { params: { id: string } }) {
       }
     } catch (err) {
       console.error('Error fetching user:', err);
-      setError('Failed to load user');
+      setError('Failed to load user. Please check your connection.');
     } finally {
       setLoading(false);
     }
   };
 
+  // ... rest of your JSX remains exactly the same
   if (loading) {
     return (
       <div className="p-6">

@@ -5,10 +5,11 @@ import { verifyJWT } from '@/lib/auth';
 // GET /api/news/[id] - Get a specific news article
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = parseInt(params.id);
+    const { id: paramId } = await params;
+    const id = parseInt(paramId);
     
     if (isNaN(id)) {
       return NextResponse.json(
@@ -55,9 +56,19 @@ export async function GET(
 // PUT /api/news/[id] - Update a news article
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id: paramId } = await params;
+    const id = parseInt(paramId);
+    
+    if (isNaN(id)) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid news ID' },
+        { status: 400 }
+      );
+    }
+
     const token = request.headers.get('authorization')?.replace('Bearer ', '');
     if (!token) {
       return NextResponse.json(
@@ -66,24 +77,23 @@ export async function PUT(
       );
     }
 
-    const payload = verifyJWT(token);
-    if (!payload || payload.role !== 'ADMIN') {
+    // FIX: Properly handle verifyJWT return type
+    const validation = verifyJWT(token);
+    if (!validation.isValid || !validation.payload) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid token' },
+        { status: 401 }
+      );
+    }
+
+    // FIX: Access role from payload, not directly from validation result
+    const userRole = (validation.payload as any).role;
+    if (userRole !== 'ADMIN') {
       return NextResponse.json(
         { success: false, error: 'Admin access required' },
         { status: 403 }
       );
     }
-
-    const id = parseInt(params.id);
-    if (isNaN(id)) {
-      return NextResponse.json(
-        { success: false, error: 'Invalid news ID' },
-        { status: 400 }
-      );
-    }
-
-    const body = await request.json();
-    const { title, category, subcategory, author, published_date, image, summary, content, tags } = body;
 
     // Check if news article exists
     const existingNews = await prisma.news.findUnique({
@@ -96,6 +106,9 @@ export async function PUT(
         { status: 404 }
       );
     }
+
+    const body = await request.json();
+    const { title, category, subcategory, author, published_date, image, summary, content, tags } = body;
 
     // Update news article
     const updatedNews = await prisma.news.update({
@@ -132,9 +145,19 @@ export async function PUT(
 // DELETE /api/news/[id] - Delete a news article
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id: paramId } = await params;
+    const id = parseInt(paramId);
+    
+    if (isNaN(id)) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid news ID' },
+        { status: 400 }
+      );
+    }
+
     const token = request.headers.get('authorization')?.replace('Bearer ', '');
     if (!token) {
       return NextResponse.json(
@@ -143,19 +166,21 @@ export async function DELETE(
       );
     }
 
-    const payload = verifyJWT(token);
-    if (!payload || payload.role !== 'ADMIN') {
+    // FIX: Properly handle verifyJWT return type
+    const validation = verifyJWT(token);
+    if (!validation.isValid || !validation.payload) {
       return NextResponse.json(
-        { success: false, error: 'Admin access required' },
-        { status: 403 }
+        { success: false, error: 'Invalid token' },
+        { status: 401 }
       );
     }
 
-    const id = parseInt(params.id);
-    if (isNaN(id)) {
+    // FIX: Access role from payload, not directly from validation result
+    const userRole = (validation.payload as any).role;
+    if (userRole !== 'ADMIN') {
       return NextResponse.json(
-        { success: false, error: 'Invalid news ID' },
-        { status: 400 }
+        { success: false, error: 'Admin access required' },
+        { status: 403 }
       );
     }
 

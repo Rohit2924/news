@@ -15,12 +15,15 @@ async function getArticle(id: string) {
   return article;
 }
 
-export default async function EditArticlePage({ params }: { params: { id: string } }) {
+export default async function EditArticlePage({ params }: { params: Promise<{ id: string }> }) { // FIX: params is now Promise
   const session = await getSession();
   
   if (!session) {
     redirect('/login');
   }
+  
+  // FIX: Await the params Promise
+  const { id } = await params;
   
   // Check if user is an editor
   const user = await prisma.user.findUnique({
@@ -32,7 +35,7 @@ export default async function EditArticlePage({ params }: { params: { id: string
     redirect('/dashboard');
   }
   
-  const article = await getArticle(params.id);
+  const article = await getArticle(id); // FIX: Use the unwrapped id
   
   // Check if the editor is the author of the article
   if (article.author !== session.user.name) {
