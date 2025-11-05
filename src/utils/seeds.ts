@@ -1,7 +1,10 @@
 import { query } from '../lib/models/db';
 import { pathToFileURL } from 'url';
+import { existsSync } from 'fs';
+import { readFile } from 'fs/promises';
 // import { Article } from '../lib/types';
-import newsData from '../data/news.json';
+// Load seed data dynamically to avoid build-time import errors if file is missing
+let newsData: any;
 
 type Article = {
   title: string;
@@ -29,6 +32,21 @@ export async function seedDatabase() {
 
     // Reset auto-increment sequence
     await query('ALTER SEQUENCE articles_id_seq RESTART WITH 1');
+
+    if (!newsData) {
+      const jsonPath = new URL('../data/news.json', import.meta.url).pathname;
+      if (!existsSync(jsonPath)) {
+        console.warn('No seed data found at ../data/news.json; skipping seeding.');
+        return;
+      }
+      try {
+        const fileContents = await readFile(jsonPath, 'utf8');
+        newsData = JSON.parse(fileContents);
+      } catch (e) {
+        console.warn('Failed to read or parse ../data/news.json; skipping seeding.');
+        return;
+      }
+    }
 
     const data = newsData as NewsDataStructure;
     

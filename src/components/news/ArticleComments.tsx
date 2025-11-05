@@ -31,7 +31,7 @@ export default function ArticleComments({ newsId, articleTitle }: ArticleComment
   const [isPosting, setIsPosting] = useState(false);
   const [editingComment, setEditingComment] = useState<string | null>(null);
   const [editContent, setEditContent] = useState('');
-  const { isAuthenticated, userId, user } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
@@ -47,7 +47,7 @@ export default function ArticleComments({ newsId, articleTitle }: ArticleComment
         // Fixed: Accessing data.comments instead of data.data
         const commentsWithOwnership = (data.comments || []).map((comment: Comment) => ({
           ...comment,
-          isOwner: comment.user.id === userId
+          isOwner: comment.user.id === user?.id
         }));
         setComments(commentsWithOwnership);
       } else {
@@ -250,7 +250,7 @@ export default function ArticleComments({ newsId, articleTitle }: ArticleComment
           comments.map((comment) => (
             <div key={comment.id} className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
               <div className="flex items-start gap-3">
-                <div className="flex-shrink-0">
+                <div className="shrink-0">
                   <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
                     <User className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                   </div>

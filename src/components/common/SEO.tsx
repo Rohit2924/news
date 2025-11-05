@@ -1,6 +1,6 @@
 'use client';
 import Head from 'next/head';
-import { useSiteSettings } from '../hooks/useSiteSettings';
+import { useSiteSettings } from '@/hooks/useSiteSettings';
 
 interface SEOProps {
   title?: string;

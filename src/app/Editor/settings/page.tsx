@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import EditorLayoutWrapper from '@/components/editor/EditorLayoutWrapper';
 import { getSession } from '@/lib/getSession';
 import prisma from '@/lib/models/prisma';
@@ -5,10 +6,12 @@ import prisma from '@/lib/models/prisma';
 export default async function SettingsPage() {
   const session = await getSession();
   
-  const user = await prisma.user.findUnique({
-    where: { email: session?.user.email },
-    select: { name: true, email: true }
-  });
+  const user = session?.user?.email
+    ? await prisma.user.findUnique({
+        where: { email: session.user.email },
+        select: { name: true, email: true }
+      })
+    : null;
 
   return (
     <EditorLayoutWrapper>

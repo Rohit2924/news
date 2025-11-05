@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 // app/editor/dashboard/page.tsx - Improved Dashboard with Temporary Username Feature
 import { SectionCards } from '@/components/admin/section-cards';
 import EditorLayoutWrapper from '@/components/editor/EditorLayoutWrapper';

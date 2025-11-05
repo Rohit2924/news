@@ -108,7 +108,7 @@ export async function PUT(
     }
 
     const body = await request.json();
-    const { title, category, subcategory, author, published_date, image, summary, content, tags } = body;
+    const { title, category, author, published_date, image, summary, content, tags } = body;
 
     // Update news article
     const updatedNews = await prisma.news.update({
@@ -116,7 +116,6 @@ export async function PUT(
       data: {
         title,
         category,
-        subcategory,
         author,
         published_date,
         image,

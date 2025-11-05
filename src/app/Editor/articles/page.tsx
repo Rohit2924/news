@@ -5,7 +5,7 @@ import Link from 'next/link';
 
 // Define the article type
 interface Article {
-  id: string;
+  id: number;
   title: string;
   categoryId: string;
   createdAt: Date;
@@ -24,7 +24,7 @@ export default async function ArticlesPage() {
     include: {
       _count: { select: { comments: true } }
     }
-  }) as Article[];
+  });
 
   return (
     <EditorLayoutWrapper>

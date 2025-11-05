@@ -1,7 +1,6 @@
 "use client"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { useAuth } from "@/context/AuthContext"
-// import { verifyJWT } from "@/lib/jwt"
 import * as React from "react"
 import {
   IconCamera,
@@ -19,9 +18,8 @@ import {
   IconSearch,
   IconSettings,
   IconUsers,
-  IconFileText, // Use Tabler's IconFileText instead of Lucide's FileText
+  IconFileText,
 } from "@tabler/icons-react"
-// import { NavDocuments } from "@/components/navigation/nav-documents"
 import { NavMain } from "@/components/navigation/nav-main"
 import { NavSecondary } from "@/components/navigation/nav-secondary"
 import { NavUser } from "@/components/navigation/nav-user"
@@ -38,26 +36,16 @@ import { NavDocuments } from "./nav-documents"
 
 // Define the data outside the component
 const navSecondary = [
-  // {
-  //   title: "Page Content",
-  //   url: "/admin/pages",
-  //   icon: IconFileText,
-  // },
+  {
+    title: "Page Content",
+    url: "/admin/pages",
+    icon: IconFileText,
+  },
   {
     title: "Settings",
     url: "/admin/settings",
     icon: IconSettings,
   },
-  // {
-  //   title: "Get Help",
-  //   url: "/admin",
-  //   icon: IconHelp,
-  // },
-  // {
-  //   title: "Search",
-  //   url: "/admin/analytics",
-  //   icon: IconSearch,
-  // },
 ]
 
 const data = {
@@ -141,45 +129,33 @@ const data = {
       ],
     },
   ],
-  documents: [
-    // {
-    //   name: "Data Library",
-    //   url: "#",
-    //   icon: IconDatabase,
-    // },
-    // {
-    //   name: "Reports",
-    //   url: "#",
-    //   icon: IconReport,
-    // },
-    // {
-    //   name: "Word Assistant",
-    //   url: "#",
-    //   icon: IconFileWord,
-    // },
-  ],
+  documents: [],
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname()
+  const router = useRouter()
+  const { user: authUser, isAuthenticated } = useAuth()
   const [adminName, setAdminName] = React.useState("Admin")
   const [adminEmail, setAdminEmail] = React.useState("admin@example.com")
   
-  // React.useEffect(() => {
-  //   if (typeof window !== 'undefined') {
-  //     const storedName = localStorage.getItem('username') || localStorage.getItem('name')
-  //     const storedEmail = localStorage.getItem('email')
+  // Check authentication and redirect if not authenticated
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      // If not authenticated, redirect to login
+      if (!isAuthenticated) {
+        router.push('/admin/login')
+        return
+      }
       
-  //     if (storedName) {
-  //       setAdminName(storedName)
-  //     }
-  //     if (storedEmail) {
-  //       setAdminEmail(storedEmail)
-  //     }
-  //   }
-  // }, [])
+      // If authenticated but not admin/editor, redirect to dashboard or show access denied
+      if (isAuthenticated && authUser?.role && !['ADMIN', 'EDITOR'].includes(authUser.role)) {
+        router.push('/admin/dashboard?error=access_denied')
+        return
+      }
+    }
+  }, [isAuthenticated, authUser, router])
 
-  const { user: authUser} = useAuth()
   React.useEffect(() => {
     if(authUser?.name){
       setAdminName(authUser.name)
@@ -191,11 +167,49 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   
   const displayName = adminName || adminEmail?.split('@')[0] || 'Admin'
   
-  // Add isActive property to navSecondary items based on current pathname
+  // Add isActive property to nav items based on current pathname
   const navSecondaryWithActive = navSecondary.map(item => ({
     ...item,
     isActive: pathname === item.url
   }))
+
+  const navMainWithActive = data.navMain.map(item => ({
+    ...item,
+    isActive: pathname === item.url
+  }))
+
+  // Show loading state while checking authentication
+  if (!isAuthenticated) {
+    return (
+      <Sidebar collapsible="offcanvas" {...props}>
+        <SidebarContent>
+          <div className="flex items-center justify-center h-32">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+              <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">Checking authentication...</p>
+            </div>
+          </div>
+        </SidebarContent>
+      </Sidebar>
+    )
+  }
+
+  // Show access denied message if user doesn't have proper role
+  if (isAuthenticated && authUser?.role && !['ADMIN', 'EDITOR'].includes(authUser.role)) {
+    return (
+      <Sidebar collapsible="offcanvas" {...props}>
+        <SidebarContent>
+          <div className="flex items-center justify-center h-32 p-4">
+            <div className="text-center">
+              <div className="text-red-500 text-lg mb-2">⚠️</div>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Access Denied</p>
+              <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">Insufficient permissions</p>
+            </div>
+          </div>
+        </SidebarContent>
+      </Sidebar>
+    )
+  }
   
   return (
     <Sidebar collapsible="offcanvas" {...props}>
@@ -206,7 +220,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               asChild
               className="data-[slot=sidebar-menu-button]:!p-1.5"
             >
-              <a href="#">
+              <a href="/admin/dashboard">
                 <IconInnerShadowTop className="!size-5" />
                 <span className="text-base font-semibold">{displayName}</span>
               </a>
@@ -215,7 +229,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
+        <NavMain items={navMainWithActive} />
         <NavDocuments items={data.documents} />
         <NavSecondary items={navSecondaryWithActive} className="mt-auto" />
       </SidebarContent>

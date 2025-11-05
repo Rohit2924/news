@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import EditorLayoutWrapper from '@/components/editor/EditorLayoutWrapper';
 import { getSession } from '@/lib/getSession';
 import prisma from '@/lib/models/prisma';
@@ -8,12 +9,12 @@ export default async function AnalyticsPage() {
   const analytics = await prisma.analyticsEvent.findMany({
     where: {
       OR: [
-        { eventType: 'page_view' },
-        { eventData: { path: { contains: '/news/' } } }
+        { type: 'page_view' },
+        { path: { contains: '/news/' } }
       ]
     },
     take: 100,
-    orderBy: { createdAt: 'desc' }
+    orderBy: { timestamp: 'desc' }
   });
 
   const articleStats = await prisma.news.findMany({
@@ -123,7 +124,7 @@ export default async function AnalyticsPage() {
                 <div key={index} className="flex items-center space-x-3">
                   <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
                   <span className="text-sm text-gray-600">
-                    {event.eventType} • {new Date(event.createdAt).toLocaleString()}
+                    {event.type} • {new Date(event.timestamp).toLocaleString()}
                   </span>
                 </div>
               ))}

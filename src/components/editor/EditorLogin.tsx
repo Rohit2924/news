@@ -19,7 +19,7 @@ export default function EditorLogin() {
     setLoading(true);
     
     try {
-      const success = await login(email, password, "editor");
+      const success = await login(email, password);
       if (success) {
         router.push("/Editor/dashboard");
       }

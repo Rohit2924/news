@@ -11,8 +11,7 @@ export default async function UsersPage() {
       createdAt: true,
       _count: {
         select: {
-          comments: true,
-          news: true
+          comments: true
         }
       }
     },
@@ -77,7 +76,7 @@ export default async function UsersPage() {
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {user._count.news}
+                    -
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {user._count.comments}

@@ -77,8 +77,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const payload = verifyJWT(token);
-    if (!payload || payload.role !== 'ADMIN') {
+    const result = verifyJWT(token);
+    if (!result.isValid || !result.payload || result.payload.role !== 'ADMIN') {
       return NextResponse.json(
         { success: false, error: 'Admin access required' },
         { status: 403 }
@@ -100,7 +100,6 @@ export async function POST(request: NextRequest) {
       data: {
         title,
         category,
-        subcategory,
         author,
         published_date: published_date || new Date().toISOString(),
         image,

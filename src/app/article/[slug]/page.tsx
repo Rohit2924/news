@@ -82,7 +82,7 @@ export default async function ArticlePage({
         </h1>
         
         <img 
-          src={article.image} 
+          src={article.image ?? ''} 
           alt={article.title} 
           className="w-full h-72 object-cover rounded-lg mb-6 shadow" 
         />
@@ -108,7 +108,7 @@ export default async function ArticlePage({
               >
                 <div className="flex gap-4 items-center">
                   <img 
-                    src={rel.image} 
+                    src={rel.image ?? ''} 
                     alt={rel.title} 
                     className="w-20 h-16 object-cover rounded" 
                   />

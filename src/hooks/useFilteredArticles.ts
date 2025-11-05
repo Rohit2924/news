@@ -1,4 +1,4 @@
-import { Article } from '../app/components/NewsGrid';
+import { Article } from '@/components/news/NewsGrid';
 
 export function useFilteredArticles(articles: Article[], category: string): Article[] {
   return articles.filter(

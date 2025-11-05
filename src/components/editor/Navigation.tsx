@@ -19,17 +19,17 @@ async function getUserRole(email: string) {
 export default async function Navigation() {
   // Get the token from cookies - need to await the cookies() call
   const cookieStore = await cookies();
-  const token = cookieStore.get('authToken')?.value;
+  const token = cookieStore.get('auth-token')?.value;
   
   // Verify the token and get user info
   let user = null;
   if (token) {
     try {
-      const payload = verifyJWT(token);
-      if (payload) {
+      const result = verifyJWT(token);
+      if (result.isValid && result.payload) {
         user = {
-          email: payload.email,
-          role: payload.role
+          email: result.payload.email,
+          role: result.payload.role
         };
       }
     } catch (error) {

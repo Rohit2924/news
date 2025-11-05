@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { getSession } from '@/lib/getSession';
 import { redirect } from 'next/navigation';
 import prisma from '@/lib/models/prisma';
