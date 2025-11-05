@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-export const runtime = 'edge';
+// export const runtime = 'no';
 
 // The GET function MUST accept the 'request' parameter to detect disconnections
 export async function GET(request: Request) {
