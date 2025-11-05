@@ -1,220 +1,142 @@
-import { NextRequest, NextResponse } from "next/server";
-import { z } from "zod";
-import { prisma } from "@/lib/db";
+import { NextRequest, NextResponse } from 'next/server';
+import { prisma } from '@/lib/db';
 
-// Schema for updating a category
-const updateCategorySchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters").optional(),
-  description: z.string().optional(),
-  parentId: z.string().optional().nullable(),
-});
-
-// Verify admin access from middleware headers
-async function verifyAdminAccess(request: Request): Promise<{ 
-  user?: any; 
-  error?: string; 
-  status?: number 
-}> {
-  const userId = request.headers.get("x-user-id");
-  const userRole = request.headers.get("x-user-role");
-
-  console.log("🔍 Admin Access Check:", { userId, userRole });
-
-  if (!userId) {
-    return { error: "Authentication required", status: 401 };
-  }
-
-  if (userRole !== 'ADMIN') {
-    return { error: "Admin access required", status: 403 };
-  }
-
-  return { user: { id: userId, role: userRole } };
+// Define TypeScript interfaces for type safety
+interface CommentUser {
+  id: string;
+  name: string | null;
+  email: string;
+  image: string | null;
+  role: string;
 }
 
-export async function DELETE(
+interface CommentWithUser {
+  id: number;
+  content: string;
+  createdAt: Date;
+  user: CommentUser;
+}
+
+interface FormattedComment {
+  id: number;
+  content: string;
+  createdAt: Date;
+  user: {
+    id: string;
+    name: string | null;
+    email: string;
+    image: string | null;
+    role: string;
+  };
+}
+
+// GET /api/news/[id]/comments - Get comments for a specific news article
+export async function GET(
   request: NextRequest,
-  { params }: { params: { categoryId: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // Use middleware-based authentication instead of getAdminSession
-    const authCheck = await verifyAdminAccess(request);
-    if (authCheck.error) {
+    // Await the params Promise
+    const { id } = await params;
+    const newsId = parseInt(id);
+    
+    // Validate news ID
+    if (isNaN(newsId) || newsId <= 0) {
       return NextResponse.json(
-        { success: false, error: authCheck.error },
-        { status: authCheck.status }
-      );
-    }
-
-    const { categoryId } = params;
-
-    // Check if category exists
-    const category = await prisma.category.findUnique({
-      where: { id: categoryId },
-      include: {
-        _count: {
-          select: {
-            articles: true,
-            subcategories: true,
-          },
-        },
-      },
-    });
-
-    if (!category) {
-      return NextResponse.json(
-        { success: false, error: "Category not found" },
-        { status: 404 }
-      );
-    }
-
-    // Check if category has articles or subcategories
-    if (category._count.articles > 0 || category._count.subcategories > 0) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Cannot delete category with existing articles or subcategories",
-        },
+        { success: false, error: 'Invalid news ID' },
         { status: 400 }
       );
     }
 
-    // Delete the category
-    await prisma.category.delete({
-      where: { id: categoryId },
+    // Check if news article exists
+    const news = await prisma.news.findUnique({
+      where: { id: newsId },
+      select: { id: true, title: true }
     });
 
-    return NextResponse.json({
-      success: true,
-      message: "Category deleted successfully",
-    });
-  } catch (error) {
-    console.error("Error deleting category:", error);
-    return NextResponse.json(
-      { success: false, error: "Failed to delete category" },
-      { status: 500 }
-    );
-  }
-}
-
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: { categoryId: string } }
-) {
-  try {
-    // Use middleware-based authentication
-    const authCheck = await verifyAdminAccess(request);
-    if (authCheck.error) {
+    if (!news) {
       return NextResponse.json(
-        { success: false, error: authCheck.error },
-        { status: authCheck.status }
-      );
-    }
-
-    const { categoryId } = params;
-
-    // Parse and validate request body
-    const body = await request.json();
-    const validatedData = updateCategorySchema.parse(body);
-
-    // Check if category exists
-    const category = await prisma.category.findUnique({
-      where: { id: categoryId },
-    });
-
-    if (!category) {
-      return NextResponse.json(
-        { success: false, error: "Category not found" },
+        { success: false, error: 'News article not found' },
         { status: 404 }
       );
     }
 
-    // If name is being updated, create new slug and check for duplicates
-    let slug;
-    if (validatedData.name) {
-      slug = validatedData.name
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/(^-|-$)/g, "");
+    const { searchParams } = new URL(request.url);
+    
+    // Validate and sanitize pagination parameters
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1'));
+    const limit = Math.min(Math.max(1, parseInt(searchParams.get('limit') || '20')), 100); // Max 100 per page
+    const sortOrder = searchParams.get('sortOrder') === 'asc' ? 'asc' : 'desc';
 
-      const existingCategory = await prisma.category.findFirst({
-        where: {
-          slug,
-          NOT: { id: categoryId },
-        },
-      });
+    const skip = (page - 1) * limit;
 
-      if (existingCategory) {
-        return NextResponse.json(
-          { success: false, error: "Category with this name already exists" },
-          { status: 400 }
-        );
-      }
-    }
-
-    // If parentId is provided, verify it exists and prevent circular references
-    if (validatedData.parentId) {
-      // Check if parent exists
-      const parentCategory = await prisma.category.findUnique({
-        where: { id: validatedData.parentId },
-      });
-
-      if (!parentCategory) {
-        return NextResponse.json(
-          { success: false, error: "Parent category not found" },
-          { status: 400 }
-        );
-      }
-
-      // Prevent setting parent to self
-      if (validatedData.parentId === categoryId) {
-        return NextResponse.json(
-          { success: false, error: "Category cannot be its own parent" },
-          { status: 400 }
-        );
-      }
-
-      // Check for circular reference
-      let currentParent = parentCategory;
-      while (currentParent.parentId) {
-        if (currentParent.parentId === categoryId) {
-          return NextResponse.json(
-            { success: false, error: "Circular reference detected" },
-            { status: 400 }
-          );
+    // Get comments with pagination
+    const [comments, total] = await Promise.all([
+      prisma.comment.findMany({
+        where: { newsId },
+        skip,
+        take: limit,
+        orderBy: { createdAt: sortOrder },
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              image: true,
+              role: true
+            }
+          }
         }
-        const nextParent = await prisma.category.findUnique({
-          where: { id: currentParent.parentId },
-        });
-        if (!nextParent) break;
-        currentParent = nextParent;
-      }
-    }
+      }) as Promise<CommentWithUser[]>,
+      prisma.comment.count({
+        where: { newsId }
+      })
+    ]);
 
-    // Update category
-    const updatedCategory = await prisma.category.update({
-      where: { id: categoryId },
-      data: {
-        ...(validatedData.name && { name: validatedData.name, slug }),
-        ...(validatedData.description && { description: validatedData.description }),
-        parentId: validatedData.parentId,
-      },
-    });
+    // Format comments for response with proper typing
+    const formattedComments: FormattedComment[] = comments.map((comment: CommentWithUser) => ({
+      id: comment.id,
+      content: comment.content,
+      createdAt: comment.createdAt,
+      user: {
+        id: comment.user.id,
+        name: comment.user.name,
+        email: comment.user.email,
+        image: comment.user.image,
+        role: comment.user.role
+      }
+    }));
 
     return NextResponse.json({
       success: true,
-      data: { category: updatedCategory },
+      data: {
+        news: {
+          id: news.id,
+          title: news.title
+        },
+        comments: formattedComments,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit),
+          hasNextPage: page < Math.ceil(total / limit),
+          hasPrevPage: page > 1
+        }
+      }
     });
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { success: false, error: error.issues[0].message },
-        { status: 400 }
-      );
-    }
 
-    console.error("Error updating category:", error);
+  } catch (error) {
+    console.error('Error fetching news comments:', error);
+    
+    // Don't expose internal error details in production
+    const errorMessage = process.env.NODE_ENV === 'development' 
+      ? (error as Error).message 
+      : 'Failed to fetch comments';
+    
     return NextResponse.json(
-      { success: false, error: "Failed to update category" },
+      { success: false, error: errorMessage },
       { status: 500 }
     );
   }
