@@ -1,3 +1,4 @@
+// src/app/admin/layout.tsx
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -7,10 +8,11 @@ import { DarkModeProvider } from '@/components/ui/dark-mode-context'
 import { useAuth } from '@/context/AuthContext';
 import { AppSidebar } from '@/components/navigation/app-sidebar';
 import { SiteHeader } from '@/components/navigation/site-header';
+import { PageProvider } from '@/context/PageContext'; // Add this import
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { isAuthenticated, user, isLoading } = useAuth(); // FIX: Use 'user' instead of 'userRole'
+  const { isAuthenticated, user, isLoading } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
 
@@ -18,7 +20,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const isLoginPage = pathname === '/admin';
   
   // Check if user is authenticated and has admin access
-  const hasAdminAccess = isAuthenticated && user && (user.role === 'ADMIN' || user.role === 'EDITOR'); // FIX: Use user.role
+  const hasAdminAccess = isAuthenticated && user && (user.role === 'ADMIN' || user.role === 'EDITOR');
 
   // Handle authentication and redirects
   useEffect(() => {
@@ -99,32 +101,34 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <DarkModeProvider>
-      <div suppressHydrationWarning className="min-h-screen bg-gray-50 dark:bg-gray-900">
-        {isLoginPage ? (
-          <main suppressHydrationWarning className="transition-all duration-300">
-            {children}
-          </main>
-        ) : (
-          <SidebarProvider
-            style={{
-              "--sidebar-width": "calc(var(--spacing) * 72)",
-              "--header-height": "calc(var(--spacing) * 12)",
-            } as React.CSSProperties}
-          >
-            <AppSidebar  />
-            <SidebarInset>
-              <SiteHeader />
-              <div className="flex flex-1 flex-col">
-                <div className="@container/main flex flex-1 flex-col gap-2">
-                  <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
-                    {children}
+      <PageProvider> {/* Wrap with PageProvider */}
+        <div suppressHydrationWarning className="min-h-screen bg-gray-50 dark:bg-gray-900">
+          {isLoginPage ? (
+            <main suppressHydrationWarning className="transition-all duration-300">
+              {children}
+            </main>
+          ) : (
+            <SidebarProvider
+              style={{
+                "--sidebar-width": "calc(var(--spacing) * 72)",
+                "--header-height": "calc(var(--spacing) * 12)",
+              } as React.CSSProperties}
+            >
+              <AppSidebar />
+              <SidebarInset>
+                <SiteHeader />
+                <div className="flex flex-1 flex-col">
+                  <div className="@container/main flex flex-1 flex-col gap-2">
+                    <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
+                      {children}
+                    </div>
                   </div>
                 </div>
-              </div>
-            </SidebarInset>
-          </SidebarProvider>
-        )}
-      </div>
+              </SidebarInset>
+            </SidebarProvider>
+          )}
+        </div>
+      </PageProvider>
     </DarkModeProvider>
   );
 }
