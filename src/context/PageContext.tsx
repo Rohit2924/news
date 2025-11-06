@@ -16,6 +16,7 @@ const PageContext = createContext<PageContextType | undefined>(undefined);
 
 const initialPages: Page[] = [
   {
+    
     id: '1',
     title: 'Privacy Policy',
     slug: 'privacy-policy',

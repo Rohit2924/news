@@ -1,24 +1,23 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  
- images: {
-    unoptimized: true, // This disables Next.js image optimization but allows any URL
-    // OR use:
+  // Remove output: 'export' to enable image optimization
+  images: {
     remotePatterns: [
       {
         protocol: 'https',
         hostname: '**', // Allow any HTTPS domain
-        pathname: '**', // Allow any path
       },
       {
         protocol: 'http',
-        hostname: '**', // Allow any HTTP domain  
-        pathname: '**',
+        hostname: '**', // Allow any HTTP domain
       },
     ],
   },
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production',
+  },
+  trailingSlash: true,
 }
-
 
 export default nextConfig;
