@@ -25,7 +25,7 @@ export default async function DynamicPage({
     return (
       <main className="min-h-screen bg-gray-50 text-gray-800 dark:bg-gray-900">
         {/* Hero Section */}
-        <section className="bg-gradient-to-r from-red-600 to-pink-500 text-white py-16 px-6 text-center dark:bg-gray-900">
+        <section className="bg-linear-to-r from-red-600 to-pink-500 text-white py-16 px-6 text-center dark:bg-gray-900">
           <h1 className="text-4xl md:text-5xl font-extrabold mb-4">
             {page.pageTitle}
           </h1>
