@@ -1,4 +1,4 @@
-// src/app/api/customer/profile/route.ts (REAL version)
+// src/app/api/customer/profile/route.ts 
 import { NextResponse } from "next/server";
 import prisma from '@/lib/models/prisma';
 

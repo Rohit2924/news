@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "../context/AuthContext";
@@ -12,16 +12,11 @@ import { useSiteSettings } from "../hooks/useSiteSettings";
 export default function ClientRoot({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { settings } = useSiteSettings();
-  const [mounted, setMounted] = useState(false);
 
   const isAdminRoute = pathname?.startsWith("/admin");
   const isEditorRoute = pathname?.startsWith("/Editor/");
   const isAuthRoute = pathname === "/login" || pathname === "/register";
   const hideChrome = isAdminRoute || isEditorRoute || isAuthRoute;
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   useEffect(() => {
     if (settings?.siteFavicon) {
@@ -37,13 +32,13 @@ export default function ClientRoot({ children }: { children: React.ReactNode }) 
     }
   }, [settings?.siteFavicon]);
 
-  if (!mounted) return null;
-
+  // Always render the same structure to avoid hydration mismatches
+  // Use suppressHydrationWarning for client-only content
   return (
     <AuthProvider>
       {!hideChrome && <BreakingBar />}
       {!hideChrome && <Header />}
-      <main>{children}</main>
+      <main suppressHydrationWarning>{children}</main>
       {!hideChrome && <FooterWrapper />}
       <Toaster position="top-center" richColors />
     </AuthProvider>

@@ -150,39 +150,39 @@ const login = async (email: string, password: string): Promise<boolean> => {
   }
 };
 
-  const register = async (email: string, password: string, name: string): Promise<boolean> => {
-    try {
-      setIsLoading(true);
-      setAuthError(null);
+const register = async (email: string, password: string, name: string): Promise<boolean> => {
+  try {
+    setIsLoading(true);
+    setAuthError(null);
 
-      const response = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ email, password, name }),
-      });
+    const response = await fetch("/api/auth/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ email, password, name }),
+    });
 
-      if (!response.ok) {
-        const error = await response.json();
-        setAuthError(error.error || "Registration failed");
-        return false;
-      }
-
-      const data = await response.json();
-      if (data.data?.user) {
-        setUser(data.data.user);
-        return true;
-      }
-
+    if (!response.ok) {
+      const error = await response.json();
+      setAuthError(error.error || "Registration failed");
       return false;
-    } catch (error) {
-      setAuthError("An error occurred during registration");
-      console.error("Register error:", error);
-      return false;
-    } finally {
-      setIsLoading(false);
     }
-  };
+
+    const data = await response.json();
+    
+    // ✅ FIXED: Don't set user state - just return success
+    // The user should login separately after registration
+    console.log("✅ Registration successful, user should login separately");
+    return true;
+
+  } catch (error) {
+    setAuthError("An error occurred during registration");
+    console.error("Register error:", error);
+    return false;
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   const logout = async (): Promise<void> => {
     try {

@@ -1,102 +1,143 @@
 // contexts/PageContext.tsx
 'use client';
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Page, PageCategory } from '../types/page';
 
 interface PageContextType {
   pages: Page[];
   categories: PageCategory[];
-  addPage: (page: Omit<Page, 'id' | 'createdAt' | 'updatedAt'>) => void;
-  updatePage: (id: string, updates: Partial<Page>) => void;
-  deletePage: (id: string) => void;
+  loading: boolean;
+  error: string | null;
+  addPage: (page: Omit<Page, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
+  updatePage: (id: string, updates: Partial<Page>) => Promise<void>;
+  deletePage: (id: string) => Promise<void>;
   getPageBySlug: (slug: string) => Page | undefined;
+  refreshPages: () => Promise<void>;
 }
 
 const PageContext = createContext<PageContextType | undefined>(undefined);
 
-const initialPages: Page[] = [
-  {
-    
-    id: '1',
-    title: 'Privacy Policy',
-    slug: 'privacy-policy',
-    content: '<h1>Privacy Policy</h1><p>Your privacy is important to us...</p>',
-    isActive: true,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    id: '2',
-    title: 'Terms of Service',
-    slug: 'terms',
-    content: '<h1>Terms of Service</h1><p>Please read these terms carefully...</p>',
-    isActive: true,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    id: '3',
-    title: 'About Us',
-    slug: 'about',
-    content: '<h1>About Us</h1><p>Learn more about our company...</p>',
-    isActive: true,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    id: '4',
-    title: 'Contact',
-    slug: 'contact',
-    content: '<h1>Contact Us</h1><p>Get in touch with our team...</p>',
-    isActive: true,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    id: '5',
-    title: 'Advertise',
-    slug: 'advertise',
-    content: '<h1>Advertise With Us</h1><p>Advertising opportunities...</p>',
-    isActive: true,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-  {
-    id: '6',
-    title: 'Careers',
-    slug: 'careers',
-    content: '<h1>Careers</h1><p>Join our amazing team...</p>',
-    isActive: true,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-];
+// Helper to map database page to Page type
+const mapDbPageToPage = (dbPage: any): Page => ({
+  id: dbPage.id,
+  title: dbPage.pageTitle,
+  slug: dbPage.pageSlug,
+  content: dbPage.pageContent,
+  isActive: dbPage.isActive,
+  createdAt: new Date(dbPage.createdAt),
+  updatedAt: new Date(dbPage.updatedAt),
+});
 
 export function PageProvider({ children }: { children: ReactNode }) {
-  const [pages, setPages] = useState<Page[]>(initialPages);
+  const [pages, setPages] = useState<Page[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const addPage = (pageData: Omit<Page, 'id' | 'createdAt' | 'updatedAt'>) => {
-    const newPage: Page = {
-      ...pageData,
-      id: Date.now().toString(),
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-    setPages(prev => [...prev, newPage]);
+  // Fetch pages from API
+  const fetchPages = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await fetch('/api/admin/pages', {
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch pages');
+      }
+
+      const data = await response.json();
+      if (data.success) {
+        const mappedPages = data.data.map(mapDbPageToPage);
+        setPages(mappedPages);
+      } else {
+        throw new Error(data.error || 'Failed to fetch pages');
+      }
+    } catch (err) {
+      console.error('Error fetching pages:', err);
+      setError(err instanceof Error ? err.message : 'Failed to fetch pages');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const updatePage = (id: string, updates: Partial<Page>) => {
-    setPages(prev =>
-      prev.map(page =>
-        page.id === id
-          ? { ...page, ...updates, updatedAt: new Date() }
-          : page
-      )
-    );
+  useEffect(() => {
+    fetchPages();
+  }, []);
+
+  const addPage = async (pageData: Omit<Page, 'id' | 'createdAt' | 'updatedAt'>) => {
+    try {
+      const response = await fetch('/api/admin/pages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          pageSlug: pageData.slug,
+          pageTitle: pageData.title,
+          pageContent: pageData.content,
+          isActive: pageData.isActive,
+        }),
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        await fetchPages(); // Refresh pages list
+      } else {
+        throw new Error(data.error || 'Failed to create page');
+      }
+    } catch (err) {
+      console.error('Error adding page:', err);
+      throw err;
+    }
   };
 
-  const deletePage = (id: string) => {
-    setPages(prev => prev.filter(page => page.id !== id));
+  const updatePage = async (id: string, updates: Partial<Page>) => {
+    try {
+      const page = pages.find(p => p.id === id);
+      if (!page) throw new Error('Page not found');
+
+      const response = await fetch('/api/admin/pages', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          id,
+          pageTitle: updates.title ?? page.title,
+          pageContent: updates.content ?? page.content,
+          pageSlug: updates.slug ?? page.slug,
+          isActive: updates.isActive ?? page.isActive,
+        }),
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        await fetchPages(); // Refresh pages list
+      } else {
+        throw new Error(data.error || 'Failed to update page');
+      }
+    } catch (err) {
+      console.error('Error updating page:', err);
+      throw err;
+    }
+  };
+
+  const deletePage = async (id: string) => {
+    try {
+      const response = await fetch(`/api/admin/pages?id=${id}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        await fetchPages(); // Refresh pages list
+      } else {
+        throw new Error(data.error || 'Failed to delete page');
+      }
+    } catch (err) {
+      console.error('Error deleting page:', err);
+      throw err;
+    }
   };
 
   const getPageBySlug = (slug: string) => {
@@ -108,7 +149,7 @@ export function PageProvider({ children }: { children: ReactNode }) {
       id: '1',
       name: 'Main Pages',
       pages: pages.filter(page => 
-        ['quick-links', 'privacy-policy', 'terms', 'about'].includes(page.slug)
+        ['privacy-policy', 'terms', 'about'].includes(page.slug)
       ),
     },
     {
@@ -118,6 +159,13 @@ export function PageProvider({ children }: { children: ReactNode }) {
         ['contact', 'advertise', 'careers'].includes(page.slug)
       ),
     },
+    {
+      id: '3',
+      name: 'Other Pages',
+      pages: pages.filter(page => 
+        !['privacy-policy', 'terms', 'about', 'contact', 'advertise', 'careers'].includes(page.slug)
+      ),
+    },
   ];
 
   return (
@@ -125,10 +173,13 @@ export function PageProvider({ children }: { children: ReactNode }) {
       value={{
         pages,
         categories,
+        loading,
+        error,
         addPage,
         updatePage,
         deletePage,
         getPageBySlug,
+        refreshPages: fetchPages,
       }}
     >
       {children}

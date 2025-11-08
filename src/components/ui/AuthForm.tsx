@@ -88,17 +88,27 @@ export default function AuthForm() {
     setError("");
     setAuthError("");
 
-    try {
+   try {
       let ok = false;
       if (mode === "login") {
         ok = await login(form.email, form.password);
       } else if (mode === "signup") {
         ok = await register(form.email, form.password, form.name);
+        
+        if (ok) {
+          setSuccess("Account created successfully! Please login to continue.");
+          setTimeout(() => {
+            setMode("login");
+            setForm({ ...initialState, email: form.email }); // Keep the email filled
+            setSuccess("");
+          }, 2000);
+          return;
+        }
       }
 
-      if (ok) {
-        setSuccess(mode === "login" ? "Logged in successfully!" : "Account created successfully!");
-      } else {
+      if (ok && mode === "login") {
+        setSuccess("Logged in successfully!");
+      } else if (!ok) {
         setError(authError || `${mode === "login" ? "Login" : "Sign up"} failed.`);
       }
     } catch (err) {
@@ -112,6 +122,7 @@ export default function AuthForm() {
   const handleForgot = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.email.match(/^[^@\s]+@[^@\s]+\.[^@\s]+$/)) {
+    
       setError("Please enter a valid email address.");
       return;
     }
@@ -162,7 +173,7 @@ export default function AuthForm() {
       {/* Header Section with Role-based Styling */}
       {(isAdminLogin || isEditorLogin) && (
         <div className="text-center mb-8">
-          <div className={`mx-auto h-12 w-12 bg-gradient-to-r ${styles.bgGradient.split(' ')[0]} ${styles.bgGradient.split(' ')[1]} rounded-full flex items-center justify-center mb-4`}>
+          <div className={`mx-auto h-12 w-12 bg-linear-to-r ${styles.bgGradient.split(' ')[0]} ${styles.bgGradient.split(' ')[1]} rounded-full flex items-center justify-center mb-4`}>
             <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
             </svg>
