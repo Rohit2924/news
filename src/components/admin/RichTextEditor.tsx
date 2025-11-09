@@ -1,6 +1,7 @@
 // components/RichTextEditor.tsx
 'use client';
 import { useState, useRef, useEffect } from 'react';
+import { sanitizeArticleContent } from '@/lib/utils/sanitize';
 
 interface RichTextEditorProps {
   content: string;
@@ -13,9 +14,15 @@ export default function RichTextEditor({ content, onChange }: RichTextEditorProp
 
   useEffect(() => {
     if (editorRef.current && content !== editorRef.current.innerHTML) {
-      editorRef.current.innerHTML = content;
+      // Sanitize content when loading
+      const sanitized = sanitizeArticleContent(content);
+      editorRef.current.innerHTML = sanitized;
+      // Update parent if sanitization changed content
+      if (sanitized !== content) {
+        onChange(sanitized);
+      }
     }
-  }, [content]);
+  }, [content, onChange]);
 
   const executeCommand = (command: string, value: string = '') => {
     document.execCommand(command, false, value);
@@ -24,7 +31,10 @@ export default function RichTextEditor({ content, onChange }: RichTextEditorProp
 
   const updateContent = () => {
     if (editorRef.current) {
-      onChange(editorRef.current.innerHTML);
+      // Sanitize content before updating parent
+      const sanitized = sanitizeArticleContent(editorRef.current.innerHTML);
+      editorRef.current.innerHTML = sanitized;
+      onChange(sanitized);
     }
   };
 
@@ -47,7 +57,9 @@ export default function RichTextEditor({ content, onChange }: RichTextEditorProp
   const insertImage = () => {
     const url = prompt('Enter image URL:');
     if (url) {
-      executeCommand('insertHTML', `<img src="${url}" alt="image" style="max-width: 100%; height: auto;" />`);
+      // Sanitize the image HTML before inserting
+      const imageHTML = sanitizeArticleContent(`<img src="${url}" alt="image" style="max-width: 100%; height: auto;" />`);
+      executeCommand('insertHTML', imageHTML);
     }
   };
 

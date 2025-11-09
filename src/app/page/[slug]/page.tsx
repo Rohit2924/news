@@ -1,6 +1,7 @@
 // app/page/[slug]/page.tsx
 import { notFound } from 'next/navigation';
 import prisma from '@/lib/models/prisma';
+import { sanitizePageContent } from '@/lib/utils/sanitize';
 
 export default async function DynamicPage({ 
   params 
@@ -36,7 +37,7 @@ export default async function DynamicPage({
           <div className="bg-white rounded-2xl shadow-lg p-8 md:p-12 space-y-8 dark:bg-gray-900 border-2">
             <article
               className="prose prose-lg dark:prose-invert max-w-none"
-              dangerouslySetInnerHTML={{ __html: page.pageContent }}
+              dangerouslySetInnerHTML={{ __html: sanitizePageContent(page.pageContent) }}
             />
           </div>
         </section>

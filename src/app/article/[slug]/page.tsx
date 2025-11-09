@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { slugify } from '../../../utils/slugify';
 import prisma from '@/lib/models/prisma';
 import ArticleComments from '@/components/news/ArticleComments';
+import { sanitizeArticleContent } from '@/lib/utils/sanitize';
 
 // Define proper TypeScript types
 interface NewsArticle {
@@ -94,7 +95,7 @@ export default async function ArticlePage({
         <hr className="my-8 border-gray-200 dark:border-gray-700" />
         
         <div className="prose dark:prose-invert max-w-none mb-12">
-          <div dangerouslySetInnerHTML={{ __html: article.content || '<p>Content coming soon.</p>' }} />
+          <div dangerouslySetInnerHTML={{ __html: sanitizeArticleContent(article.content || '<p>Content coming soon.</p>') }} />
         </div>
         
         <div className="mb-8">
