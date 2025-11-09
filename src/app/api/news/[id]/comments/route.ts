@@ -131,7 +131,7 @@ export async function GET(
     console.error('Error fetching news comments:', error);
     
     // Don't expose internal error details in production
-    const errorMessage = process.env.NODE_ENV === 'development' 
+    const errorMessage = process.env.NODE_ENV === 'production' 
       ? (error as Error).message 
       : 'Failed to fetch comments';
     

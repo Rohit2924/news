@@ -158,7 +158,7 @@ function getRoleRedirectUrl(role: Role): string {
 
 function addSecurityHeaders(response: NextResponse, request: NextRequest): NextResponse {
   const nonce = generateNonce();
-  const isDev = process.env.NODE_ENV === 'development';
+  const isDev = process.env.NODE_ENV === 'production';
 
   response.headers.set('X-Content-Type-Options', 'nosniff');
   response.headers.set('X-Frame-Options', 'DENY');

@@ -211,7 +211,7 @@ export async function POST(request: NextRequest) {
     } = body;
 
     // SECURE DEVELOPMENT LOGGING
-    if (process.env.NODE_ENV === 'development') {
+    if (process.env.NODE_ENV === 'production') {
       console.log('Creating article with data:', { 
         titleLength: title?.length || 0,
         categoryId: categoryId ? 'provided' : 'missing',

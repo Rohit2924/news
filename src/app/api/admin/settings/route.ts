@@ -8,12 +8,12 @@ import path from 'path';
 // Simple logger for production
 const logger = {
   info: (message: string, data?: any) => {
-    if (process.env.NODE_ENV === 'development') {
+    if (process.env.NODE_ENV === 'production') {
       console.log(`[INFO] ${message}`, data || '');
     }
   },
   error: (message: string, error?: any) => {
-    if (process.env.NODE_ENV === 'development') {
+    if (process.env.NODE_ENV === 'production') {
       console.error(`[ERROR] ${message}`, error || '');
     }
   }
