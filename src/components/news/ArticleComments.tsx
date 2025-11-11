@@ -34,14 +34,17 @@ export default function ArticleComments({ newsId, articleTitle }: ArticleComment
   const { isAuthenticated, user } = useAuth();
   const router = useRouter();
 
-  useEffect(() => {
+ useEffect(() => {
+  if (user) {
     fetchComments();
-  }, [newsId]);
+  }
+}, [newsId, user]);
+
 
   const fetchComments = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(`/api/comments?newsId=${newsId}`);
+      const response = await fetch(`/api/comments?newsId=${newsId}`, {credentials: 'include'});
       const data = await response.json();
       if (data.success) {
         // Fixed: Accessing data.comments instead of data.data
@@ -91,9 +94,7 @@ export default function ArticleComments({ newsId, articleTitle }: ArticleComment
       // Fixed: Added newsId as query parameter instead of in body
       const response = await fetch(`/api/comments?newsId=${newsId}`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        credentials:'include',
         body: JSON.stringify({
           // Removed newsId from body, only sending content
           content: newComment.trim(),
@@ -156,6 +157,7 @@ export default function ArticleComments({ newsId, articleTitle }: ArticleComment
     try {
       const response = await fetch(`/api/comments/${commentId}`, {
         method: 'DELETE',
+        credentials:'include'
       });
 
       const data = await response.json();

@@ -15,10 +15,12 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     // FIX: Await the params Promise
     const { id } = await params;
     
-    const token = getToken(req);
+    // const token = getToken(req);
+    const token = req.cookies.get('auth-token')?.value;
     if (!token) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
+
 
     const secretKey = new TextEncoder().encode(process.env.JWT_SECRET || 'fallback-secret-key-for-development');
     const payload = await jwtVerify(token, secretKey);
@@ -64,10 +66,15 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     // FIX: Await the params Promise
     const { id } = await params;
     
-    const token = getToken(req);
-    if (!token) {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
-    }
+   const token = req.cookies.get('auth-token')?.value;
+
+    console.log(token);
+    
+  if (!token) {
+  const error = new Error("Unauthorized: No token provided");
+  return NextResponse.json({ success: false, error: error.message }, { status: 401 });
+}
+
 
     const secretKey = new TextEncoder().encode(process.env.JWT_SECRET || 'fallback-secret-key-for-development');
     const payload = await jwtVerify(token, secretKey);
