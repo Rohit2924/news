@@ -22,7 +22,7 @@ const Footer = () => {
       <div className="grid md:grid-cols-5 gap-8">
         <div className="md:col-span-2">
           <div className="flex items-center mb-6">
-            <img src={settings?.siteLogo || "https://nanglokhaber.com/wp-content/uploads/2023/10/cropped-Logo-1.png"} alt="Logo" className="h-12 mr-3"/>
+            <img src={settings?.siteLogo || "https:placeholder.com"} alt="Logo" className="h-12 mr-3"/>
             <div>
               <h3 className="text-3xl font-bold bg-linear-to-r from-red-400 to-red-600 bg-clip-text text-transparent">
                 {settings?.siteName || "News Portal"}

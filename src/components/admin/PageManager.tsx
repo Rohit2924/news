@@ -6,11 +6,9 @@ import { Page } from '@/types/page';
 import RichTextEditor from './RichTextEditor';
 
 export default function PageManager() {
-  const { pages, categories, loading, error, addPage, updatePage, deletePage } = usePages();
+  const { pages, categories, addPage, updatePage, deletePage } = usePages();
   const [selectedPage, setSelectedPage] = useState<Page | null>(null);
   const [isAddingNew, setIsAddingNew] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const [saveError, setSaveError] = useState<string | null>(null);
   const [newPageData, setNewPageData] = useState({
     title: '',
     slug: '',
@@ -20,36 +18,17 @@ export default function PageManager() {
   const handleSelectPage = (page: Page) => {
     setSelectedPage(page);
     setIsAddingNew(false);
-    setSaveError(null);
   };
 
-  const handleSavePage = async (content: string) => {
+  const handleSavePage = (content: string) => {
     if (selectedPage) {
-      try {
-        setIsSaving(true);
-        setSaveError(null);
-        await updatePage(selectedPage.id, { content });
-        // Update local selected page to reflect changes
-        setSelectedPage({ ...selectedPage, content, updatedAt: new Date() });
-      } catch (err) {
-        setSaveError(err instanceof Error ? err.message : 'Failed to save page');
-        console.error('Error saving page:', err);
-      } finally {
-        setIsSaving(false);
-      }
+      updatePage(selectedPage.id, { content });
     }
   };
 
-  const handleAddPage = async () => {
-    if (!newPageData.title || !newPageData.slug) {
-      setSaveError('Title and slug are required');
-      return;
-    }
-
-    try {
-      setIsSaving(true);
-      setSaveError(null);
-      await addPage({
+  const handleAddPage = () => {
+    if (newPageData.title && newPageData.slug) {
+      addPage({
         title: newPageData.title,
         slug: newPageData.slug.toLowerCase().replace(/\s+/g, '-'),
         content: newPageData.content,
@@ -61,53 +40,17 @@ export default function PageManager() {
         content: '<p>Start writing your content here...</p>' 
       });
       setIsAddingNew(false);
-    } catch (err) {
-      setSaveError(err instanceof Error ? err.message : 'Failed to create page');
-      console.error('Error adding page:', err);
-    } finally {
-      setIsSaving(false);
     }
   };
 
-  const handleDeletePage = async (pageId: string) => {
+  const handleDeletePage = (pageId: string) => {
     if (confirm('Are you sure you want to delete this page? This action cannot be undone.')) {
-      try {
-        setIsSaving(true);
-        setSaveError(null);
-        await deletePage(pageId);
-        if (selectedPage?.id === pageId) {
-          setSelectedPage(null);
-        }
-      } catch (err) {
-        setSaveError(err instanceof Error ? err.message : 'Failed to delete page');
-        console.error('Error deleting page:', err);
-      } finally {
-        setIsSaving(false);
+      deletePage(pageId);
+      if (selectedPage?.id === pageId) {
+        setSelectedPage(null);
       }
     }
   };
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-[calc(100vh-200px)]">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-300">Loading pages...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="flex items-center justify-center h-[calc(100vh-200px)]">
-        <div className="text-center p-6 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
-          <p className="text-red-600 dark:text-red-400 font-semibold">Error loading pages</p>
-          <p className="text-red-500 dark:text-red-500 text-sm mt-2">{error}</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="flex flex-col lg:flex-row gap-6 h-[calc(100vh-200px)]">
@@ -246,20 +189,10 @@ export default function PageManager() {
       </div>
 
       {/* Main Content - Editor */}
-            <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col">
         {selectedPage ? (
           <>
             <div className="p-6 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-t-lg">
-              {saveError && (
-                <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-                  <p className="text-red-600 dark:text-red-400 text-sm">{saveError}</p>
-                </div>
-              )}
-              {isSaving && (
-                <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-                  <p className="text-blue-600 dark:text-blue-400 text-sm">Saving...</p>
-                </div>
-              )}
               <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4">
                 <div>
                   <h2 className="text-2xl font-bold text-gray-900 dark:text-white">

@@ -55,11 +55,11 @@ const data = {
       url: "/admin/dashboard",
       icon: IconDashboard,
     },
-    {
-      title: "Analytics",
-      url: "/admin/analytics",
-      icon: IconChartBar,
-    },
+    // {
+    //   title: "Analytics",
+    //   url: "/admin/analytics",
+    //   icon: IconChartBar,
+    // },
     {
       title: "Articles",
       url: "/admin/articles",
@@ -144,7 +144,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     if (typeof window !== 'undefined') {
       // If not authenticated, redirect to login
       if (!isAuthenticated) {
-        router.push('/admin/login')
+        router.push('/admin/')
         return
       }
       
@@ -178,21 +178,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     isActive: pathname === item.url
   }))
 
-  // Show loading state while checking authentication
-  if (!isAuthenticated) {
-    return (
-      <Sidebar collapsible="offcanvas" {...props}>
-        <SidebarContent>
-          <div className="flex items-center justify-center h-32">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-              <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">Checking authentication...</p>
-            </div>
-          </div>
-        </SidebarContent>
-      </Sidebar>
-    )
-  }
+
 
   // Show access denied message if user doesn't have proper role
   if (isAuthenticated && authUser?.role && !['ADMIN', 'EDITOR'].includes(authUser.role)) {
@@ -210,7 +196,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </Sidebar>
     )
   }
-  
+  const path = usePathname()
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
@@ -228,7 +214,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
-      <SidebarContent>
+      <SidebarContent className={`clsx()`}>
         <NavMain items={navMainWithActive} />
         <NavDocuments items={data.documents} />
         <NavSecondary items={navSecondaryWithActive} className="mt-auto" />

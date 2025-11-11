@@ -12,6 +12,7 @@ export default function Page() {
   const [recentArticles, setRecentArticles] = useState<any[]>([]);
   const [analytics, setAnalytics] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  
 
   useEffect(() => {
     fetchDashboardData();
@@ -20,7 +21,8 @@ export default function Page() {
   async function fetchDashboardData() {
     setLoading(true);
     try {
-      const res = await fetch('/api/admin/dashboard', { credentials: 'include' });
+      const res = await fetch('/api/admin/dashboard',
+        { credentials: 'include', cache: 'no-store' });
       const data = await res.json();
       if (data.success && data.data) {
         setRecentArticles(data.data.recentActivity.news || []);
@@ -32,6 +34,7 @@ export default function Page() {
       setLoading(false);
     }
   }
+
 
   return (
     <div className="@container/main flex flex-1 flex-col gap-2">

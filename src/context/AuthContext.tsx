@@ -39,6 +39,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     if (response.ok) {
       const data = await response.json();
+
+// Debug: print tokens if present
+if (data.data?.accessToken || data.data?.refreshToken) {
+  console.log("🪙 Access Token:", data.data.accessToken);
+  console.log("🔁 Refresh Token:", data.data.refreshToken);
+} else {
+  console.log("⚠️ No tokens found in response — likely stored in HttpOnly cookies");
+}
+
       if (data.data?.user) {
         setUser(data.data.user);
         return true;
@@ -77,6 +86,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const data = await retryResponse.json();
           if (data.authenticated && data.data?.user) {
             setUser(data.data.user);
+            console.log();
+            
             console.log("User rehydrated after token refresh");
           }
         }
@@ -115,8 +126,10 @@ const login = async (email: string, password: string): Promise<boolean> => {
       headers: { "Content-Type": "application/json" },
       credentials: "include", // This is crucial!
       body: JSON.stringify({ email, password }),
+    
     });
-
+      console.log("email",{email},{password}) 
+   
     if (!response.ok) {
       const error = await response.json();
       setAuthError(error.error || "Login failed");
@@ -160,6 +173,7 @@ const register = async (email: string, password: string, name: string): Promise<
       headers: { "Content-Type": "application/json" },
       credentials: "include",
       body: JSON.stringify({ email, password, name }),
+    
     });
 
     if (!response.ok) {
@@ -169,9 +183,7 @@ const register = async (email: string, password: string, name: string): Promise<
     }
 
     const data = await response.json();
-    
-    // ✅ FIXED: Don't set user state - just return success
-    // The user should login separately after registration
+  
     console.log("✅ Registration successful, user should login separately");
     return true;
 
@@ -183,6 +195,7 @@ const register = async (email: string, password: string, name: string): Promise<
     setIsLoading(false);
   }
 };
+
 
   const logout = async (): Promise<void> => {
     try {

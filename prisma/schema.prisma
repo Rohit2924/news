@@ -1,5 +1,6 @@
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native"]
 }
 
 datasource db {
@@ -12,16 +13,16 @@ model User {
   email           String        @unique
   name            String?
   password        String?
-  role            Role          @default(USER) // Changed to Role enum
+  role            Role          @default(USER)
   image           String?
   contactNumber   String?
   reputation      Int           @default(0)
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
-  comments        Comment[]
   commentEdits    CommentEdit[]
-  reportsMade     UserReport[]  @relation("reportsMade")
+  comments        Comment[]
   reportsReceived UserReport[]  @relation("reportsReceived")
+  reportsMade     UserReport[]  @relation("reportsMade")
 
   @@map("users")
 }
@@ -30,7 +31,6 @@ model News {
   id             Int       @id @default(autoincrement())
   title          String
   categoryId     String
-  category      Category   @relation("NewsCategory", fields: [categoryId], references: [id])
   author         String
   published_date String?
   image          String?
@@ -38,10 +38,11 @@ model News {
   summary        String?
   content        String
   tags           String[]
-  status          String    @default("published") // Add this line
+  status         String    @default("published")
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
   comments       Comment[]
+  category       Category  @relation("NewsCategory", fields: [categoryId], references: [id])
 
   @@map("news")
 }
@@ -53,10 +54,10 @@ model Comment {
   content     String
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
+  editHistory CommentEdit[]
   news        News          @relation(fields: [newsId], references: [id])
   user        User          @relation(fields: [userId], references: [id])
-  editHistory CommentEdit[]
-  reports     UserReport[] // Added relation to UserReport
+  reports     UserReport[]
 
   @@map("comments")
 }
@@ -69,8 +70,8 @@ model CommentEdit {
   reason     String?
   createdAt  DateTime @default(now())
   userId     String
-  user       User     @relation(fields: [userId], references: [id])
   comment    Comment  @relation(fields: [commentId], references: [id])
+  user       User     @relation(fields: [userId], references: [id])
 
   @@map("comment_edits")
 }
@@ -96,75 +97,56 @@ model UserReport {
   id             String   @id @default(cuid())
   reporterId     String
   reportedUserId String
-  commentId      Int? // Made optional and added relation
+  commentId      Int?
   reason         String
   status         String   @default("pending")
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
-
-  reporter     User     @relation("reportsMade", fields: [reporterId], references: [id])
-  reportedUser User     @relation("reportsReceived", fields: [reportedUserId], references: [id])
-  comment      Comment? @relation(fields: [commentId], references: [id]) // Added relation
+  comment        Comment? @relation(fields: [commentId], references: [id])
+  reportedUser   User     @relation("reportsReceived", fields: [reportedUserId], references: [id])
+  reporter       User     @relation("reportsMade", fields: [reporterId], references: [id])
 
   @@index([reportedUserId])
   @@index([reporterId])
   @@index([status])
-  @@map("user_reports") // Fixed: Changed from "UserReport" to "user_reports"
-}
-
-// Role enum to define user roles including editor
-enum Role {
-  USER
-  EDITOR
-  ADMIN
+  @@map("user_reports")
 }
 
 model SiteSettings {
-  id              String  @id @default(cuid())
-  siteName        String  @default("News Portal")
-  siteDescription String  @default("Your trusted source for news")
-  siteLogo        String?
-  siteFavicon     String?
-  siteUrl         String  @default("http://localhost:3000")
-
-  // SEO Settings
-  metaTitle       String  @default("News Portal - Latest News")
-  metaDescription String  @default("Stay updated with the latest news")
-  metaKeywords    String  @default("news, portal, latest, updates")
-  ogImage         String?
-  twitterCard     String?
-
-  // Contact Information
-  contactEmail   String?
-  contactPhone   String?
-  contactAddress String?
-
-  // Social Media
-  facebookUrl  String?
-  twitterUrl   String?
-  instagramUrl String?
-  linkedinUrl  String?
-  youtubeUrl   String?
-
-  // Analytics
+  id                String   @id @default(cuid())
+  siteName          String   @default("News Portal")
+  siteDescription   String   @default("Your trusted source for news")
+  siteLogo          String?
+  siteFavicon       String?
+  siteUrl           String   @default("http://localhost:3000")
+  metaTitle         String   @default("News Portal - Latest News")
+  metaDescription   String   @default("Stay updated with the latest news")
+  metaKeywords      String   @default("news, portal, latest, updates")
+  ogImage           String?
+  twitterCard       String?
+  contactEmail      String?
+  contactPhone      String?
+  contactAddress    String?
+  facebookUrl       String?
+  twitterUrl        String?
+  instagramUrl      String?
+  linkedinUrl       String?
+  youtubeUrl        String?
   googleAnalyticsId String?
   facebookPixelId   String?
-
-  // Footer Settings
-  footerText  String @default("© 2024 News Portal. All rights reserved.")
-  footerLinks Json? // Store footer links as JSON
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  footerText        String   @default("© 2024 News Portal. All rights reserved.")
+  footerLinks       Json?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
   @@map("site_settings")
 }
 
 model PageContent {
   id              String   @id @default(cuid())
-  pageSlug        String   @unique // e.g., "about", "contact", "privacy"
+  pageSlug        String   @unique
   pageTitle       String
-  pageContent     String // HTML content
+  pageContent     String
   metaTitle       String?
   metaDescription String?
   metaKeywords    String?
@@ -188,23 +170,21 @@ model MediaFile {
   @@map("media_files")
 }
 
-// Category model for news categories
 model Category {
-  id           String     @id @default(cuid())
-  name         String
-  slug         String     @unique
-  description  String?
-  parentId     String?
-  parent       Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  id            String     @id @default(cuid())
+  name          String
+  slug          String     @unique
+  description   String?
+  parentId      String?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  parent        Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
   subcategories Category[] @relation("CategoryHierarchy")
-  articles     News[]     @relation("NewsCategory")
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
+  articles      News[]     @relation("NewsCategory")
 
   @@map("categories")
 }
 
-// Stores messages submitted from the public Contact form
 model ContactMessage {
   id        String   @id @default(cuid())
   name      String
@@ -216,7 +196,6 @@ model ContactMessage {
   @@map("contact_messages")
 }
 
-// Stores job applications submitted from /careers/apply
 model JobApplication {
   id        String   @id @default(cuid())
   name      String
@@ -228,4 +207,10 @@ model JobApplication {
   createdAt DateTime @default(now())
 
   @@map("job_applications")
+}
+
+enum Role {
+  USER
+  EDITOR
+  ADMIN
 }

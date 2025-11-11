@@ -1,7 +1,7 @@
 // src/components/ui/AuthForm.tsx
 "use client";
 import { useState, useEffect } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter, usePathname, redirect } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 
 const initialState = {
@@ -25,8 +25,10 @@ export default function AuthForm() {
   const pathname = usePathname();
   const { login, register, forgotPassword, user, isLoading, isAuthenticated, authError, setAuthError } = useAuth();
 
+  
+
   // Detect if this is admin login page
-  const isAdminLogin = pathname === '/admin' || pathname.startsWith('/admin/login');
+  const isAdminLogin = pathname === '/login' || pathname.startsWith('/admin/');
   const isEditorLogin = pathname === '/editor' || pathname.startsWith('/editor/login');
   
   // Determine the role context
@@ -37,25 +39,23 @@ export default function AuthForm() {
   };
 
   const roleContext = getRoleContext();
+  
 
   // Handle redirection after login
   useEffect(() => {
     if (!isAuthenticated || !user) return;
     
     const currentPath = pathname;
-    if (currentPath === '/login' || currentPath === '/register' || currentPath === '/admin' || currentPath === '/editor') {
-      switch (user.role) {
-        case 'ADMIN':
-          router.push('/admin/dashboard');
-          break;
-        case 'EDITOR':
-          router.push('/editor/dashboard');
-          break;
-        default:
-          router.push('/profile');
-          break;
-      }
+    console.log(currentPath);
+    if(user.role === 'ADMIN'){
+      redirect('/admin/dashboard');
+    }else if(user.role === 'EDITOR'){
+      redirect('/editor/dashboard');
+    }else{
+      redirect('/profile');
     }
+    
+ 
   }, [isAuthenticated, user, pathname, router]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -82,8 +82,8 @@ export default function AuthForm() {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!validate()) return;
+    e.preventDefault();  
+    if (!validate()) return;  
     setLoading(true);
     setError("");
     setAuthError("");
@@ -94,6 +94,9 @@ export default function AuthForm() {
         ok = await login(form.email, form.password);
       } else if (mode === "signup") {
         ok = await register(form.email, form.password, form.name);
+
+        console.log("email:" + form.email, "passwod" + form.password);
+        
         
         if (ok) {
           setSuccess("Account created successfully! Please login to continue.");

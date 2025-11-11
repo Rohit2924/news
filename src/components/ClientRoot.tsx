@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "../context/AuthContext";
@@ -12,14 +12,22 @@ import { useSiteSettings } from "../hooks/useSiteSettings";
 export default function ClientRoot({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { settings } = useSiteSettings();
+  const [isMounted, setIsMounted] = useState(false);
 
+  // Determine route types
   const isAdminRoute = pathname?.startsWith("/admin");
-  const isEditorRoute = pathname?.startsWith("/Editor/");
+  const isEditorRoute = pathname?.startsWith("/editor");
   const isAuthRoute = pathname === "/login" || pathname === "/register";
   const hideChrome = isAdminRoute || isEditorRoute || isAuthRoute;
 
+  // Set mounted state to avoid hydration issues
   useEffect(() => {
-    if (settings?.siteFavicon) {
+    setIsMounted(true);
+  }, []);
+
+  // Update favicon
+  useEffect(() => {
+    if (settings?.siteFavicon && isMounted) {
       const favicon = document.querySelector('link[rel="icon"]') as HTMLLinkElement;
       if (favicon) {
         favicon.href = settings.siteFavicon;
@@ -30,10 +38,20 @@ export default function ClientRoot({ children }: { children: React.ReactNode }) 
         document.head.appendChild(link);
       }
     }
-  }, [settings?.siteFavicon]);
+  }, [settings?.siteFavicon, isMounted]);
 
-  // Always render the same structure to avoid hydration mismatches
-  // Use suppressHydrationWarning for client-only content
+  
+
+  // Don't render anything until mounted to avoid hydration mismatches
+  if (!isMounted) {
+    return (
+      <AuthProvider>
+        <main suppressHydrationWarning>{children}</main>
+        <Toaster position="top-center" richColors />
+      </AuthProvider>
+    );
+  }
+
   return (
     <AuthProvider>
       {!hideChrome && <BreakingBar />}

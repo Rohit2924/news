@@ -118,7 +118,7 @@ export default function ViewArticlePage({ params }: { params: Promise< { id: str
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow p-6 mx-5">
+      <div className="bg-white rounded-xl shadow p-6 mx-5">
         {/* Article Header */}
         <div className="border-b border-gray-200 pb-6 mb-6">
           <h1 className="text-3xl font-bold text-gray-900 mb-4">{article.title}</h1>

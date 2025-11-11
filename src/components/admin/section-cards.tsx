@@ -63,6 +63,8 @@ export function SectionCards() {
   const [isRefreshing, setIsRefreshing] = useState(false);
 
 
+  
+
   const fetchDashboardStats = async (isManualRefresh = false) => {
     if (isManualRefresh) {
       setIsRefreshing(true);
@@ -76,20 +78,20 @@ export function SectionCards() {
         credentials: 'include',
         cache: 'no-store'
       });
-  
+      
       if (!response.ok) {
-        throw new Error(`Server responded with ${response.status}`);
+        throw new Error(`Server responded with ${response.status}` );
       }
-  
+      
       const data: DashboardResponse = await response.json();
+      console.log("data is loading",{data})
       
       if (!data.success || !data.data) {
         throw new Error(data.error || 'Invalid response from server');
       }
-  
+
       
-
-
+  
       const { overview, analytics } = data.data;
       
       setStats({

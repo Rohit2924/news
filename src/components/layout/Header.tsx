@@ -29,7 +29,6 @@ const Header = () => {
   const handleLangSwitch = () => {
     // Implement language switch logic here
   };
-  console.log("siteLogo value:", settings?.siteLogo);
 
   const categories = [
     { name: 'Home', href: '/' },

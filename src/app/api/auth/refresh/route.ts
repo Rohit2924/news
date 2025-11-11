@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
     const response = NextResponse.json({ success: true, message: 'Token refreshed', data: { user: tokenPayload } });
     response.cookies.set('auth-token', newAccessToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: process.env.NODE_ENV === 'development',
       sameSite: 'strict',
       maxAge: 15 * 60, // 15 minutes
       path: '/',

@@ -24,6 +24,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
+
     // Verify token
     const result = verifyJWT(token);
     console.log('🔍 [/api/auth/me] Token verification result:', { 
@@ -38,9 +39,7 @@ export async function GET(request: NextRequest) {
         { success: false, authenticated: false, error: 'Invalid token' },
         { status: 401 }
       );
-    }
-
-
+    }  
 
     // Get fresh user data from database
     const user = await prisma.user.findUnique({

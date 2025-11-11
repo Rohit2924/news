@@ -6,6 +6,8 @@ import { signJWT, ACCESS_TOKEN_EXPIRES_IN, REFRESH_TOKEN_EXPIRES_IN } from '@/li
 import { z } from 'zod';
 // import { SignJWT } from 'jose';
 
+
+console.log("this is login routes")
 const loginSchema = z.object({
   email: z.string().email("Invalid email format"),
   password: z.string().min(1, "Password is required"),
@@ -23,6 +25,8 @@ export async function POST(request: NextRequest) {
       );
     }
     const { email, password } = validationResult.data;
+    console.log("email-route",{email})
+    console.log("body",{body})
 
     // Find user in database
     const user = await prisma.user.findUnique({
@@ -68,7 +72,7 @@ export async function POST(request: NextRequest) {
     // ✅ FIXED: Changed from 'authToken' to 'auth-token' to match middleware
     response.cookies.set('auth-token', accessToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: process.env.NODE_ENV === 'development',
       sameSite: 'strict',
       maxAge: 15 * 60, // minutes
       path: '/',
@@ -77,7 +81,7 @@ export async function POST(request: NextRequest) {
     // ✅ FIXED: Changed from 'refreshToken' to 'refresh-token' to match middleware
     response.cookies.set('refresh-token', refreshToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: process.env.NODE_ENV === 'development',
       sameSite: 'strict',
       maxAge: 7 * 24 * 60 * 60, // 7 days
       path: '/',
@@ -88,7 +92,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Login error:', error);
     return NextResponse.json(
-      { success: false, error: 'Internal server error' },
+      { success: false, error: error, msg:'Internal server error' },
       { status: 500 }
     );
   }
