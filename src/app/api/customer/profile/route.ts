@@ -13,8 +13,7 @@ export async function GET(request: Request) {
     // cookie extraction works in server runtime APIs via Request.cookies
     if (!token) {
       try {
-        // @ts-ignore - Request.cookies is available in Next.js server runtime
-        token = (request as any).cookies?.get?.('authToken')?.value ?? null;
+        token = (request as any).cookies?.get?.('auth-token')?.value ?? null;
       } catch (e) {
         // ignore
       }
@@ -33,7 +32,6 @@ export async function GET(request: Request) {
       );
     }
 
-    // Get user profile from database
     const users = await prisma.$queryRaw`
       SELECT id, email, name, role, image, "contactNumber", "createdAt", "updatedAt"
       FROM users WHERE id = ${result.payload.id}
@@ -71,7 +69,7 @@ export async function POST(request: Request) {
     if (!token) {
       try {
         // @ts-ignore
-        token = (request as any).cookies?.get?.('authToken')?.value ?? null;
+        token = (request as any).cookies?.get?.('auth-token')?.value ?? null;
       } catch (e) {}
     }
     if (!token) {
@@ -135,8 +133,7 @@ export async function DELETE(request: Request) {
     }
     if (!token) {
       try {
-        // @ts-ignore
-        token = (request as any).cookies?.get?.('authToken')?.value ?? null;
+        token = (request as any).cookies?.get?.('auth-token')?.value ?? null;
       } catch (e) {}
     }
     if (!token) {
@@ -204,7 +201,7 @@ export async function DELETE(request: Request) {
 
       const response = NextResponse.json({ error: false, message: 'Account deleted' });
       // Clear auth cookie if any
-      response.cookies.set('authToken', '', {
+      response.cookies.set('auth-token', '', {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',

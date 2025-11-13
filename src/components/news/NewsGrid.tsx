@@ -18,19 +18,19 @@ export type Article = {
 
 const NewsGrid = ({ articles }: { articles: Article[] }) => (
   <section className="py-12 bg-white dark:bg-gray-900 transition-colors duration-200">
-    <div className="container mx-auto px-4">
-      <h2 className="text-3xl font-bold text-center mb-10 text-gray-800 dark:text-white">Latest News</h2>
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+    <div className="container mx-auto px-4  ">
+      <h2 className="text-3xl font-bold text-center mb-10 text-gray-800 dark:text-white 0">Latest News</h2>
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-h-[1100px] overflow-y-auto p-2">
         {articles?.map((article) => (
           <NewsCard
-            key={article.id}
-            image={article.image || article.imageUrl || ""}
-            title={article.title}
-            summary={article.summary}
-            link={`/article/${slugify(article.title)}`}
+          key={article.id}
+          image={article.image || article.imageUrl || ""}
+          title={article.title}
+          summary={article.summary}
+          link={`/article/${slugify(article.title)}`}
           />
-        ))}
-      </div>
+         ))}
+    </div>
     </div>
   </section>
 );

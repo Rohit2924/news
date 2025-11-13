@@ -1,5 +1,7 @@
+// app/careers/apply/page.tsx
 "use client";
 import { useState } from "react";
+import {  toast } from 'sonner';
 
 const countries = [
   { code: "+977", name: "Nepal" },
@@ -19,26 +21,37 @@ export default function ApplyPage() {
     setError("");
     const fd = new FormData(e.currentTarget);
 
+    const name = fd.get("name")?.toString().trim();
     const email = fd.get("email")?.toString().trim();
     const phone = fd.get("phone")?.toString().trim();
     const position = fd.get("position")?.toString().trim();
-    const cv = fd.get("cv") as File | null;
+    const coverNote = fd.get("coverNote")?.toString();
+    const cv = fd.get("cv") as File;
 
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return setError("Invalid email"), setStatus("error");
-    if (!position) return setError("Select a position"), setStatus("error");
+    // if (!position) return setError("Select a position"), setStatus("error"), setError("Invalid position") ;
     if (!cv || !["application/pdf","application/msword","application/vnd.openxmlformats-officedocument.wordprocessingml.document"].includes(cv.type))
       return setError("Upload valid CV"), setStatus("error");
     if (cv.size > 10 * 1024 * 1024) return setError("CV max 10MB"), setStatus("error");
-    if (phone && !/^\d{6,15}$/.test(phone)) return setError("Invalid phone"), setStatus("error");
+ if (phone) {
+    const digitsOnly = phone.replace(/\D/g, '');
+    if (digitsOnly.length < 6 || digitsOnly.length > 15) {
+      return setError("Phone must be 6-15 digits"), setStatus("error");
+    }
+    fd.set("phone", `${countryCode}${digitsOnly}`);
+  } else {
+    fd.set("phone", "");
+  }
+console.log("phone",{phone},{email},{position},{name},{coverNote});
 
-    fd.set("phone", phone ? `${countryCode}${phone}` : "");
+
 
     try {
       const res = await fetch("/api/careers/apply", { method: "POST", body: fd });
       const data = await res.json();
       if (!res.ok || !data.success) throw new Error(data.error || "Failed");
       setStatus("success");
-      e.currentTarget.reset();
+      // e.currentTarget.reset();
       setTimeout(() => setStatus("idle"), 3000);
     } catch (err: any) {
       setError(err.message || "Something went wrong");
@@ -81,8 +94,14 @@ export default function ApplyPage() {
               {status === "loading" ? "Submitting…" : "Submit Application"}
             </button>
 
-            {status === "success" && <p className="text-green-600">Application submitted.</p>}
-            {status === "error" && <p className="text-red-600">{error}</p>}
+            {status === "success" && 
+            <p className="text-green-600">Application submitted.</p> &&
+              toast.success("Application submitted successfully!")
+            }
+
+            {status === "error" && <p className="text-red-600">{error}</p> &&
+            toast.error("Application submitting error")
+            }
           </form>
         </div>
       </section>

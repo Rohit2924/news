@@ -15,6 +15,7 @@ import {
   IconInnerShadowTop,
   IconListDetails,
   IconReport,
+  IconFileCv,
   IconSearch,
   IconSettings,
   IconUsers,
@@ -80,6 +81,11 @@ const data = {
       url: "/admin/comments",
       icon: IconReport,
     },
+     {
+      title: "Careers",
+      url: "/admin/careers",
+      icon: IconFileCv,
+    },
   ],
   navClouds: [
     {
@@ -144,7 +150,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     if (typeof window !== 'undefined') {
       // If not authenticated, redirect to login
       if (!isAuthenticated) {
-        router.push('/admin/')
+        router.push('/login/')
         return
       }
       

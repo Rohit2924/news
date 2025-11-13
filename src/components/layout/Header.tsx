@@ -74,14 +74,14 @@ const Header = () => {
 
             {/* Right Menu */}
             <div className="flex items-center space-x-4">
-              <button
+              {/* <button
                 onClick={handleLangSwitch}
                 title="Switch Language"
                 type="button"
                 className="flex items-center space-x-1 px-3 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition"
               >
                 <span className="text-sm font-medium text-black dark:text-white">EN</span>
-              </button>
+              </button> */}
 
               <DarkModeToggle />
 

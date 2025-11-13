@@ -18,7 +18,8 @@ export default function ClientRoot({ children }: { children: React.ReactNode }) 
   const isAdminRoute = pathname?.startsWith("/admin");
   const isEditorRoute = pathname?.startsWith("/editor");
   const isAuthRoute = pathname === "/login" || pathname === "/register";
-  const hideChrome = isAdminRoute || isEditorRoute || isAuthRoute;
+  const isUserProfileRoute = pathname?.startsWith("/profile");
+  const hideChrome = isAdminRoute || isEditorRoute || isAuthRoute || isUserProfileRoute;
 
   // Set mounted state to avoid hydration issues
   useEffect(() => {

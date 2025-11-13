@@ -1,3 +1,4 @@
+//api/admin/careers/applications/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/models/prisma';
 import { verifyJWT } from '@/lib/auth';
@@ -8,7 +9,7 @@ function getAuthToken(request: NextRequest): string | null {
   return (
     request.cookies.get('adminAuthToken')?.value ||
     request.cookies.get('editorAuthToken')?.value ||
-    request.cookies.get('authToken')?.value ||
+    request.cookies.get('auth-token')?.value ||
     null
   );
 }

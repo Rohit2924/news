@@ -26,12 +26,11 @@ export default function AdminCommentsPage() {
   const [selectedComment, setSelectedComment] = useState<{userId: string, commentId: string} | null>(null);
   const [reportReason, setReportReason] = useState('');
 
-
   const fetchComments = async () => {
     setIsLoading(true);
     try {
       const res = await fetch(`/api/admin/comments?page=${page}&limit=10`, {
-       credentials: 'include',
+        credentials: 'include',
       });
       const data = await res.json();
       if (data.success) {
@@ -53,67 +52,38 @@ export default function AdminCommentsPage() {
   }, [page]);
 
   const deleteComment = async (id: string) => {
+    try {
+      const res = await fetch(`/api/admin/comments?id=${id}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success(data.message);
+        setComments((prev) => prev.filter((c) => c.id !== id));
+      } else {
+        toast.error(data.error || 'Failed to delete comment');
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error('Failed to delete comment');
+    }
+  };
+
+  const handleDeleteClick = (id: string) => {
     toast(
-      <div className="flex flex-col gap-3">
-        <div className="font-semibold text-gray-900 dark:text-white">Delete Comment</div>
-        <div className="text-sm text-gray-600 dark:text-gray-300">Are you sure you want to delete this comment? This action cannot be undone.</div>
-        <div className="flex gap-2 mt-2">
-          <button
-            onClick={async () => {
-              try {
-                const res = await fetch(`/api/admin/comments?id=${id}`, {
-                 credentials: 'include'
-                });
-                const data = await res.json();
-                if (data.success) {
-                  toast.success(data.message);
-                  setComments((prev) => prev.filter((c) => c.id !== id));
-                } else {
-                  toast.error(data.error || 'Failed to delete comment');
-                }
-              } catch (error) {
-                console.error(error);
-                toast.error('Failed to delete comment');
-              }
-            }}
-            className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors"
-          >
-            Delete
-          </button>
-          <button
-            onClick={() => toast.dismiss()}
-            className="px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-md hover:bg-gray-300 dark:hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors"
-          >
-            Cancel
-          </button>
-        </div>
-      </div>,
+      `Delete this comment?`,
       {
-        duration: 5000,
+        description: 'This action cannot be undone.',
         action: {
           label: 'Delete',
-          onClick: async () => {
-            try {
-              const res = await fetch(`/api/admin/comments?id=${id}`, {
-                credentials: 'include'
-              });
-              const data = await res.json();
-              if (data.success) {
-                toast.success(data.message);
-                setComments((prev) => prev.filter((c) => c.id !== id));
-              } else {
-                toast.error(data.error || 'Failed to delete comment');
-              }
-            } catch (error) {
-              console.error(error);
-              toast.error('Failed to delete comment');
-            }
-          }
+          onClick: () => deleteComment(id),
         },
         cancel: {
           label: 'Cancel',
-          onClick: () => {}
-        }
+          onClick: () => {},
+        },
+        duration: 10000,
       }
     );
   };
@@ -135,8 +105,8 @@ export default function AdminCommentsPage() {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
-          credentials: 'include' 
         },
+        credentials: 'include',
         body: JSON.stringify({ 
           userId: selectedComment.userId, 
           commentId: selectedComment.commentId, 
@@ -166,19 +136,7 @@ export default function AdminCommentsPage() {
     const slug = newsTitle.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
     const articleUrl = `/articles/${slug}`;
     
-    toast.success(
-      <div className="flex flex-col gap-2">
-        <div className="font-semibold text-gray-900 dark:text-white">Opening Article</div>
-        <div className="text-sm text-gray-600 dark:text-gray-300">{newsTitle}</div>
-      </div>,
-      {
-        duration: 3000,
-        action: {
-          label: 'Open Now',
-          onClick: () => window.open(articleUrl, '_blank')
-        }
-      }
-    );
+    window.open(articleUrl, '_blank');
   };
 
   const filteredComments = comments.filter((c) => {
@@ -192,18 +150,18 @@ export default function AdminCommentsPage() {
   });
 
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 py-4 sm:py-6 lg:py-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#0D0D0D] py-4 sm:py-6 lg:py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl overflow-hidden">
+        <div className="bg-white dark:bg-[#171717] rounded-lg shadow-xl overflow-hidden border border-gray-200 dark:border-[#262626]">
           {/* Header */}
-          <div className="px-4 sm:px-6 py-4 sm:py-6 border-b border-gray-200 dark:border-gray-700">
+          <div className="px-4 sm:px-6 py-4 sm:py-6 border-b border-gray-200 dark:border-[#262626]">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
                 <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                  <MessageCircle className="h-6 w-6 sm:h-7 sm:w-7" />
+                  <MessageCircle className="h-6 w-6 sm:h-7 sm:w-7 text-red-600" />
                   Comments Management
                 </h1>
-                <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 mt-1">
+                <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1">
                   Manage user comments and interactions
                 </p>
               </div>
@@ -211,13 +169,13 @@ export default function AdminCommentsPage() {
               {/* Search */}
               <div className="w-full sm:w-auto sm:max-w-md">
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500" />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <input
                     type="text"
                     placeholder="Search comments, users, or articles..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent"
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-[#262626] rounded-lg bg-white dark:bg-[#171717] text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-colors"
                   />
                 </div>
               </div>
@@ -230,18 +188,20 @@ export default function AdminCommentsPage() {
             <div className="block md:hidden">
               {isLoading ? (
                 <div className="flex flex-col items-center justify-center py-12">
-                  <Loader2 className="h-8 w-8 animate-spin text-blue-600 dark:text-blue-400 mb-3" />
+                  <Loader2 className="h-8 w-8 animate-spin text-red-600 mb-3" />
                   <div className="text-gray-600 dark:text-gray-400 text-sm">Loading comments...</div>
                 </div>
               ) : filteredComments.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12 px-4">
                   <MessageCircle className="h-12 w-12 text-gray-400 dark:text-gray-500 mb-3" />
-                  <div className="text-gray-600 dark:text-gray-400 text-center">No comments found</div>
+                  <div className="text-gray-600 dark:text-gray-400 text-center">
+                    {searchTerm ? 'No comments match your search' : 'No comments found'}
+                  </div>
                 </div>
               ) : (
-                <div className="divide-y divide-gray-200 dark:divide-gray-700">
+                <div className="divide-y divide-gray-200 dark:divide-[#262626]">
                   {filteredComments.map((c) => (
-                    <div key={c.id} className="p-4 sm:p-6 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                    <div key={c.id} className="p-4 sm:p-6 hover:bg-gray-50 dark:hover:bg-[#262626]/50 transition-colors">
                       <div className="space-y-3">
                         <div className="flex items-start justify-between gap-3">
                           <div className="flex-1 min-w-0">
@@ -258,8 +218,8 @@ export default function AdminCommentsPage() {
                               disabled={!c.user?.id}
                               className={`p-2 rounded-full transition-colors ${
                                 c.user?.id 
-                                  ? 'text-yellow-600 dark:text-yellow-400 hover:bg-yellow-50 dark:hover:bg-yellow-900/20' 
-                                  : 'text-gray-400 dark:text-gray-600 cursor-not-allowed'
+                                  ? 'text-yellow-600 hover:bg-yellow-50 dark:hover:bg-yellow-500/20' 
+                                  : 'text-gray-400 cursor-not-allowed'
                               }`}
                               title="Report User"
                             >
@@ -270,16 +230,16 @@ export default function AdminCommentsPage() {
                               disabled={!c.newsTitle}
                               className={`p-2 rounded-full transition-colors ${
                                 c.newsTitle 
-                                  ? 'text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20' 
-                                  : 'text-gray-400 dark:text-gray-600 cursor-not-allowed'
+                                  ? 'text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-500/20' 
+                                  : 'text-gray-400 cursor-not-allowed'
                               }`}
                               title="View Article"
                             >
                               <ExternalLink className="h-4 w-4" />
                             </button>
                             <button
-                              onClick={() => deleteComment(c.id)}
-                              className="p-2 rounded-full text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                              onClick={() => handleDeleteClick(c.id)}
+                              className="p-2 rounded-full text-red-600 hover:bg-red-50 dark:hover:bg-red-500/20 transition-colors"
                               title="Delete Comment"
                             >
                               <Trash2 className="h-4 w-4" />
@@ -287,20 +247,16 @@ export default function AdminCommentsPage() {
                           </div>
                         </div>
                         
-                        <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
-                          <p className="text-sm text-gray-900 dark:text-gray-100 leading-relaxed break-words">
+                        <div className="bg-gray-50 dark:bg-[#262626] rounded-lg p-3">
+                          <p className="text-sm text-gray-900 dark:text-gray-100 leading-relaxed wrap-break-word">
                             {c.content}
                           </p>
                         </div>
                         
                         <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
-                          <a
-                            href={`/article/${c.newsTitle?.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '') || 'article'}`}
-                            target="_blank"
-                            className="text-blue-600 dark:text-blue-400 hover:underline truncate max-w-[60%]"
-                          >
+                          <span className="truncate max-w-[60%] text-blue-600 dark:text-blue-400">
                             {c.newsTitle || 'Untitled Article'}
-                          </a>
+                          </span>
                           <span>
                             {new Date(c.createdAt).toLocaleDateString('en-US', { 
                               month: 'short', 
@@ -320,7 +276,7 @@ export default function AdminCommentsPage() {
             {/* Desktop Table View */}
             <div className="hidden md:block overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-gray-50 dark:bg-gray-700/50">
+                <thead className="bg-gray-50 dark:bg-[#171717]">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                       Comment
@@ -339,11 +295,11 @@ export default function AdminCommentsPage() {
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                <tbody className="bg-white dark:bg-[#171717] divide-y divide-gray-200 dark:divide-[#262626]">
                   {isLoading ? (
                     <tr>
                       <td colSpan={5} className="text-center py-12">
-                        <Loader2 className="h-8 w-8 animate-spin mx-auto mb-3 text-blue-600 dark:text-blue-400" />
+                        <Loader2 className="h-8 w-8 animate-spin mx-auto mb-3 text-red-600" />
                         <div className="text-gray-600 dark:text-gray-400">Loading comments...</div>
                       </td>
                     </tr>
@@ -351,15 +307,17 @@ export default function AdminCommentsPage() {
                     <tr>
                       <td colSpan={5} className="text-center py-12">
                         <MessageCircle className="h-12 w-12 mx-auto mb-3 text-gray-400 dark:text-gray-500" />
-                        <div className="text-gray-600 dark:text-gray-400">No comments found</div>
+                        <div className="text-gray-600 dark:text-gray-400">
+                          {searchTerm ? 'No comments match your search' : 'No comments found'}
+                        </div>
                       </td>
                     </tr>
                   ) : (
                     filteredComments.map((c) => (
-                      <tr key={c.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                      <tr key={c.id} className="hover:bg-gray-50 dark:hover:bg-[#262626]/50 transition-colors">
                         <td className="px-6 py-4">
                           <div className="max-w-xs">
-                            <p className="text-sm text-gray-900 dark:text-gray-100 line-clamp-3 break-words">
+                            <p className="text-sm text-gray-900 dark:text-gray-100 line-clamp-3 wrap-break-word">
                               {c.content}
                             </p>
                           </div>
@@ -377,13 +335,9 @@ export default function AdminCommentsPage() {
                           </div>
                         </td>
                         <td className="px-6 py-4">
-                          <a
-                            href={`/article/${c.newsTitle?.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '') || 'article'}`}
-                            target="_blank"
-                            className="text-blue-600 dark:text-blue-400 hover:underline text-sm max-w-[200px] truncate block"
-                          >
+                          <span className="text-blue-600 dark:text-blue-400 text-sm max-w-[200px] truncate block">
                             {c.newsTitle || 'Untitled'}
-                          </a>
+                          </span>
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">
                           <div className="flex flex-col">
@@ -400,8 +354,8 @@ export default function AdminCommentsPage() {
                               disabled={!c.user?.id}
                               className={`p-2 rounded-full transition-colors ${
                                 c.user?.id 
-                                  ? 'text-yellow-600 dark:text-yellow-400 hover:bg-yellow-50 dark:hover:bg-yellow-900/20' 
-                                  : 'text-gray-400 dark:text-gray-600 cursor-not-allowed'
+                                  ? 'text-yellow-600 hover:bg-yellow-50 dark:hover:bg-yellow-500/20' 
+                                  : 'text-gray-400 cursor-not-allowed'
                               }`}
                               title="Report User"
                             >
@@ -412,16 +366,16 @@ export default function AdminCommentsPage() {
                               disabled={!c.newsTitle}
                               className={`p-2 rounded-full transition-colors ${
                                 c.newsTitle 
-                                  ? 'text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20' 
-                                  : 'text-gray-400 dark:text-gray-600 cursor-not-allowed'
+                                  ? 'text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-500/20' 
+                                  : 'text-gray-400 cursor-not-allowed'
                               }`}
                               title="View Article"
                             >
                               <ExternalLink className="h-4 w-4" />
                             </button>
                             <button
-                              onClick={() => deleteComment(c.id)}
-                              className="p-2 rounded-full text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                              onClick={() => handleDeleteClick(c.id)}
+                              className="p-2 rounded-full text-red-600 hover:bg-red-50 dark:hover:bg-red-500/20 transition-colors"
                               title="Delete Comment"
                             >
                               <Trash2 className="h-4 w-4" />
@@ -438,7 +392,7 @@ export default function AdminCommentsPage() {
           
           {/* Pagination */}
           {!isLoading && filteredComments.length > 0 && (
-            <div className="px-4 sm:px-6 py-4 border-t border-gray-200 dark:border-gray-700">
+            <div className="px-4 sm:px-6 py-4 border-t border-gray-200 dark:border-[#262626]">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div className="text-sm text-gray-700 dark:text-gray-300 text-center sm:text-left">
                   Page {page} of {totalPages}
@@ -447,7 +401,7 @@ export default function AdminCommentsPage() {
                   <button
                     onClick={() => setPage((p) => Math.max(1, p - 1))}
                     disabled={page === 1}
-                    className="inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="inline-flex items-center px-3 py-2 border border-gray-300 dark:border-[#262626] rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-[#171717] hover:bg-gray-50 dark:hover:bg-[#262626] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
                     <ChevronLeft className="h-4 w-4 mr-1" />
                     Previous
@@ -455,7 +409,7 @@ export default function AdminCommentsPage() {
                   <button
                     onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                     disabled={page === totalPages}
-                    className="inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="inline-flex items-center px-3 py-2 border border-gray-300 dark:border-[#262626] rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-[#171717] hover:bg-gray-50 dark:hover:bg-[#262626] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
                     Next
                     <ChevronRight className="h-4 w-4 ml-1" />
@@ -470,10 +424,10 @@ export default function AdminCommentsPage() {
       {/* Report Dialog */}
       {reportDialogOpen && selectedComment && (
         <div className="fixed inset-0 bg-black/50 dark:bg-black/70 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+          <div className="bg-white dark:bg-[#171717] rounded-lg shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto border border-gray-200 dark:border-[#262626]">
             <div className="p-6">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                <Flag className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
+                <Flag className="h-5 w-5 text-yellow-600" />
                 Report User
               </h3>
               <div className="mb-6">
@@ -483,7 +437,7 @@ export default function AdminCommentsPage() {
                 <textarea
                   value={reportReason}
                   onChange={(e) => setReportReason(e.target.value)}
-                  className="w-full p-3 border border-gray-300 dark:border-gray-00 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 resize-y"
+                  className="w-full p-3 border border-gray-300 dark:border-[#262626] rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent bg-white dark:bg-[#171717] text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 resize-y transition-colors"
                   placeholder="Enter reason for reporting..."
                   rows={4}
                 />
@@ -491,13 +445,13 @@ export default function AdminCommentsPage() {
               <div className="flex flex-col sm:flex-row gap-3 sm:justify-end">
                 <button
                   onClick={() => setReportDialogOpen(false)}
-                  className="w-full sm:w-auto px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-md hover:bg-gray-300 dark:hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition-colors"
+                  className="w-full sm:w-auto px-4 py-2 bg-gray-200 dark:bg-[#262626] text-gray-800 dark:text-gray-200 rounded-md hover:bg-gray-300 dark:hover:bg-[#404040] focus:outline-none focus:ring-2 focus:ring-gray-500 transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={submitReport}
-                  className="w-full sm:w-auto px-4 py-2 bg-yellow-600 dark:bg-yellow-600 text-white rounded-md hover:bg-yellow-700 dark:hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-yellow-500 dark:focus:ring-yellow-400 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition-colors"
+                  className="w-full sm:w-auto px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-yellow-500 transition-colors"
                 >
                   Submit Report
                 </button>

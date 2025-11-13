@@ -215,7 +215,7 @@ export function ChartAreaInteractive() {
         >
           <AreaChart data={filteredData}>
             <defs>
-              <linearGradient id="fillDesktop" x1="0" y1="0" x2="0" y2="1">
+              <linearlinear id="fillDesktop" x1="0" y1="0" x2="0" y2="1">
                 <stop
                   offset="5%"
                   stopColor="var(--color-desktop)"
@@ -226,8 +226,8 @@ export function ChartAreaInteractive() {
                   stopColor="var(--color-desktop)"
                   stopOpacity={0.1}
                 />
-              </linearGradient>
-              <linearGradient id="fillMobile" x1="0" y1="0" x2="0" y2="1">
+              </linearlinear>
+              <linearlinear id="fillMobile" x1="0" y1="0" x2="0" y2="1">
                 <stop
                   offset="5%"
                   stopColor="var(--color-mobile)"
@@ -238,7 +238,7 @@ export function ChartAreaInteractive() {
                   stopColor="var(--color-mobile)"
                   stopOpacity={0.1}
                 />
-              </linearGradient>
+              </linearlinear>
             </defs>
             <CartesianGrid vertical={false} />
             <XAxis

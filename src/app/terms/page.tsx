@@ -2,7 +2,7 @@ export default function TermsPage() {
   return (
     <main className="min-h-screen bg-gray-50 text-gray-800 dark:bg-gray-900">
       {/* Hero Section */}
-      <section className="bg-gradient-to-r from-red-600 to-pink-500 text-white py-16 px-6 text-center">
+      <section className="bg-linear-to-r from-red-600 to-pink-500 text-white py-16 px-6 text-center">
         <h1 className="text-4xl md:text-5xl font-extrabold mb-4">
           Terms & Conditions
         </h1>

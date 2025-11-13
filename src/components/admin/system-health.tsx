@@ -54,7 +54,7 @@ const SystemHealth = () => {
         const dbResponse = await withTimeout(fetch('/api/test-db-connection', { credentials: 'include' }));
         if (dbResponse.ok) {
           const dbData = await safeJson(dbResponse);
-          dbOk = Boolean(dbData?.success);
+          dbOk = dbData?.status === 'connected';
         }
       } catch {
         dbOk = false;

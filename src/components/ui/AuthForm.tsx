@@ -28,7 +28,7 @@ export default function AuthForm() {
   
 
   // Detect if this is admin login page
-  const isAdminLogin = pathname === '/login' || pathname.startsWith('/admin/');
+  const isAdminLogin = pathname === '/login' || pathname.startsWith('/login/');
   const isEditorLogin = pathname === '/editor' || pathname.startsWith('/editor/login');
   
   // Determine the role context
@@ -144,7 +144,7 @@ export default function AuthForm() {
     switch (roleContext) {
       case 'ADMIN':
         return {
-          bgGradient: "from-red-600 to-indigo-800",
+          bglinear: "from-red-600 to-indigo-800",
           buttonColor: "bg-red-600 hover:bg-red-700",
           headerText: "Admin Portal",
           subText: "Sign in with your admin credentials",
@@ -152,7 +152,7 @@ export default function AuthForm() {
         };
       case 'EDITOR':
         return {
-          bgGradient: "from-green-600 via-blue-600 to-teal-800",
+          bglinear: "from-green-600 via-blue-600 to-teal-800",
           buttonColor: "bg-green-600 hover:bg-green-700",
           headerText: "Editor Portal",
           subText: "Sign in with your editor credentials",
@@ -160,7 +160,7 @@ export default function AuthForm() {
         };
       default:
         return {
-          bgGradient: "from-blue-500 via-purple-500 to-pink-500",
+          bglinear: "from-blue-500 via-purple-500 to-pink-500",
           buttonColor: "bg-blue-600 hover:bg-blue-700",
           headerText: "Welcome Back",
           subText: "Sign in to your account",
@@ -176,7 +176,7 @@ export default function AuthForm() {
       {/* Header Section with Role-based Styling */}
       {(isAdminLogin || isEditorLogin) && (
         <div className="text-center mb-8">
-          <div className={`mx-auto h-12 w-12 bg-linear-to-r ${styles.bgGradient.split(' ')[0]} ${styles.bgGradient.split(' ')[1]} rounded-full flex items-center justify-center mb-4`}>
+          <div className={`mx-auto h-12 w-12 bg-linear-to-r ${styles.bglinear.split(' ')[0]} ${styles.bglinear.split(' ')[1]} rounded-full flex items-center justify-center mb-4`}>
             <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
             </svg>

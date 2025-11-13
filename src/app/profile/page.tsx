@@ -1,11 +1,12 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
-import { toast as notify } from "sonner";
+import { toast as notify, toast } from "sonner";
+
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import {
+  Upload,
   Camera,
-  Check,
   User,
   Loader2,
   AlertCircle,
@@ -13,6 +14,7 @@ import {
   Edit3,
   Phone,
   Mail,
+  Link,
   X,
   Sparkles,
   MessageCircle,
@@ -46,6 +48,7 @@ interface Comment {
   };
 }
 
+
 export default function Profile() {
   const router = useRouter();
   const [isEditing, setIsEditing] = useState(false);
@@ -59,6 +62,7 @@ export default function Profile() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [isFetching, setIsFetching] = useState(true);
   const [profileUpdateErrors, setProfileUpdateErrors] = useState<{
     name?: string;
@@ -80,6 +84,10 @@ export default function Profile() {
   // Get auth context
   const { isAuthenticated, user: authUser, logout } = useAuth();
   const [dark, setDark] = useState<boolean>(false);
+
+    // Drag and drop state
+  const [dragActive, setDragActive] = useState(false);
+  const dragCounter = useRef(0);
   
   // Theme toggle
   useEffect(() => {
@@ -121,6 +129,7 @@ export default function Profile() {
     });
   };
 
+
   
   
   // Fetch user profile
@@ -151,6 +160,8 @@ export default function Profile() {
       image: userProfile.image || "",
     });
     setIsFetching(false);
+    loadComments();
+
 
     // Load comments
     loadComments();
@@ -162,7 +173,6 @@ export default function Profile() {
     
     try {
       setLoadingComments(true);
-      
       const res = await secureApiCall('/api/comments?mode=user', {
         method: 'GET',
       });
@@ -188,11 +198,86 @@ export default function Profile() {
     setFormData((prev) => ({ ...prev, [name]: value }));
     setProfileUpdateErrors((prev) => ({ ...prev, [name]: undefined }));
   };
+
+
+  /////////////////// Handle File Uploads /////////////////////////////
+  const handleFileUpload = async (file: File) => {
+        if (!file) return;
+    
+    // Validate file
+    if (file.size > 5 * 1024 * 1024) {
+      notify.error("Image too large", {
+        description: "Please select an image smaller than 5MB",
+      });
+      return;
+    }
+    
+    if (!file.type.startsWith('image/')) {
+      notify.error("Invalid file type", {
+        description: "Please select an image file",
+      });
+      return;
+    }
+    setUploading(true);
+    try {
+      const formData = new FormData(); 
+      formData.append('image', file);
+
+      const response = await fetch('/api/customer/change-image/', {
+        method: 'POST',
+        credentials: 'include',
+        body: formData,
+      });
+      const data = await response.json();
+      
+      if (data.success) {
+        const uploadedUrl = data.data.imageUrl.startsWith('http') 
+          ? data.data.imageUrl 
+          : `${window.location.origin}${data.data.imageUrl}`;  
+
+        setFormData(prev => ({ 
+          ...prev, 
+          image: uploadedUrl 
+        }));
+        setImagePreview(uploadedUrl);
+        toast.success('Image uploaded successfully');
+      } else {
+        throw new Error(data.error);
+      }
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast.error('Failed to upload image');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const previewUrl = URL.createObjectURL(file);
+      setImagePreview(previewUrl);
+      handleFileUpload(file);
+    }
+  };
+
+  const handleUrlChange = (url: string) => {
+    setFormData(prev => ({ ...prev, image: url }));
+    setImagePreview(url);
+  };
+
+  const clearImage = () => {
+    setFormData(prev => ({ ...prev, image: "" }));
+    setImagePreview("");
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
   
   // Clean up image preview URL
   useEffect(() => {
     return () => {
-      if (imagePreview) {
+        if (imagePreview && imagePreview.startsWith('blob:')) {
         URL.revokeObjectURL(imagePreview);
       }
     };
@@ -227,9 +312,7 @@ export default function Profile() {
     }
   };
   
-  // Drag and drop handlers
-  const [dragActive, setDragActive] = useState(false);
-  const dragCounter = useRef(0);
+
   
   const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -617,9 +700,9 @@ export default function Profile() {
   
   // Loading skeleton
   const LoadingSkeleton = () => (
-    <div className="min-h-screen md:mt-16 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
+    <div className="min-h-screen md:mt-16 bg-linear-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
       <div className="container mx-auto max-w-4xl px-4 py-8">
-        <div className="relative mb-8 overflow-hidden rounded-2xl bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-700 border border-gray-200 dark:border-gray-600 shadow-lg">
+        <div className="relative mb-8 overflow-hidden rounded-2xl bg-linear-to-r from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-700 border border-gray-200 dark:border-gray-600 shadow-lg">
           <div className="p-8 text-center">
             <div className="inline-flex items-center gap-3 mb-6 px-6 py-3 rounded-full bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm border border-gray-200/50 dark:border-gray-600/50 shadow-sm">
               <div className="h-4 w-4 rounded-full bg-blue-400 animate-pulse" />
@@ -641,7 +724,7 @@ export default function Profile() {
                   </div>
                   
                   <div className="relative mx-auto mb-8">
-                    <div className="w-48 h-48 rounded-full bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-600 dark:to-gray-700 animate-pulse mx-auto" />
+                    <div className="w-48 h-48 rounded-full bg-linear-to-br from-gray-200 to-gray-300 dark:from-gray-600 dark:to-gray-700 animate-pulse mx-auto" />
                     <div className="absolute -bottom-2 -right-2 w-12 h-12 rounded-full bg-blue-500 animate-pulse border-4 border-white dark:border-gray-800" />
                   </div>
                   
@@ -768,7 +851,7 @@ export default function Profile() {
         {/* Main profile card */}
         <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900 shadow-xl">
           <div className="p-6 md:p-8">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
+            <div className="grid grid-cols-1 lg:grid-cols-1 gap-8 lg:gap-12">
               {/* Avatar Section */}
               <div className="lg:col-span-1">
                 <div className="">
@@ -798,7 +881,7 @@ export default function Profile() {
                           priority
                         />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center text-gray-400 dark:text-gray-500 text-5xl font-bold bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900 dark:to-indigo-900">
+                        <div className="w-full h-full flex items-center justify-center text-gray-400 dark:text-gray-500 text-5xl font-bold bg-linear-to-br from-blue-100 to-indigo-100 dark:from-blue-900 dark:to-indigo-900">
                           {user?.name?.[0]?.toUpperCase() || "U"}
                         </div>
                       )}
@@ -808,59 +891,71 @@ export default function Profile() {
                         </div>
                       )}
                     </div>
-                    <div className="mt-3 text-center text-xs text-gray-500 dark:text-gray-400">
-                      {dragActive ? "📥 Drop to upload" : isEditing ? "📷 Click or drag to upload" : "Edit profile to change photo"}
-                    </div>
-                    <input
-                      type="file"
-                      accept="image/jpeg,image/png,image/gif,image/webp"
-                      onChange={handleImageChange}
-                      className="hidden"
-                      ref={fileInputRef}
-                      disabled={!isEditing}
-                    />
-                  </div>
-                  
-                  {imageFile && isEditing && (
-                    <div className="mt-3 space-y-2">
-                      <button
-                        onClick={handleImageUpload}
-                        disabled={loading}
-                        className="w-full inline-flex items-center justify-center rounded-md bg-green-600 px-3 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                      >
-                        {loading ? (
-                          <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Uploading...
-                          </>
-                        ) : (
-                          <>
-                            <Check className="mr-2 h-4 w-4" />
-                            Upload photo
-                          </>
-                        )}
-                      </button>
-                      <button
-                        onClick={() => {
-                          setImageFile(null);
-                          if (imagePreview) URL.revokeObjectURL(imagePreview);
-                          setImagePreview(null);
-                        }}
-                        disabled={loading}
-                        className="w-full inline-flex items-center justify-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700 transition-colors"
-                      >
-                        <X className="mr-2 h-4 w-4" />
-                        Cancel
-                      </button>
-                    </div>
+                    {/* Upload Options */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* File Upload */}
+              <div className="border-2 border-dashed border-[#262626] rounded-lg  text-center dark:bg-[#171717] transition-colors">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileSelect}
+                  className="hidden"
+                />
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
+                  className="w-full flex flex-col items-center justify-center  p-4 dark:hover:bg-[#262626] rounded-md disabled:opacity-50 transition-colors"
+                >
+                  {uploading ? (
+                    <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+                  ) : (
+                    <Upload className="h-6 w-6 dark:text-gray-400" />
                   )}
+                  <span className="text-sm font-medium dark:text-gray-200">
+                    {uploading ? 'Uploading...' : 'Upload from Computer'}
+                  </span>
+                  <span className="text-xs dark:text-gray-400">
+                    PNG, JPG, GIF up to 5MB
+                  </span>
+                </button>
+              </div>
+
+              {/* URL Input */}
+              {/* <div className="border-2 border-[#262626] rounded-lg p-4 bg-[#171717] transition-colors">
+                <div className="flex items-center mb-2">
+                  <Link className="h-5 w-5 text-gray-400 mr-2" />
+                  <span className="text-sm font-medium text-gray-200">Or enter URL</span>
+                </div>
+                <input
+                  type="url"
+                  value={formData.image}
+                  onChange={(e) => handleUrlChange(e.target.value)}
+                  placeholder="https://example.com/image.jpg"
+                  className="w-full px-3 py-2 border border-[#262626] rounded-md text-sm bg-[#171717] text-white placeholder-gray-500 transition-colors"
+                />
+              </div> */}
+            </div>
+
+            {/* Current Image Display - Fixed */}
+            {/* {formData.image && (
+              <div className="text-xs dark:text-gray-400 mt-2">
+                <span className="font-medium dark:text-gray-200">Current image:</span>
+                <div 
+                  className="truncate mt-1 dark:bg-[#262626] px-3 py-2 rounded border dark:border-[#404040] dark:text-gray-300"
+                  title={formData.image}
+                >
+                  {formData.image}
                 </div>
               </div>
+            )} */}
+          </div> 
               
               {/* Form Fields */}
               <div className="lg:col-span-2 space-y-8">
                 {/* Personal Information */}
-                <div className="space-y-6">
+                <div className="space-y-6 mt-6">
                   <div className="flex items-center gap-3 mb-6">
                     <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/30">
                       <User className="h-5 w-5 text-blue-600 dark:text-blue-400" />
@@ -1058,7 +1153,7 @@ export default function Profile() {
                             </div>
                           </div>
                           
-                          <div className="flex-shrink-0 flex items-center gap-2">
+                          <div className="shrink-0 flex items-center gap-2">
                             <a 
                               href={`/article/${slug}`} 
                               className="inline-flex items-center px-3 py-1.5 text-xs font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
@@ -1147,5 +1242,7 @@ export default function Profile() {
         </div>
       </div>
     </div>
+  </div>
+</div>
   );
 }
