@@ -3,6 +3,8 @@ import { redirect } from 'next/navigation';
 import prisma from '@/lib/models/prisma';
 import EditorSidebar from './EditorSidebar';
 
+export const dynamic = 'force-dynamic';
+
 export default async function EditorLayoutWrapper({ children }: { children: React.ReactNode }) {
   const session = await getSession();
   

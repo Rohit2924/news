@@ -3,6 +3,8 @@ import prisma from '@/lib/models/prisma';
 import Link from 'next/link';
 import { cookies } from 'next/headers';
 
+export const dynamic = 'force-dynamic';
+
 async function getUserRole(email: string) {
   try {
     const user = await prisma.user.findUnique({

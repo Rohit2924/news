@@ -3,6 +3,8 @@ import { redirect } from 'next/navigation';
 import prisma from '@/lib/models/prisma';
 import { ReactNode } from 'react';
 
+export const dynamic = 'force-dynamic';
+
 export default async function ProtectedEditorWrapper({ children }: { children: ReactNode }) {
   const session = await getSession();
   
