@@ -7,6 +7,186 @@ import { getAuthToken, verifyJWT } from '@/lib/auth';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
+
+/**
+ * @swagger
+ * tags:
+ *   - name: Admin Pages
+ *     description: Admin management for static pages
+ */
+
+/**
+ * @swagger
+ * /api/admin/pages:
+ *   get:
+ *     summary: List all pages
+ *     tags:
+ *       - Admin Pages
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Bearer token for admin/editor access
+ *     responses:
+ *       200:
+ *         description: List of pages
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                       pageSlug:
+ *                         type: string
+ *                       pageTitle:
+ *                         type: string
+ *                       pageContent:
+ *                         type: string
+ *                       metaTitle:
+ *                         type: string
+ *                       metaDescription:
+ *                         type: string
+ *                       metaKeywords:
+ *                         type: string
+ *                       isActive:
+ *                         type: boolean
+ *                       createdAt:
+ *                         type: string
+ *                       updatedAt:
+ *                         type: string
+ *       401:
+ *         description: Authentication required
+ *       403:
+ *         description: Admin or Editor access required
+ *       500:
+ *         description: Failed to fetch pages
+ *
+ *   post:
+ *     summary: Create a new page
+ *     tags:
+ *       - Admin Pages
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - pageSlug
+ *               - pageTitle
+ *               - pageContent
+ *             properties:
+ *               pageSlug:
+ *                 type: string
+ *               pageTitle:
+ *                 type: string
+ *               pageContent:
+ *                 type: string
+ *               metaTitle:
+ *                 type: string
+ *               metaDescription:
+ *                 type: string
+ *               metaKeywords:
+ *                 type: string
+ *               isActive:
+ *                 type: boolean
+ *     responses:
+ *       200:
+ *         description: Page created successfully
+ *       400:
+ *         description: Page slug, title, and content are required
+ *       401:
+ *         description: Authentication required
+ *       403:
+ *         description: Admin or Editor access required
+ *       409:
+ *         description: Page with this slug already exists
+ *       500:
+ *         description: Failed to create page
+ *
+ *   put:
+ *     summary: Update a page
+ *     tags:
+ *       - Admin Pages
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - id
+ *             properties:
+ *               id:
+ *                 type: string
+ *               pageTitle:
+ *                 type: string
+ *               pageContent:
+ *                 type: string
+ *               metaTitle:
+ *                 type: string
+ *               metaDescription:
+ *                 type: string
+ *               metaKeywords:
+ *                 type: string
+ *               isActive:
+ *                 type: boolean
+ *     responses:
+ *       200:
+ *         description: Page updated successfully
+ *       400:
+ *         description: Page ID is required
+ *       401:
+ *         description: Authentication required
+ *       403:
+ *         description: Admin or Editor access required
+ *       404:
+ *         description: Page not found
+ *       500:
+ *         description: Failed to update page
+ *
+ *   delete:
+ *     summary: Delete a page
+ *     tags:
+ *       - Admin Pages
+ *     parameters:
+ *       - in: query
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: ID of the page to delete
+ *       - in: header
+ *         name: Authorization
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Bearer token for admin/editor access
+ *     responses:
+ *       200:
+ *         description: Page deleted successfully
+ *       400:
+ *         description: Page ID is required
+ *       401:
+ *         description: Authentication required
+ *       403:
+ *         description: Admin or Editor access required
+ *       404:
+ *         description: Page not found
+ *       500:
+ *         description: Failed to delete page
+ */
+
 async function verifyAdminAccess(request: Request): Promise<{ user?: JWTPayload; error?: string; status?: number }> {
   const userId = request.headers.get("x-user-id");
   const userRole = request.headers.get("x-user-role");

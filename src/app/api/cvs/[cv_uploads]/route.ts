@@ -5,9 +5,63 @@ import path from 'path';
 import prisma from "@/lib/models/prisma";
 import { getAuthToken, verifyJWT } from "@/lib/auth";
 
+/**
+ * @swagger
+ * tags:
+ *   - name: CVs
+ *     description: Admin/Editor endpoints for managing and downloading uploaded CVs
+ */
+
+/**
+ * @swagger
+ * /api/cvs/{cv_uploads}:
+ *   get:
+ *     summary: Download a specific CV file
+ *     description: Allows an Admin or Editor to download a CV file by its filename. Only authenticated users with role `ADMIN` or `EDITOR` can access this endpoint.
+ *     tags:
+ *       - CVs
+ *     parameters:
+ *       - in: path
+ *         name: cv_uploads
+ *         required: true
+ *         schema:
+ *           type: string
+ *           pattern: "^[a-zA-Z0-9._-]+$"
+ *         description: The filename of the CV to download (e.g., user123.pdf)
+ *     security:
+ *       - x-user-id: []
+ *       - x-user-role: []
+ *     responses:
+ *       200:
+ *         description: CV file retrieved successfully
+ *         content:
+ *           application/pdf:
+ *             schema:
+ *               type: string
+ *               format: binary
+ *           application/msword:
+ *             schema:
+ *               type: string
+ *               format: binary
+ *           application/vnd.openxmlformats-officedocument.wordprocessingml.document:
+ *             schema:
+ *               type: string
+ *               format: binary
+ *       400:
+ *         description: Invalid filename
+ *       401:
+ *         description: Authentication required or invalid token
+ *       403:
+ *         description: Admin or Editor access required
+ *       404:
+ *         description: CV file not found
+ *       500:
+ *         description: Internal server error
+ */
+
 
 // this verify admin or Editor Access 
-export async function verifyAdminAccess(request: NextRequest): Promise<{ 
+async function verifyAdminAccess(request: NextRequest): Promise<{ 
   user?: { 
     id: string; 
     role: string;

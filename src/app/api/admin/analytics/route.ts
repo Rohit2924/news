@@ -1,5 +1,51 @@
+// src/app/api/admin/analytics/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+
+
+/**
+ * @swagger
+ * /api/admin/analytics:
+ *   get:
+ *     summary: Get analytics overview
+ *     tags:
+ *       - Admin
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Analytics overview
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     totalViews:
+ *                       type: integer
+ *                     totalUsers:
+ *                       type: integer
+ *                     popularArticles:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: integer
+ *                           title:
+ *                             type: string
+ *                           category:
+ *                             type: string
+ *                           views:
+ *                             type: integer
+ *       500:
+ *         description: Failed to fetch analytics
+ */
+
 
 export async function GET(request: NextRequest) {
   try {
@@ -15,7 +61,7 @@ export async function GET(request: NextRequest) {
       by: ["metadata"],
       _count: { metadata: true },
     });
-    // Fallback: get top 5 articles by comment count
+    // Fallback: get atop 5 articles by comment count
     const popularArticles = await prisma.news.findMany({
       orderBy: { comments: { _count: "desc" } },
       take: 5,

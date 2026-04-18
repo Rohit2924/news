@@ -2,6 +2,191 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/models/prisma';
 import { verifyJWT } from '@/lib/auth';
 
+/**
+ * @swagger
+ * tags:
+ *   - name: Admin Users
+ *     description: Manage users (Admins only)
+ */
+
+/**
+ * @swagger
+ * /api/admin/users/{id}:
+ *   get:
+ *     summary: Get a specific user by ID
+ *     tags:
+ *       - Admin Users
+ *     parameters:
+ *       - in: header
+ *         name: cookie
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Must contain admin token (e.g., token=...)
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: User ID to fetch
+ *     responses:
+ *       200:
+ *         description: User details
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                     email:
+ *                       type: string
+ *                     name:
+ *                       type: string
+ *                     role:
+ *                       type: string
+ *                     image:
+ *                       type: string
+ *                       nullable: true
+ *                     contactNumber:
+ *                       type: string
+ *                       nullable: true
+ *                     createdAt:
+ *                       type: string
+ *                       format: date-time
+ *                     updatedAt:
+ *                       type: string
+ *                       format: date-time
+ *       401:
+ *         description: Authentication required
+ *       403:
+ *         description: Admin access required
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Internal server error
+ *
+ *   put:
+ *     summary: Update a specific user by ID
+ *     tags:
+ *       - Admin Users
+ *     parameters:
+ *       - in: header
+ *         name: cookie
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Must contain admin token (e.g., token=...)
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: User ID to update
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *               name:
+ *                 type: string
+ *               role:
+ *                 type: string
+ *               contactNumber:
+ *                 type: string
+ *             required:
+ *               - email
+ *               - name
+ *     responses:
+ *       200:
+ *         description: User updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                     email:
+ *                       type: string
+ *                     name:
+ *                       type: string
+ *                     role:
+ *                       type: string
+ *                     contactNumber:
+ *                       type: string
+ *                     updatedAt:
+ *                       type: string
+ *                       format: date-time
+ *       400:
+ *         description: Missing required fields or cannot update
+ *       401:
+ *         description: Authentication required
+ *       403:
+ *         description: Admin access required
+ *       409:
+ *         description: Email already taken by another user
+ *       500:
+ *         description: Database error
+ *
+ *   delete:
+ *     summary: Delete a specific user by ID
+ *     tags:
+ *       - Admin Users
+ *     parameters:
+ *       - in: header
+ *         name: cookie
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Must contain admin token (e.g., token=...)
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: User ID to delete
+ *     responses:
+ *       200:
+ *         description: User deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *       400:
+ *         description: Cannot delete own account
+ *       401:
+ *         description: Authentication required
+ *       403:
+ *         description: Admin access required
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Database error
+ */
+
+
 // Helper function to verify admin access from cookies
 async function verifyAdminAccess(request: NextRequest) {
   // Get token from cookies instead of Authorization header

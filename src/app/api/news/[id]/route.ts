@@ -2,6 +2,202 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { verifyJWT } from '@/lib/auth';
 
+/**
+ * @swagger
+ * tags:
+ *   - name: News
+ *     description: Manage individual news articles
+ */
+
+/**
+ * @swagger
+ * /api/news/{id}:
+ *   get:
+ *     summary: Get a specific news article
+ *     description: Fetch a single news article by its ID, including comments with user info.
+ *     tags:
+ *       - News
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID of the news article
+ *     responses:
+ *       200:
+ *         description: News article fetched successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   $ref: '#/components/schemas/News'
+ *       400:
+ *         description: Invalid news ID
+ *       404:
+ *         description: News article not found
+ *       500:
+ *         description: Internal server error
+ *
+ *   put:
+ *     summary: Update a news article
+ *     description: Admin-only endpoint to update an existing news article.
+ *     tags:
+ *       - News
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID of the news article
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               title:
+ *                 type: string
+ *               category:
+ *                 type: string
+ *               author:
+ *                 type: string
+ *               published_date:
+ *                 type: string
+ *                 format: date-time
+ *               image:
+ *                 type: string
+ *               summary:
+ *                 type: string
+ *               content:
+ *                 type: string
+ *               tags:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *     responses:
+ *       200:
+ *         description: News article updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   $ref: '#/components/schemas/News'
+ *                 message:
+ *                   type: string
+ *       400:
+ *         description: Invalid news ID
+ *       401:
+ *         description: Authentication required or invalid token
+ *       403:
+ *         description: Admin access required
+ *       404:
+ *         description: News article not found
+ *       500:
+ *         description: Internal server error
+ *
+ *   delete:
+ *     summary: Delete a news article
+ *     description: Admin-only endpoint to delete a news article along with related comments.
+ *     tags:
+ *       - News
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID of the news article
+ *     responses:
+ *       200:
+ *         description: News article deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *       400:
+ *         description: Invalid news ID
+ *       401:
+ *         description: Authentication required or invalid token
+ *       403:
+ *         description: Admin access required
+ *       404:
+ *         description: News article not found
+ *       500:
+ *         description: Internal server error
+ *
+ * components:
+ *   schemas:
+ *     News:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: integer
+ *         title:
+ *           type: string
+ *         category:
+ *           type: string
+ *         subcategory:
+ *           type: string
+ *         author:
+ *           type: string
+ *         published_date:
+ *           type: string
+ *           format: date-time
+ *         image:
+ *           type: string
+ *         summary:
+ *           type: string
+ *         content:
+ *           type: string
+ *         tags:
+ *           type: array
+ *           items:
+ *             type: string
+ *         comments:
+ *           type: array
+ *           items:
+ *             type: object
+ *             properties:
+ *               id:
+ *                 type: integer
+ *               content:
+ *                 type: string
+ *               createdAt:
+ *                 type: string
+ *                 format: date-time
+ *               user:
+ *                 type: object
+ *                 properties:
+ *                   name:
+ *                     type: string
+ *                   email:
+ *                     type: string
+ *                   image:
+ *                     type: string
+ */
+
+
+
 // GET /api/news/[id] - Get a specific news article
 export async function GET(
   request: NextRequest,

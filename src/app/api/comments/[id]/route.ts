@@ -3,11 +3,124 @@ import prisma from '@/lib/models/prisma';
 import { parse } from 'cookie';
 import { jwtVerify } from 'jose';
 
-function getToken(req: NextRequest) {
-  const cookies = req.headers.get('cookie') || '';
-  const parsed = parse(cookies);
-  return parsed.authToken || null;
-}
+/**
+ * @swagger
+ * tags:
+ *   - name: Comments
+ *     description: Endpoints for editing and deleting user comments
+ */
+
+/**
+ * @swagger
+ * /api/comments/{id}:
+ *   put:
+ *     summary: Edit a comment
+ *     tags:
+ *       - Comments
+ *     description: Edit a comment by its ID. Users can only edit their own comments.
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: ID of the comment to edit
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               content:
+ *                 type: string
+ *                 example: "Updated comment content"
+ *     responses:
+ *       200:
+ *         description: Comment updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 comment:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                     content:
+ *                       type: string
+ *                     user:
+ *                       type: object
+ *                       properties:
+ *                         id:
+ *                           type: string
+ *                         name:
+ *                           type: string
+ *                         email:
+ *                           type: string
+ *                     createdAt:
+ *                       type: string
+ *                       format: date-time
+ *                     updatedAt:
+ *                       type: string
+ *                       format: date-time
+ *       400:
+ *         description: Content missing or invalid
+ *       401:
+ *         description: Unauthorized (invalid/missing token)
+ *       403:
+ *         description: Forbidden (user cannot edit others’ comments)
+ *       404:
+ *         description: Comment not found
+ *       500:
+ *         description: Internal server error
+ *
+ *   delete:
+ *     summary: Delete a comment
+ *     tags:
+ *       - Comments
+ *     description: Delete a comment by its ID. Users can only delete their own comments.
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: ID of the comment to delete
+ *     responses:
+ *       200:
+ *         description: Comment deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Comment deleted successfully"
+ *       401:
+ *         description: Unauthorized (invalid/missing token)
+ *       403:
+ *         description: Forbidden (user cannot delete others’ comments)
+ *       404:
+ *         description: Comment not found
+ *       500:
+ *         description: Internal server error
+ */
+
+
+// function getToken(req: NextRequest) {
+//   const cookies = req.headers.get('cookie') || '';
+//   const parsed = parse(cookies);
+//   return parsed.authToken || null;
+// }
 
 // PUT - Edit comment
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {

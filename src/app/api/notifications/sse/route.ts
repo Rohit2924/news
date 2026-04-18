@@ -2,6 +2,54 @@ import { NextResponse } from 'next/server';
 
 // export const runtime = 'no';
 
+/**
+ * @swagger
+ * tags:
+ *   - name: Notifications
+ *     description: Server-Sent Events for real-time notifications
+ */
+
+/**
+ * @swagger
+ * /api/notifications/stream:
+ *   get:
+ *     summary: Connect to the notifications SSE stream
+ *     description: >
+ *       Opens a Server-Sent Events (SSE) connection to receive real-time notifications from the server.
+ *       The server will periodically send 'ping' events to keep the connection alive.
+ *     tags:
+ *       - Notifications
+ *     responses:
+ *       200:
+ *         description: SSE stream established successfully
+ *         content:
+ *           text/event-stream:
+ *             schema:
+ *               type: string
+ *               description: |
+ *                 The server will continuously send events in the following format:
+ *                 ```text
+ *                 data: {"type":"connection","message":"Connected to notifications stream"}
+
+ *                 data: {"type":"ping","timestamp":"2025-11-16T12:00:00.000Z"}
+ *                 ```
+ *       500:
+ *         description: Failed to establish SSE connection
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Internal Server Error
+ *     notes: |
+ *       - The client should handle `abort` or connection close events.
+ *       - Pings are sent every 30 seconds to keep the connection alive.
+ *       - Initial 'connection' event is sent immediately after connecting.
+ */
+
+
 // The GET function MUST accept the 'request' parameter to detect disconnections
 export async function GET(request: Request) {
   const encoder = new TextEncoder();

@@ -3,6 +3,123 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/models/prisma';
 import { getAuthToken, verifyJWT } from '@/lib/auth';
 
+
+/**
+ * @swagger
+ * tags:
+ *   - name: Admin Comments
+ *     description: Admin endpoints for managing comments
+ */
+
+/**
+ * @swagger
+ * /api/admin/comments:
+ *   get:
+ *     summary: Get all comments (admin/editor only)
+ *     tags:
+ *       - Admin Comments
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Page number for pagination
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Number of comments per page
+ *     responses:
+ *       200:
+ *         description: Successfully fetched comments
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                       content:
+ *                         type: string
+ *                       createdAt:
+ *                         type: string
+ *                         format: date-time
+ *                       user:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: string
+ *                           name:
+ *                             type: string
+ *                             nullable: true
+ *                           email:
+ *                             type: string
+ *                       newsId:
+ *                         type: integer
+ *                       newsTitle:
+ *                         type: string
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     page:
+ *                       type: integer
+ *                     limit:
+ *                       type: integer
+ *                     total:
+ *                       type: integer
+ *       401:
+ *         description: Unauthorized (no token or invalid token)
+ *       403:
+ *         description: Forbidden (user is not admin/editor)
+ *       500:
+ *         description: Internal server error
+ *
+ *   delete:
+ *     summary: Delete a comment by ID (admin/editor only)
+ *     tags:
+ *       - Admin Comments
+ *     parameters:
+ *       - in: query
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID of the comment to delete
+ *     responses:
+ *       200:
+ *         description: Successfully deleted comment
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *       400:
+ *         description: Comment ID is required
+ *       401:
+ *         description: Unauthorized (no token or invalid token)
+ *       403:
+ *         description: Forbidden (user is not admin/editor)
+ *       404:
+ *         description: Comment not found
+ *       500:
+ *         description: Internal server error
+ */
+
+
+
 // Helper function to verify admin access
 async function verifyAdminAccess(request: NextRequest): Promise<{ user?: any; error?: string; status?: number }> {
   // Method 1: Check middleware headers (preferred)

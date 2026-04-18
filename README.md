@@ -46,3 +46,20 @@ Long-form project documentation has been moved to the `docs/` folder. See:
 - `docs/PROFESSIONAL_WEBSITE_UPGRADE.md` — upgrade notes
 - `docs/MANUAL_TESTING_GUIDE.md` — manual test checklist
 
+## SMTP / Email Setup
+
+The contact form and other server‑side notifications use SMTP for delivery. Populate your `.env.local` with the following variables:
+
+```
+SMTP_HOST=smtp.example.com
+SMTP_PORT=587          # use 465 with SMTP_SECURE=true
+SMTP_SECURE=false      # true if using port 465
+SMTP_USER=your@address.com
+SMTP_PASS=supersecret
+CONTACT_RECIPIENT=admin@yourdomain.com  # if not set, falls back to SMTP_USER
+```
+
+An `src/lib/email.ts` helper abstracts the Nodemailer transport, and the `/api/contact` route now persists messages in the database and sends an email when a message arrives.
+
+Be sure not to commit real credentials; treat the `.env.local` file as private configuration.
+

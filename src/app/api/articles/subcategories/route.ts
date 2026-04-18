@@ -1,6 +1,91 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/db';
 
+/**
+ * @swagger
+ * tags:
+ *   - name: Articles
+ *     description: Fetch categories and subcategories for news articles
+ */
+
+/**
+ * @swagger
+ * /api/articles/subcategories:
+ *   get:
+ *     summary: Get subcategories of a specific category
+ *     tags:
+ *       - Articles
+ *     parameters:
+ *       - in: query
+ *         name: category
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Name of the parent category
+ *     responses:
+ *       200:
+ *         description: List of subcategories
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                       name:
+ *                         type: string
+ *                       slug:
+ *                         type: string
+ *                       description:
+ *                         type: string
+ *                       _count:
+ *                         type: object
+ *                         properties:
+ *                           articles:
+ *                             type: integer
+ *       400:
+ *         description: Missing category query parameter
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 error:
+ *                   type: string
+ *       404:
+ *         description: Category not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 error:
+ *                   type: string
+ *       500:
+ *         description: Failed to fetch subcategories due to server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 error:
+ *                   type: string
+ */
+
+
 // GET /api/articles/subcategories?category=politics
 export async function GET(request: NextRequest) {
   try {

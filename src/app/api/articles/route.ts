@@ -5,6 +5,184 @@ import type { JWTPayload } from "@/lib/types/auth";
 
 export const runtime = "nodejs";
 
+/**
+ * @swagger
+ * tags:
+ *   - name: Articles
+ *     description: Manage news articles (Editors and Admins)
+ */
+
+/**
+ * @swagger
+ * /api/articles:
+ *   get:
+ *     summary: Get a list of articles
+ *     tags:
+ *       - Articles
+ *     parameters:
+ *       - in: query
+ *         name: category
+ *         schema:
+ *           type: string
+ *         description: Filter by category name
+ *       - in: query
+ *         name: subcategory
+ *         schema:
+ *           type: string
+ *         description: Filter by subcategory name
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 20
+ *         description: Number of articles to return (max 100)
+ *     responses:
+ *       200:
+ *         description: List of articles
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 articles:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                       title:
+ *                         type: string
+ *                       category:
+ *                         type: object
+ *                       author:
+ *                         type: string
+ *                       published_date:
+ *                         type: string
+ *                         format: date-time
+ *                       image:
+ *                         type: string
+ *                       imageUrl:
+ *                         type: string
+ *                       summary:
+ *                         type: string
+ *                       content:
+ *                         type: string
+ *                       tags:
+ *                         type: array
+ *                         items:
+ *                           type: string
+ *                       createdAt:
+ *                         type: string
+ *                         format: date-time
+ *                       updatedAt:
+ *                         type: string
+ *                         format: date-time
+ *       401:
+ *         description: Authentication required
+ *       403:
+ *         description: Admin or Editor access required
+ *       500:
+ *         description: Internal server error
+ *
+ *   post:
+ *     summary: Create a new article
+ *     tags:
+ *       - Articles
+ *     parameters:
+ *       - in: header
+ *         name: x-user-id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: User ID of the admin/editor
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - title
+ *               - categoryId
+ *               - author
+ *               - published_date
+ *             properties:
+ *               title:
+ *                 type: string
+ *               categoryId:
+ *                 type: string
+ *               author:
+ *                 type: string
+ *               published_date:
+ *                 type: string
+ *                 format: date-time
+ *               image:
+ *                 type: string
+ *                 nullable: true
+ *               imageUrl:
+ *                 type: string
+ *                 nullable: true
+ *               summary:
+ *                 type: string
+ *                 nullable: true
+ *               content:
+ *                 type: string
+ *                 nullable: true
+ *               tags:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *     responses:
+ *       200:
+ *         description: Article created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 article:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                     title:
+ *                       type: string
+ *                     categoryId:
+ *                       type: string
+ *                     author:
+ *                       type: string
+ *                     published_date:
+ *                       type: string
+ *                       format: date-time
+ *                     image:
+ *                       type: string
+ *                     imageUrl:
+ *                       type: string
+ *                     summary:
+ *                       type: string
+ *                     content:
+ *                       type: string
+ *                     tags:
+ *                       type: array
+ *                       items:
+ *                         type: string
+ *       400:
+ *         description: Missing required fields
+ *       401:
+ *         description: Authentication required
+ *       403:
+ *         description: Admin or Editor access required
+ *       500:
+ *         description: Failed to create article
+ */
+
+
+
 // Helper: verify JWT from cookies
 
 async function verifyEditorOrAdminAccess(request: Request): Promise<{ user?: JWTPayload; error?: string; status?: number }> {

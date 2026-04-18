@@ -4,6 +4,163 @@ import prisma from '@/lib/models/prisma';
 import { secureLog } from '@/lib/secure-logger';
 import { AppError, ErrorCodes, handleApiError } from '@/lib/error-handler';
 
+
+/**
+ * @swagger
+ * tags:
+ *   - name: EditorArticles
+ *     description: Endpoints for Editors (or Admins) to manage news articles
+ */
+
+/**
+ * @swagger
+ * /api/editor/articles:
+ *   get:
+ *     summary: Fetch all articles authored by the editor
+ *     description: Returns a list of news articles created by the authenticated editor. Only accessible by users with role `EDITOR` or `ADMIN`.
+ *     tags:
+ *       - EditorArticles
+ *     security:
+ *       - x-user-id: []
+ *       - x-user-role: []
+ *     responses:
+ *       200:
+ *         description: List of articles retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                   title:
+ *                     type: string
+ *                   content:
+ *                     type: string
+ *                   categoryId:
+ *                     type: integer
+ *                   imageUrl:
+ *                     type: string
+ *                   image:
+ *                     type: string
+ *                   published_date:
+ *                     type: string
+ *                     format: date
+ *                   summary:
+ *                     type: string
+ *                   author:
+ *                     type: string
+ *                   _count:
+ *                     type: object
+ *                     properties:
+ *                       comments:
+ *                         type: integer
+ *       401:
+ *         description: Authentication required
+ *       403:
+ *         description: Editor or Admin access required
+ *       500:
+ *         description: Internal server error
+ *
+ *   post:
+ *     summary: Create a new article
+ *     description: Allows an editor (or admin) to create a new news article. Title, content, and categoryId are required fields.
+ *     tags:
+ *       - EditorArticles
+ *     security:
+ *       - x-user-id: []
+ *       - x-user-role: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               title:
+ *                 type: string
+ *                 description: Title of the article
+ *               content:
+ *                 type: string
+ *                 description: Full content of the article
+ *               categoryId:
+ *                 type: integer
+ *                 description: ID of the category
+ *               imageUrl:
+ *                 type: string
+ *                 description: Optional URL for the article image
+ *               image:
+ *                 type: string
+ *                 description: Optional placeholder or actual image URL
+ *               summary:
+ *                 type: string
+ *                 description: Optional summary; defaults to first 200 characters of content
+ *     responses:
+ *       201:
+ *         description: Article created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   $ref: '#/components/schemas/Article'
+ *                 message:
+ *                   type: string
+ *       400:
+ *         description: Missing required fields or invalid category
+ *       401:
+ *         description: Authentication required
+ *       403:
+ *         description: Editor or Admin access required
+ *       500:
+ *         description: Internal server error
+ *
+ * components:
+ *   schemas:
+ *     Article:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: integer
+ *         title:
+ *           type: string
+ *         content:
+ *           type: string
+ *         categoryId:
+ *           type: integer
+ *         imageUrl:
+ *           type: string
+ *         image:
+ *           type: string
+ *         published_date:
+ *           type: string
+ *           format: date
+ *         summary:
+ *           type: string
+ *         author:
+ *           type: string
+ *         category:
+ *           type: object
+ *           properties:
+ *             id:
+ *               type: integer
+ *             name:
+ *               type: string
+ *             slug:
+ *               type: string
+ *         _count:
+ *           type: object
+ *           properties:
+ *             comments:
+ *               type: integer
+ */
+
+
 // Use middleware headers for authentication (same as admin routes)
 async function verifyEditorAccess(request: Request): Promise<{ 
   user?: { id: string; role: string; name: string }; 

@@ -3,6 +3,211 @@ import { prisma } from '@/lib/db';
 import { verifyJWT } from '@/lib/auth';
 import * as cookie from 'cookie';
 
+/**
+ * @swagger
+ * tags:
+ *   - name: Admin User Reports
+ *     description: Manage user reports (Admins only)
+ */
+
+/**
+ * @swagger
+ * /api/admin/users/reports:
+ *   get:
+ *     summary: Get all pending user reports
+ *     tags:
+ *       - Admin User Reports
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Bearer token for admin access
+ *     responses:
+ *       200:
+ *         description: List of pending reports
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                       reporter:
+ *                         type: object
+ *                         properties:
+ *                           name:
+ *                             type: string
+ *                           email:
+ *                             type: string
+ *                       reportedUser:
+ *                         type: object
+ *                         properties:
+ *                           name:
+ *                             type: string
+ *                           email:
+ *                             type: string
+ *                       comment:
+ *                         type: object
+ *                         properties:
+ *                           content:
+ *                             type: string
+ *                       reason:
+ *                         type: string
+ *                       status:
+ *                         type: string
+ *                         enum: [PENDING, APPROVED, REJECTED]
+ *                       createdAt:
+ *                         type: string
+ *                         format: date-time
+ *       401:
+ *         description: Authentication required
+ *       403:
+ *         description: Admin access required
+ *       500:
+ *         description: Failed to fetch reports
+ *
+ *   post:
+ *     summary: Report a user
+ *     tags:
+ *       - Admin User Reports
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               reportedUserId:
+ *                 type: string
+ *               reason:
+ *                 type: string
+ *               commentId:
+ *                 type: string
+ *             required:
+ *               - reportedUserId
+ *               - reason
+ *     responses:
+ *       200:
+ *         description: Report created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                     reporterId:
+ *                       type: string
+ *                     reportedUserId:
+ *                       type: string
+ *                     commentId:
+ *                       type: string
+ *                     reason:
+ *                       type: string
+ *                     status:
+ *                       type: string
+ *                       enum: [PENDING, APPROVED, REJECTED]
+ *                     createdAt:
+ *                       type: string
+ *                       format: date-time
+ *       400:
+ *         description: Missing user ID or reason
+ *       401:
+ *         description: Authentication required
+ *       403:
+ *         description: Admin access required
+ *       404:
+ *         description: Reported user not found
+ *       500:
+ *         description: Failed to report user
+ *
+ *   put:
+ *     summary: Approve or reject a user report
+ *     tags:
+ *       - Admin User Reports
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               reportId:
+ *                 type: string
+ *               status:
+ *                 type: string
+ *                 enum: [APPROVED, REJECTED]
+ *             required:
+ *               - reportId
+ *               - status
+ *     responses:
+ *       200:
+ *         description: Report status updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                     reporterId:
+ *                       type: string
+ *                     reportedUserId:
+ *                       type: string
+ *                     commentId:
+ *                       type: string
+ *                     reason:
+ *                       type: string
+ *                     status:
+ *                       type: string
+ *                       enum: [PENDING, APPROVED, REJECTED]
+ *                     createdAt:
+ *                       type: string
+ *                       format: date-time
+ *       400:
+ *         description: Missing required fields
+ *       401:
+ *         description: Authentication required
+ *       403:
+ *         description: Admin access required
+ *       500:
+ *         description: Failed to update report
+ */
+
+
 async function getTokenFromRequest(request: NextRequest) {
   // Try Authorization header first
   const authHeader = request.headers.get('authorization');

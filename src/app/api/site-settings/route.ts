@@ -4,6 +4,76 @@ import { secureLog } from '@/lib/secure-logger';
 
 const logger = secureLog;
 
+/**
+ * @swagger
+ * tags:
+ *   - name: Site Settings
+ *     description: Public APIs for fetching website configuration
+ */
+
+/**
+ * @swagger
+ * /api/public/settings:
+ *   get:
+ *     summary: Get public site settings
+ *     description: Fetches site settings (site name, description, meta info). Automatically creates default settings if none exist.
+ *     tags:
+ *       - Site Settings
+ *     responses:
+ *       200:
+ *         description: Site settings fetched successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: number
+ *                       example: 1
+ *                     siteName:
+ *                       type: string
+ *                       example: "News Portal"
+ *                     siteDescription:
+ *                       type: string
+ *                       example: "Your trusted source for news"
+ *                     siteUrl:
+ *                       type: string
+ *                       example: "https://yourdomain.com"
+ *                     metaTitle:
+ *                       type: string
+ *                       example: "News Portal - Latest News"
+ *                     metaDescription:
+ *                       type: string
+ *                       example: "Stay updated with the latest news"
+ *                     metaKeywords:
+ *                       type: string
+ *                       example: "news, portal, latest"
+ *                     footerText:
+ *                       type: string
+ *                       example: "© 2024 News Portal. All rights reserved."
+ *       500:
+ *         description: Server or database connection error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Server error"
+ *                 details:
+ *                   type: string
+ *                   example: "Database connection failed"
+ */
+
+
+
 export async function GET(request: NextRequest) {
   try {
     logger.info('GET request received for public site settings');

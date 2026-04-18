@@ -5,6 +5,226 @@ import { secureLog } from '@/lib/secure-logger';
 import { AppError, ErrorCodes } from '@/lib/error-handler';
 import { getAuthToken, verifyJWT } from '@/lib/auth';
 
+/**
+ * @swagger
+ * /api/admin/articles:
+ *   get:
+ *     summary: Get all articles (Admin/Editor only)
+ *     tags:
+ *       - Admin
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 20
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: categoryId
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: sortBy
+ *         schema:
+ *           type: string
+ *           default: createdAt
+ *       - in: query
+ *         name: sortOrder
+ *         schema:
+ *           type: string
+ *           enum: [asc, desc]
+ *           default: desc
+ *       - in: query
+ *         name: startDate
+ *         schema:
+ *           type: string
+ *           format: date
+ *       - in: query
+ *         name: endDate
+ *         schema:
+ *           type: string
+ *           format: date
+ *     responses:
+ *       200:
+ *         description: Articles list with pagination
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     articles:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: string
+ *                           title:
+ *                             type: string
+ *                           author:
+ *                             type: string
+ *                           category:
+ *                             type: object
+ *                             properties:
+ *                               id:
+ *                                 type: string
+ *                               name:
+ *                                 type: string
+ *                               slug:
+ *                                 type: string
+ *                           published_date:
+ *                             type: string
+ *                           tags:
+ *                             type: array
+ *                             items:
+ *                               type: string
+ *                           _count:
+ *                             type: object
+ *                             properties:
+ *                               comments:
+ *                                 type: integer
+ *                     pagination:
+ *                       type: object
+ *                       properties:
+ *                         page:
+ *                           type: integer
+ *                         limit:
+ *                           type: integer
+ *                         total:
+ *                           type: integer
+ *                         totalPages:
+ *                           type: integer
+ *                         hasMore:
+ *                           type: boolean
+ *       401:
+ *         description: Unauthorized / JWT missing or invalid
+ *       403:
+ *         description: Forbidden / Insufficient role
+ *       500:
+ *         description: Internal server error
+ * 
+ *   post:
+ *     summary: Create a new article (Admin/Editor)
+ *     tags:
+ *       - Admin
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               title:
+ *                 type: string
+ *               content:
+ *                 type: string
+ *               categoryId:
+ *                 type: string
+ *               imageUrl:
+ *                 type: string
+ *               summary:
+ *                 type: string
+ *               tags:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *               status:
+ *                 type: string
+ *                 enum: [draft, published]
+ *               published_date:
+ *                 type: string
+ *                 format: date
+ *     responses:
+ *       201:
+ *         description: Article created successfully
+ *       400:
+ *         description: Validation or missing fields
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
+ *       500:
+ *         description: Internal server error
+ * 
+ *   put:
+ *     summary: Bulk update or delete articles (Admin only)
+ *     tags:
+ *       - Admin
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               action:
+ *                 type: string
+ *                 enum: [update, delete]
+ *               articleIds:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *               updateData:
+ *                 type: object
+ *     responses:
+ *       200:
+ *         description: Bulk operation success
+ *       400:
+ *         description: Bad request
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
+ *       500:
+ *         description: Internal server error
+ * 
+ *   delete:
+ *     summary: Delete all articles (Admin only - dangerous)
+ *     tags:
+ *       - Admin
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: confirm
+ *         schema:
+ *           type: string
+ *           enum: [true]
+ *         required: true
+ *         description: Must be true to confirm deletion
+ *     responses:
+ *       200:
+ *         description: All articles deleted
+ *       400:
+ *         description: Confirmation not provided
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
+ *       500:
+ *         description: Internal server error
+ */
+
+
 // Verify admin or editor access from middleware headers or JWT token
 async function verifyAdminAccess(request: NextRequest): Promise<{ 
   user?: { 

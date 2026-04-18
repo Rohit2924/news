@@ -5,6 +5,76 @@ import path from 'path';
 import { getAuthToken, verifyJWT } from '@/lib/auth';
 import prisma from '@/lib/db';
 
+/**
+ * @swagger
+ * tags:
+ *   - name: Admin Upload
+ *     description: Upload images for articles or site content (Admins & Editors)
+ */
+
+/**
+ * @swagger
+ * /api/admin/upload:
+ *   post:
+ *     summary: Upload an image file
+ *     tags:
+ *       - Admin Upload
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Bearer token for admin/editor access
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               image:
+ *                 type: string
+ *                 format: binary
+ *                 description: Image file to upload (max 5MB)
+ *     responses:
+ *       200:
+ *         description: Image uploaded successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     imageUrl:
+ *                       type: string
+ *                       description: Public URL path to the uploaded image
+ *                     filename:
+ *                       type: string
+ *                     size:
+ *                       type: integer
+ *                       description: File size in bytes
+ *                     type:
+ *                       type: string
+ *                       description: MIME type of the file
+ *                 message:
+ *                   type: string
+ *                   example: "Image uploaded successfully"
+ *       400:
+ *         description: Validation error (missing file, wrong type, or file too large)
+ *       401:
+ *         description: Authentication required
+ *       403:
+ *         description: Admin or Editor access required
+ *       500:
+ *         description: Failed to upload image
+ */
+
+
 // Copy the EXACT same verifyAdminAccess function from your articles route
 async function verifyAdminAccess(request: NextRequest): Promise<{ 
   user?: { 

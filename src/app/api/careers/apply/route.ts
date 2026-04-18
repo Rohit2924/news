@@ -23,7 +23,7 @@ position: z.enum([
   "Senior Journalist",
   "Content Editor",
   "Digital Marketing Specialist",
-  "Social Media Manager" // ✅ Correct spelling
+  "Social Media Manager"
 ]),
   coverNote: z.string().min(3),
   cv: z.custom<File>()

@@ -3,6 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Menu, X, User as UserIcon, LogOut } from 'lucide-react';
 import Link from 'next/link';
 import DarkModeToggle from '../ui/DarkModeToggle';
+import SearchBar from '../common/SearchBar';
 import { useAuth } from '../../context/AuthContext';
 import { usePathname, useRouter } from 'next/navigation';
 import { useSiteSettings } from '../../hooks/useSiteSettings';
@@ -74,6 +75,11 @@ const Header = () => {
 
             {/* Right Menu */}
             <div className="flex items-center space-x-4">
+              {/* Desktop Search Bar */}
+              <div className="hidden lg:block">
+                <SearchBar variant="desktop" />
+              </div>
+
               {/* <button
                 onClick={handleLangSwitch}
                 title="Switch Language"
@@ -162,6 +168,11 @@ const Header = () => {
           </div>
         </div>
 
+        {/* Desktop Search Bar for Tablet/smaller screens */}
+        <div className="hidden md:block lg:hidden px-4 py-3 border-t">
+          <SearchBar variant="desktop" />
+        </div>
+
         {/* Desktop Nav */}
         <nav id="main-nav" className="hidden md:block my-4 border-t pt-4">
           <ul className="flex space-x-8 justify-center">
@@ -208,16 +219,8 @@ const Header = () => {
               </li>
             </ul>
 
-            {/* Search in mobile */}
-            <div className="mt-4 flex items-center bg-gray-100 dark:bg-gray-800 rounded-lg px-4 py-2 mx-4">
-              <i className="fa-solid fa-search text-gray-500 mr-2"></i>
-              <input
-                type="text"
-                placeholder="Search news..."
-                className="bg-transparent outline-none flex-1 text-black dark:text-white"
-                id="search-input-mobile"
-              />
-            </div>
+            {/* Mobile Search Bar */}
+            <SearchBar variant="mobile" />
           </nav>
         )}
       </header>

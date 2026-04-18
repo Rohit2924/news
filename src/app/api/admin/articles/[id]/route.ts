@@ -3,6 +3,158 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/models/prisma';
 import { getAuthToken, verifyJWT } from '@/lib/auth';
 
+
+
+/**
+ * @swagger
+ * /api/admin/articles/{id}:
+ *   get:
+ *     summary: Get a specific article by ID (Admin/Editor)
+ *     tags:
+ *       - Admin
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Article ID
+ *     responses:
+ *       200:
+ *         description: Article fetched successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                     title:
+ *                       type: string
+ *                     author:
+ *                       type: string
+ *                     category:
+ *                       type: object
+ *                       properties:
+ *                         id:
+ *                           type: string
+ *                         name:
+ *                           type: string
+ *                         slug:
+ *                           type: string
+ *                     published_date:
+ *                       type: string
+ *                     tags:
+ *                       type: array
+ *                       items:
+ *                         type: string
+ *                     _count:
+ *                       type: object
+ *                       properties:
+ *                         comments:
+ *                           type: integer
+ *       400:
+ *         description: Invalid article ID
+ *       401:
+ *         description: Unauthorized / JWT missing or invalid
+ *       403:
+ *         description: Forbidden / Insufficient role
+ *       404:
+ *         description: Article not found
+ *       500:
+ *         description: Internal server error
+ * 
+ *   put:
+ *     summary: Update a specific article by ID (Admin/Editor)
+ *     tags:
+ *       - Admin
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Article ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               title:
+ *                 type: string
+ *               categoryId:
+ *                 type: string
+ *               author:
+ *                 type: string
+ *               published_date:
+ *                 type: string
+ *                 format: date
+ *               image:
+ *                 type: string
+ *               imageUrl:
+ *                 type: string
+ *               summary:
+ *                 type: string
+ *               content:
+ *                 type: string
+ *               tags:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *     responses:
+ *       200:
+ *         description: Article updated successfully
+ *       400:
+ *         description: Missing or invalid fields
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
+ *       404:
+ *         description: Article not found
+ *       500:
+ *         description: Internal server error
+ * 
+ *   delete:
+ *     summary: Delete a specific article by ID (Admin/Editor)
+ *     tags:
+ *       - Admin
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Article ID
+ *     responses:
+ *       200:
+ *         description: Article deleted successfully
+ *       400:
+ *         description: Invalid article ID
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
+ *       404:
+ *         description: Article not found
+ *       500:
+ *         description: Internal server error
+ */
+
+
 // Use the SAME verifyAdminAccess function as your main route
 async function verifyAdminAccess(request: NextRequest): Promise<{ 
   user?: { 

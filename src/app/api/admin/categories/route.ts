@@ -4,6 +4,161 @@ import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { getAuthToken, verifyJWT } from "@/lib/auth";
 
+
+/**
+ * @swagger
+ * /api/admin/categories:
+ *   get:
+ *     summary: Get all categories (Admin only)
+ *     tags:
+ *       - Categories
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Page number
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 20
+ *         description: Number of items per page
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Search categories by name
+ *     responses:
+ *       200:
+ *         description: Categories fetched successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     categories:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: string
+ *                           name:
+ *                             type: string
+ *                           slug:
+ *                             type: string
+ *                           description:
+ *                             type: string
+ *                           parent:
+ *                             type: object
+ *                             nullable: true
+ *                             properties:
+ *                               id:
+ *                                 type: string
+ *                               name:
+ *                                 type: string
+ *                           subcategories:
+ *                             type: array
+ *                             items:
+ *                               type: object
+ *                               properties:
+ *                                 id:
+ *                                   type: string
+ *                                 name:
+ *                                   type: string
+ *                           _count:
+ *                             type: object
+ *                             properties:
+ *                               articles:
+ *                                 type: integer
+ *                     pagination:
+ *                       type: object
+ *                       properties:
+ *                         page:
+ *                           type: integer
+ *                         limit:
+ *                           type: integer
+ *                         total:
+ *                           type: integer
+ *                         totalPages:
+ *                           type: integer
+ *                         hasMore:
+ *                           type: boolean
+ *       401:
+ *         description: Unauthorized / No token
+ *       403:
+ *         description: Admin access required
+ *       500:
+ *         description: Internal server error
+ *
+ *   post:
+ *     summary: Create a new category (Admin only)
+ *     tags:
+ *       - Categories
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 description: Category name (min 2 characters)
+ *               description:
+ *                 type: string
+ *                 description: Optional description
+ *               parentId:
+ *                 type: string
+ *                 description: Optional parent category ID
+ *     responses:
+ *       200:
+ *         description: Category created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     category:
+ *                       type: object
+ *                       properties:
+ *                         id:
+ *                           type: string
+ *                         name:
+ *                           type: string
+ *                         slug:
+ *                           type: string
+ *                         description:
+ *                           type: string
+ *                         parentId:
+ *                           type: string
+ *       400:
+ *         description: Validation error or duplicate category
+ *       401:
+ *         description: Unauthorized / No token
+ *       403:
+ *         description: Admin access required
+ *       500:
+ *         description: Internal server error
+ */
+
+
 // Schema for creating/updating a category
 const categorySchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),

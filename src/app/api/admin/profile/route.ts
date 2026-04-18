@@ -2,6 +2,155 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { verifyJWT } from '@/lib/auth';
 
+/**
+ * @swagger
+ * tags:
+ *   - name: Admin Profile
+ *     description: Admin/Editor profile management
+ */
+
+/**
+ * @swagger
+ * /api/admin/profile:
+ *   get:
+ *     summary: Get current admin/editor profile
+ *     tags:
+ *       - Admin Profile
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Bearer token for admin/editor access
+ *     responses:
+ *       200:
+ *         description: Admin profile data
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                     email:
+ *                       type: string
+ *                     name:
+ *                       type: string
+ *                     role:
+ *                       type: string
+ *                     image:
+ *                       type: string
+ *                     contactNumber:
+ *                       type: string
+ *                     reputation:
+ *                       type: integer
+ *                     createdAt:
+ *                       type: string
+ *                     updatedAt:
+ *                       type: string
+ *                     comments:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: number
+ *                           content:
+ *                             type: string
+ *                           createdAt:
+ *                             type: string
+ *                           news:
+ *                             type: object
+ *                             properties:
+ *                               id:
+ *                                 type: number
+ *                               title:
+ *                                 type: string
+ *                               category:
+ *                                 type: string
+ *       401:
+ *         description: Authentication required or invalid token
+ *       403:
+ *         description: Admin access required
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Failed to fetch admin profile
+ *
+ *   post:
+ *     summary: Update current admin/editor profile
+ *     tags:
+ *       - Admin Profile
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Bearer token for admin/editor access
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               contactNumber:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Profile updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                     email:
+ *                       type: string
+ *                     name:
+ *                       type: string
+ *                     role:
+ *                       type: string
+ *                     image:
+ *                       type: string
+ *                     contactNumber:
+ *                       type: string
+ *                     reputation:
+ *                       type: integer
+ *                     createdAt:
+ *                       type: string
+ *                     updatedAt:
+ *                       type: string
+ *                 message:
+ *                   type: string
+ *       400:
+ *         description: Name is required
+ *       401:
+ *         description: Authentication required or invalid token
+ *       403:
+ *         description: Admin access required
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Failed to update profile
+ */
+
+
 export async function GET(request: NextRequest) {
   try {
     // Get token from Authorization header

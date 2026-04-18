@@ -3,6 +3,117 @@ import { prisma } from '@/lib/db';
 import { verifyJWT } from '@/lib/auth';
 import { Server as SocketIOServer } from 'socket.io';
 
+/**
+ * @swagger
+ * tags:
+ *   - name: Analytics
+ *     description: Admin analytics and real-time monitoring APIs
+ */
+
+/**
+ * @swagger
+ * /api/analytics:
+ *   get:
+ *     summary: Fetch platform analytics (Admin only)
+ *     description: |
+ *       Returns aggregated analytics including total users, articles, comments, and randomly generated mock growth stats.
+ *       Requires ADMIN role via Bearer token authentication.
+ *     tags:
+ *       - Analytics
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Analytics fetched successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     totalUsers:
+ *                       type: number
+ *                       example: 1520
+ *                     totalArticles:
+ *                       type: number
+ *                       example: 340
+ *                     totalComments:
+ *                       type: number
+ *                       example: 9821
+ *                     totalViews:
+ *                       type: number
+ *                       example: 13452
+ *                     userGrowth:
+ *                       type: number
+ *                       example: 12
+ *                     articleGrowth:
+ *                       type: number
+ *                       example: 8
+ *                     commentGrowth:
+ *                       type: number
+ *                       example: 15
+ *                     viewGrowth:
+ *                       type: number
+ *                       example: 11
+ *       401:
+ *         description: Authentication missing or invalid
+ *       403:
+ *         description: Admin access required
+ *       500:
+ *         description: Internal server error
+ */
+
+/**
+ * @swagger
+ * /api/analytics:
+ *   post:
+ *     summary: Trigger real-time analytics/socket events
+ *     description: |
+ *       Used internally to broadcast events through Socket.IO.
+ *       Supports user, article, comment, and analytics update events.
+ *     tags:
+ *       - Analytics
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - action
+ *             properties:
+ *               action:
+ *                 type: string
+ *                 enum: [userRegistered, articlePublished, commentPosted, analyticsUpdate]
+ *                 example: userRegistered
+ *               data:
+ *                 type: object
+ *                 example:
+ *                   id: 12
+ *                   name: "John Doe"
+ *     responses:
+ *       200:
+ *         description: Event emitted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *       400:
+ *         description: Invalid action
+ *       500:
+ *         description: Server or socket error
+ */
+
+
 // Helper function to get token from request
 function getToken(request: NextRequest): string | null {
   const authHeader = request.headers.get('authorization');

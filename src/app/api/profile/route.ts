@@ -2,6 +2,144 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/models/prisma';
 import { verifyJWT } from '@/lib/auth';
 
+/**
+ * @swagger
+ * tags:
+ *   - name: User Profile
+ *     description: Manage authenticated user's profile
+ */
+
+/**
+ * @swagger
+ * /api/user/profile:
+ *   get:
+ *     summary: Get logged-in user profile
+ *     description: Returns the authenticated user's profile using Bearer token or authToken cookie.
+ *     tags:
+ *       - User Profile
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: User profile fetched successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                       example: clt9x123a003edp98ab123xyz
+ *                     email:
+ *                       type: string
+ *                       example: user@example.com
+ *                     name:
+ *                       type: string
+ *                       example: "Jenny"
+ *                     role:
+ *                       type: string
+ *                       example: user
+ *                     image:
+ *                       type: string
+ *                       nullable: true
+ *                     contactNumber:
+ *                       type: string
+ *                       nullable: true
+ *                     createdAt:
+ *                       type: string
+ *                       format: date-time
+ *                     updatedAt:
+ *                       type: string
+ *                       format: date-time
+ *       401:
+ *         description: Unauthorized (missing or invalid token)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 error:
+ *                   type: string
+ *                   example: Authentication required
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Server error
+ */
+
+/**
+ * @swagger
+ * /api/user/profile:
+ *   post:
+ *     summary: Update logged-in user profile
+ *     description: Allows user to update their name or contact number.
+ *     tags:
+ *       - User Profile
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 example: "Jenny"
+ *               contactNumber:
+ *                 type: string
+ *                 example: "+9779812345678"
+ *     responses:
+ *       200:
+ *         description: Profile updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Profile updated successfully
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                     email:
+ *                       type: string
+ *                     name:
+ *                       type: string
+ *                     role:
+ *                       type: string
+ *                     image:
+ *                       type: string
+ *                       nullable: true
+ *                     contactNumber:
+ *                       type: string
+ *                       nullable: true
+ *       400:
+ *         description: No valid fields to update
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Server error
+ */
+
+
+
 function getToken(request: NextRequest): string | null {
   const authHeader = request.headers.get('authorization');
   if (authHeader && authHeader.startsWith('Bearer ')) {

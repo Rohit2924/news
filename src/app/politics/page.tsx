@@ -33,7 +33,7 @@ export default function PoliticsPage() {
     }
     load();
   }, []);
-
+   
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
@@ -72,6 +72,7 @@ export default function PoliticsPage() {
     </div>
   );
 }
+
 
 function SubcategorySection({ subcategory }: { subcategory: string }) {
   const [items, setItems] = useState<Article[]>([]);

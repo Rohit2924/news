@@ -2,6 +2,159 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/models/prisma";
 import { verifyJWT } from "@/lib/auth";
 
+/**
+ * @swagger
+ * tags:
+ *   - name: Profile
+ *     description: User profile management endpoints
+ */
+
+/**
+ * @swagger
+ * /api/profile:
+ *   get:
+ *     summary: Get current user profile
+ *     tags:
+ *       - Profile
+ *     description: Returns the authenticated user's profile data.
+ *     security:
+ *       - cookieAuth: []
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: User profile fetched successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: boolean
+ *                   example: false
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                     email:
+ *                       type: string
+ *                     name:
+ *                       type: string
+ *                     role:
+ *                       type: string
+ *                     image:
+ *                       type: string
+ *                     contactNumber:
+ *                       type: string
+ *                     createdAt:
+ *                       type: string
+ *                       format: date-time
+ *                     updatedAt:
+ *                       type: string
+ *                       format: date-time
+ *       401:
+ *         description: Unauthorized / invalid token
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Internal server error
+ *
+ *   post:
+ *     summary: Update current user profile
+ *     tags:
+ *       - Profile
+ *     description: Update authenticated user's name and contact number.
+ *     security:
+ *       - cookieAuth: []
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 description: The user's full name
+ *                 example: "John Doe"
+ *               contactNumber:
+ *                 type: string
+ *                 description: The user's phone number
+ *                 example: "+1234567890"
+ *     responses:
+ *       200:
+ *         description: Profile updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: boolean
+ *                   example: false
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                     email:
+ *                       type: string
+ *                     name:
+ *                       type: string
+ *                     role:
+ *                       type: string
+ *                     image:
+ *                       type: string
+ *                     contactNumber:
+ *                       type: string
+ *                     createdAt:
+ *                       type: string
+ *                       format: date-time
+ *                     updatedAt:
+ *                       type: string
+ *                       format: date-time
+ *       400:
+ *         description: Invalid input
+ *       401:
+ *         description: Unauthorized / invalid token
+ *       500:
+ *         description: Internal server error
+ *
+ *   delete:
+ *     summary: Delete current user account
+ *     tags:
+ *       - Profile
+ *     description: Deletes the authenticated user's account and all related dependent records. Admins cannot self-delete via this endpoint.
+ *     security:
+ *       - cookieAuth: []
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Account deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Account deleted"
+ *       401:
+ *         description: Unauthorized / invalid token
+ *       403:
+ *         description: Admin self-deletion forbidden
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Failed to delete account / Internal server error
+ */
+
+
+
 export async function GET(request: Request) {
   try {
     // Get the token from the Authorization header or httpOnly cookie

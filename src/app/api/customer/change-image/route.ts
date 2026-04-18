@@ -5,6 +5,121 @@ import { join } from 'path';
 import { getAuthToken, verifyJWT } from '@/lib/auth';
 import prisma from '@/lib/db';
 
+
+/**
+ * @swagger
+ * tags:
+ *   - name: Customer
+ *     description: Customer-related endpoints
+ */
+
+/**
+ * @swagger
+ * /api/customer/upload-image:
+ *   post:
+ *     summary: Upload a profile image
+ *     tags:
+ *       - Customer
+ *     description: Allows an authenticated user to upload a profile image (JPEG, PNG, GIF, WebP). The image is stored on the server and the user record is updated with the image path.
+ *     security:
+ *       - cookieAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               image:
+ *                 type: string
+ *                 format: binary
+ *                 description: The profile image to upload
+ *     responses:
+ *       200:
+ *         description: Image uploaded successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Profile image uploaded successfully"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     imageUrl:
+ *                       type: string
+ *                       example: "/uploads/profiles/2025/11/16/profile-123-1699999999999-abc123.png"
+ *                     filename:
+ *                       type: string
+ *                       example: "profile-123-1699999999999-abc123.png"
+ *                     size:
+ *                       type: integer
+ *                       example: 512345
+ *                     type:
+ *                       type: string
+ *                       example: "image/png"
+ *                     user:
+ *                       type: object
+ *                       properties:
+ *                         id:
+ *                           type: string
+ *                         email:
+ *                           type: string
+ *                         name:
+ *                           type: string
+ *                         role:
+ *                           type: string
+ *                         image:
+ *                           type: string
+ *                         contactNumber:
+ *                           type: string
+ *       400:
+ *         description: Invalid file or missing image
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 error:
+ *                   type: string
+ *                   example: "No image file provided"
+ *       401:
+ *         description: Unauthorized user
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 error:
+ *                   type: string
+ *                   example: "No authentication token found"
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 error:
+ *                   type: string
+ *                   example: "Failed to upload image"
+ */
+
+
 // Verify authenticated user (any role)
 async function verifyAuthenticatedUser(request: NextRequest): Promise<{ 
   user?: { 

@@ -5,6 +5,161 @@ import prisma from '@/lib/models/prisma';
 import fs from 'fs';
 import path from 'path';
 
+/**
+ * @swagger
+ * tags:
+ *   - name: Admin Settings
+ *     description: Manage site-wide settings (accessible to Admins and Editors)
+ */
+
+/**
+ * @swagger
+ * /api/admin/settings:
+ *   get:
+ *     summary: Get site settings
+ *     tags:
+ *       - Admin Settings
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Bearer token for admin/editor access
+ *     responses:
+ *       200:
+ *         description: Successfully fetched site settings
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     siteName:
+ *                       type: string
+ *                     siteDescription:
+ *                       type: string
+ *                     siteUrl:
+ *                       type: string
+ *                     metaTitle:
+ *                       type: string
+ *                     metaDescription:
+ *                       type: string
+ *                     metaKeywords:
+ *                       type: string
+ *                     siteLogo:
+ *                       type: string
+ *                     siteFavicon:
+ *                       type: string
+ *                     footerText:
+ *                       type: string
+ *                     footerLinks:
+ *                       type: object
+ *                     createdAt:
+ *                       type: string
+ *                     updatedAt:
+ *                       type: string
+ *       401:
+ *         description: Authentication required
+ *       403:
+ *         description: Admin or Editor access required
+ *       500:
+ *         description: Failed to fetch settings
+ *
+ *   put:
+ *     summary: Update site settings
+ *     tags:
+ *       - Admin Settings
+ *     parameters:
+ *       - in: header
+ *         name: Authorization
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Bearer token for admin/editor access
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               siteName:
+ *                 type: string
+ *               siteDescription:
+ *                 type: string
+ *               siteUrl:
+ *                 type: string
+ *               metaTitle:
+ *                 type: string
+ *               metaDescription:
+ *                 type: string
+ *               metaKeywords:
+ *                 type: string
+ *               siteLogoFile:
+ *                 type: string
+ *                 format: binary
+ *               siteFaviconFile:
+ *                 type: string
+ *                 format: binary
+ *               footerText:
+ *                 type: string
+ *               footerLinks:
+ *                 type: string
+ *                 description: JSON string or object
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               siteName:
+ *                 type: string
+ *               siteDescription:
+ *                 type: string
+ *               siteUrl:
+ *                 type: string
+ *               metaTitle:
+ *                 type: string
+ *               metaDescription:
+ *                 type: string
+ *               metaKeywords:
+ *                 type: string
+ *               footerText:
+ *                 type: string
+ *               footerLinks:
+ *                 type: object
+ *     responses:
+ *       200:
+ *         description: Settings updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   description: Updated settings object
+ *                 message:
+ *                   type: string
+ *       400:
+ *         description: Validation error (e.g., invalid JSON for footerLinks or unique constraint violation)
+ *       401:
+ *         description: Authentication required
+ *       403:
+ *         description: Admin or Editor access required
+ *       404:
+ *         description: Settings not found
+ *       500:
+ *         description: Failed to update settings
+ */
+
+
+
 // Simple logger for production
 const logger = {
   info: (message: string, data?: any) => {
