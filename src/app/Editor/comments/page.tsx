@@ -2,6 +2,8 @@ import EditorLayoutWrapper from '@/components/editor/EditorLayoutWrapper';
 import { getSession } from '@/lib/getSession';
 import prisma from '@/lib/models/prisma';
 
+export const dynamic = 'force-dynamic';
+
 export default async function CommentsPage() {
   const session = await getSession();
   

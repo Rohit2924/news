@@ -132,7 +132,7 @@ async function verifyAdminAccess(request: NextRequest): Promise<{
 
 export async function GET(
     request: NextRequest,
-     {params }: {params: {cv_uploads: string}}
+     {params }: {params: Promise<{cv_uploads: string}>}
 ){
     try{
         const authCheck = await verifyAdminAccess(request);
@@ -144,7 +144,7 @@ export async function GET(
         }
 
       // validation filename
-      const filename = params.cv_uploads;
+      const { cv_uploads: filename } = await params;
       if(!filename || !/^[a-zA-Z0-9._-]+$/.test(filename)){
         return NextResponse.json(
          { success: false, error: "Invalid filename" },

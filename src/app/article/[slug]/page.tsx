@@ -5,6 +5,8 @@ import prisma from '@/lib/models/prisma';
 import ArticleComments from '@/components/news/ArticleComments';
 // import { sanitizeArticleContent } from '@/lib/utils/sanitize';
 
+export const dynamic = 'force-dynamic';
+
 // Define proper TypeScript types
 interface NewsArticle {
   id: number;

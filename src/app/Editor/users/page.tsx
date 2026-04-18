@@ -1,6 +1,8 @@
 import EditorLayoutWrapper from '@/components/editor/EditorLayoutWrapper';
 import prisma from '@/lib/models/prisma';
 
+export const dynamic = 'force-dynamic';
+
 export default async function UsersPage() {
   const users = await prisma.user.findMany({
     select: {

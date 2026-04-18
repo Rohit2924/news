@@ -3,6 +3,8 @@ import { redirect, notFound } from 'next/navigation';
 import prisma from '@/lib/models/prisma';
 import EditArticleForm from '@/components/editor/EditorArticleForm';
 
+export const dynamic = 'force-dynamic';
+
 async function getArticle(id: string) {
   const article = await prisma.news.findUnique({
     where: { id: parseInt(id) }

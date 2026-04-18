@@ -3,6 +3,8 @@ import { getSession } from '@/lib/getSession';
 import prisma from '@/lib/models/prisma';
 import Link from 'next/link';
 
+export const dynamic = 'force-dynamic';
+
 // Define the article type
 interface Article {
   id: number;
